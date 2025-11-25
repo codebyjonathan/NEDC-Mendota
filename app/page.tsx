@@ -20,13 +20,15 @@ export default function HomePage() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-white/40 rounded-full blur-3xl" />
 
       <div className="relative w-full max-w-md flex flex-col items-center space-y-8">
-        <div className="relative w-64 h-64">
+        <div className="relative w-80 h-80">
+          {/* Glow around logo */}
+          <div className="absolute inset-0 bg-white/30 rounded-full blur-2xl" />
           <Image
             src="/logo.png"
             alt="Safe Space Logo"
-            width={256}
-            height={256}
-            className="w-full h-full object-contain drop-shadow-2xl"
+            width={320}
+            height={320}
+            className="w-full h-full object-contain drop-shadow-2xl relative z-10"
             priority
           />
         </div>

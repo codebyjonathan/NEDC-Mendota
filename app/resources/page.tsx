@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { CalendarDays, BookOpen, Video, FileText, ExternalLink, Heart } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
@@ -23,6 +23,20 @@ function ResourcesContent() {
       // fallback: set location
       window.location.href = url
     }
+  }
+
+  function TeamInfo({ lang, isRTL }: { lang: string; isRTL: boolean }) {
+    const [teamText, setTeamText] = useState(t.teamDescription || "")
+
+    useEffect(() => {
+      setTeamText(t.teamDescription || "")
+    }, [lang])
+
+    return (
+      <div>
+        <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">{teamText}</p>
+      </div>
+    )
   }
 
   const resources = [
@@ -232,15 +246,10 @@ function ResourcesContent() {
 
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5">
           <h4 className="font-bold text-blue-900 mb-3">
-            {lang === "en" ? "About These Resources" : lang === "es" ? "Acerca de Estos Recursos" : "حول هذه الموارد"}
+            {lang === "en" ? "All About Our Team" : lang === "es" ? "Sobre Nuestro Equipo" : "كل شيء عن فريقنا"}
           </h4>
-          <p className="text-sm text-blue-800 leading-relaxed">
-            {lang === "en"
-              ? "These are trusted, professional organizations dedicated to mental health support. All services are confidential and many are available 24/7."
-              : lang === "es"
-                ? "Estas son organizaciones profesionales confiables dedicadas al apoyo de la salud mental. Todos los servicios son confidenciales y muchos están disponibles 24/7."
-                : "هذه منظمات مهنية موثوقة مكرسة لدعم الصحة النفسية. جميع الخدمات سرية والعديد منها متاح على مدار الساعة."}
-          </p>
+
+          <TeamInfo lang={lang} isRTL={isRTL} />
         </div>
       </div>
 

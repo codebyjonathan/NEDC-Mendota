@@ -32,7 +32,7 @@ function MainScreenContent() {
           </Button>
         </Link>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 gap-5 mt-6">
           <Link
             href={`/call-lifeline?lang=${lang}`}
             className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
