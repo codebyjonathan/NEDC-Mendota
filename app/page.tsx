@@ -41,11 +41,11 @@ export default function HomePage() {
           </h1>
         </div>
 
-        <p className="text-3xl font-serif text-gray-800 italic">You're Not Alone.</p>
+        <p className="text-3xl font-serif text-gray-50 italic">You're Not Alone.</p>
 
         <div className="w-64">
           <Select value={selectedLanguage} onValueChange={handleLanguageSelect}>
-            <SelectTrigger className="w-full h-14 bg-gray-800/80 hover:bg-gray-800 text-white border-none rounded-full text-lg font-medium shadow-lg">
+              <SelectTrigger className="w-full h-14 bg-gray-200 hover:bg-gray-300 text-black border-none rounded-full text-lg font-medium shadow-lg">
               <SelectValue placeholder="Languages ▼" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl">
