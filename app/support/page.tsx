@@ -82,7 +82,7 @@ function SupportContent() {
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-10">
           {supportOptions.map((option) => {
             const Icon = option.icon
             return (

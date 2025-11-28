@@ -70,28 +70,28 @@ function MainScreenContent() {
               href={`/breathing?lang=${lang}`}
               className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
             >
-              <Wind className="w-10 h-10 text-gray-700" />
+              <Wind className="w-10 h-10" style={{ color: "#2B7FFF" }}/>
               <span className="text-xs text-center text-gray-900 leading-tight">{t.breathing}</span>
             </Link>
             <Link
               href={`/grounding?lang=${lang}`}
               className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
             >
-              <Sparkles className="w-10 h-10 text-gray-700" />
+              <Sparkles className="w-10 h-10" style={{ color: "#00c950" }}/>
               <span className="text-xs text-center text-gray-900 leading-tight">{t.grounding}</span>
             </Link>
             <Link
               href={`/journal?lang=${lang}`}
               className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
             >
-              <Book className="w-10 h-10 text-gray-700" />
+              <Book className="w-10 h-10" style={{ color: "#fe9a00" }}/>
               <span className="text-xs text-center text-gray-900 leading-tight">{t.journal}</span>
             </Link>
             <Link
               href={`/music?lang=${lang}`}
               className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
             >
-              <Music className="w-10 h-10 text-gray-700" />
+              <Music className="w-10 h-10" style={{ color: "#615fff" }}/>
               <span className="text-xs text-center text-gray-900 leading-tight">{t.music}</span>
             </Link>
           </div>
