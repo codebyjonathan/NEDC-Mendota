@@ -26,16 +26,13 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [chatMessages, loading]);
 
   async function sendMessage() {
     if (!input.trim()) return;
 
     const newMessages: ChatMessage[] = [...chatMessages, { role: "user", content: input.trim() }];
-
     setChatMessages(newMessages);
     setInput("");
     setLoading(true);
@@ -47,7 +44,6 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
       });
 
       const data = await response.json();
-
       setChatMessages([...newMessages, { role: "assistant", content: data.text || "No response from AI." }]);
     } catch {
       setChatMessages((prev) => [
@@ -64,6 +60,27 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   };
 
   const header = useMemo(() => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />, [t]);
+
+  // --- Speech-to-text for chat input ---
+  const handleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput((prev) => prev + (prev ? " " : "") + transcript);
+    };
+
+    recognition.onerror = () => alert("Speech recognition failed. Try again.");
+    recognition.start();
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -101,7 +118,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
               {loading && <div className="mt-2 text-sm italic text-gray-500">Typing…</div>}
             </div>
 
-            <div className="flex items-center gap-2 p-3 border-t bg-white">
+            <div className="flex items-center gap-2 p-3 border-t bg-white relative">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -109,6 +126,12 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                 className="flex-1 rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-gray-400"
                 placeholder="Type your message…"
               />
+              <button
+                onClick={handleVoiceInput}
+                className="absolute right-16 top-1/2 -translate-y-1/2 inline-flex items-center justify-center rounded-full bg-teal-500 p-2 text-white shadow hover:brightness-110"
+              >
+                🎤
+              </button>
               <button
                 onClick={sendMessage}
                 className="inline-flex items-center justify-center rounded-full bg-teal-600 p-3 text-white shadow hover:brightness-110"
@@ -139,7 +162,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                     return;
                   }
                   const recognition = new SpeechRecognition();
-                  recognition.lang = "en-US"; // You can set dynamically based on lang
+                  recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US";
                   recognition.interimResults = false;
                   recognition.maxAlternatives = 1;
 
