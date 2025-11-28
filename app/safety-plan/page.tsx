@@ -18,8 +18,8 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const t = translations[lang];
 
   const [activeTab, setActiveTab] = useState<"ai" | "plan" | "saved">("ai");
-  const [myPlan, setMyPlan] = useState("");
-  const [input, setInput] = useState("");
+  const [myPlan, setMyPlan] = useState<string>("");
+  const [input, setInput] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: t.greeting },
   ]);
@@ -48,9 +48,15 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
       });
       const data = await response.json();
 
-      setChatMessages([...newMessages, { role: "assistant", content: data.text || "No response from AI." }]);
+      setChatMessages([
+        ...newMessages,
+        { role: "assistant", content: data.text || "No response from Safe AI." },
+      ]);
     } catch {
-      setChatMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong. Please try again." }]);
+      setChatMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Something went wrong. Please try again." },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -211,7 +217,7 @@ function ChatBubble({ role, content }: ChatMessage) {
     return (
       <div className="mb-3 flex items-start gap-2">
         <div className="h-8 w-8 shrink-0 rounded-full bg-teal-600 text-white grid place-items-center text-xs font-bold">
-          AI
+          Safe AI
         </div>
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">
           <p className="text-gray-800 text-sm leading-relaxed">{content}</p>
