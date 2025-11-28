@@ -1,81 +1,35 @@
-"use client"
+"use client";
 
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
-import { Heart, Sun, Moon, Utensils, Activity, Users, Smile } from "lucide-react"
-import Link from "next/link"
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
-import { translations, type Language } from "@/lib/translations"
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { Heart, Sun, Moon, Utensils, Activity, Users, Smile } from "lucide-react";
+import Link from "next/link";
+import { AppHeader } from "@/components/app-header";
+import { BottomNav } from "@/components/bottom-nav";
+import { translations, type Language } from "@/lib/translations";
 
 function WellnessContent() {
-  const searchParams = useSearchParams()
-  const langParam = searchParams.get("lang") || "en"
-  const lang: Language = langParam === "en" || langParam === "es" || langParam === "ar" ? langParam : "en"
-  const t = translations[lang]
-  const isRTL = lang === "ar"
+  const searchParams = useSearchParams();
+  const langParam = searchParams.get("lang") || "en";
+  const lang: Language = langParam === "en" || langParam === "es" || langParam === "ar" ? langParam : "en";
+  const t = translations[lang];
+  const isRTL = lang === "ar";
 
   const wellnessTips = [
-    {
-      title: t.sleepRoutine,
-      description: t.sleepRoutineDescription,
-      icon: Moon,
-      color: "bg-indigo-500",
-    },
-    {
-      title: t.healthyEating,
-      description: t.healthyEatingDescription,
-      icon: Utensils,
-      color: "bg-green-500",
-    },
-    {
-      title: t.physicalActivity,
-      description: t.physicalActivityDescription,
-      icon: Activity,
-      color: "bg-orange-500",
-    },
-    {
-      title: t.socialConnection,
-      description: t.socialConnectionDescription,
-      icon: Users,
-      color: "bg-pink-500",
-    },
-    {
-      title: t.sunlightAndFreshAir,
-      description: t.sunlightAndFreshAirDescription,
-      icon: Sun,
-      color: "bg-yellow-500",
-    },
-    {
-      title: t.selfCompassion,
-      description: t.selfCompassionDescription,
-      icon: Smile,
-      color: "bg-purple-500",
-    },
-  ]
+    { title: t.sleepRoutine, description: t.sleepRoutineDescription, icon: Moon, color: "bg-indigo-500" },
+    { title: t.healthyEating, description: t.healthyEatingDescription, icon: Utensils, color: "bg-green-500" },
+    { title: t.physicalActivity, description: t.physicalActivityDescription, icon: Activity, color: "bg-orange-500" },
+    { title: t.socialConnection, description: t.socialConnectionDescription, icon: Users, color: "bg-pink-500" },
+    { title: t.sunlightAndFreshAir, description: t.sunlightAndFreshAirDescription, icon: Sun, color: "bg-yellow-500" },
+    { title: t.selfCompassion, description: t.selfCompassionDescription, icon: Smile, color: "bg-purple-500" },
+  ];
 
   const quickActivities = [
-    {
-      title: t.takeAWalk,
-      duration: t.takeAWalkDuration,
-      link: 'https://www.youtube.com/watch?v=ShG6kISrHoU',
-    },
-    {
-      title: t.listenToMusic,
-      duration: t.listenToMusicDuration,
-      link: `/music?lang=${lang}`,
-    },
-    {
-      title: t.breathingExercise,
-      duration: t.breathingExerciseDuration,
-      link: `/breathing?lang=${lang}`,
-    },
-    {
-      title: t.journal,
-      duration: t.journalDuration,
-      link: `/journal?lang=${lang}`,
-    },
-  ]
+    { title: t.takeAWalk, duration: t.takeAWalkDuration, link: "https://www.youtube.com/watch?v=ShG6kISrHoU" },
+    { title: t.listenToMusic, duration: t.listenToMusicDuration, link: `/music?lang=${lang}` },
+    { title: t.breathingExercise, duration: t.breathingExerciseDuration, link: `/breathing?lang=${lang}` },
+    { title: t.journal, duration: t.journalDuration, link: `/journal?lang=${lang}` },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-rose-50 flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
@@ -92,7 +46,7 @@ function WellnessContent() {
           <h3 className="text-lg font-bold text-gray-900">{t.dailyWellnessHabits}</h3>
           <div className="grid gap-3">
             {wellnessTips.map((tip) => {
-              const Icon = tip.icon
+              const Icon = tip.icon;
               return (
                 <div key={tip.title} className="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4">
                   <div className={`${tip.color} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
@@ -103,7 +57,7 @@ function WellnessContent() {
                     <p className="text-xs text-gray-600 mt-1">{tip.description}</p>
                   </div>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
@@ -111,14 +65,28 @@ function WellnessContent() {
         <div className="space-y-3">
           <h3 className="text-lg font-bold text-gray-900">{t.quickActivities}</h3>
           <div className="grid grid-cols-2 gap-3">
-            {quickActivities.map((activity) => (
-              <Link key={activity.title} href={activity.link || "#"}>
-                <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow h-full">
+            {quickActivities.map((activity) => {
+              const isExternal = activity.link?.startsWith("http");
+              return isExternal ? (
+                <a
+                  key={activity.title}
+                  href={activity.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow h-full block"
+                >
                   <h4 className="text-sm font-bold text-gray-900 mb-2">{activity.title}</h4>
                   <p className="text-xs text-gray-600">{activity.duration}</p>
-                </div>
-              </Link>
-            ))}
+                </a>
+              ) : (
+                <Link key={activity.title} href={activity.link || "#"}>
+                  <div className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow h-full">
+                    <h4 className="text-sm font-bold text-gray-900 mb-2">{activity.title}</h4>
+                    <p className="text-xs text-gray-600">{activity.duration}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
@@ -130,7 +98,7 @@ function WellnessContent() {
 
       <BottomNav lang={lang} />
     </div>
-  )
+  );
 }
 
 export default function WellnessPage() {
@@ -144,5 +112,5 @@ export default function WellnessPage() {
     >
       <WellnessContent />
     </Suspense>
-  )
+  );
 }

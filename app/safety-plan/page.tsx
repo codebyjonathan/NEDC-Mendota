@@ -3,10 +3,9 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { translations, type Language } from "@/lib/translations";
-import { Shield, Sparkles, Send, Save } from "lucide-react";
+import { Shield, Sparkles, Send, Save, Download } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { BottomNav } from "@/components/bottom-nav";
-import Link from "next/link";
 
 // --- Types ---
 type ChatRole = "user" | "assistant";
@@ -17,14 +16,11 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const lang = (searchParams.get("lang") || _lang || "en") as Language;
   const t = translations[lang];
 
-  const [activeTab, setActiveTab] = useState<"ai" | "plan">("ai");
+  const [activeTab, setActiveTab] = useState<"ai" | "plan" | "saved">("ai");
   const [myPlan, setMyPlan] = useState("");
   const [input, setInput] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: t.greeting,
-    },
+    { role: "assistant", content: t.greeting },
   ]);
   const [loading, setLoading] = useState(false);
 
@@ -55,12 +51,11 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
       const data = await response.json();
 
-      const updated: ChatMessage[] = [
+      setChatMessages([
         ...newMessages,
         { role: "assistant", content: data.text || "No response from AI." },
-      ];
-      setChatMessages(updated);
-    } catch (err) {
+      ]);
+    } catch {
       setChatMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Something went wrong. Please try again." },
@@ -70,10 +65,11 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     }
   }
 
-  const header = useMemo(
-    () => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />, 
-    [t]
-  );
+  const handleSavePlan = () => {
+    if (myPlan.trim()) setActiveTab("saved");
+  };
+
+  const header = useMemo(() => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />, [t]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -85,9 +81,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
           <button
             onClick={() => setActiveTab("ai")}
             className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${
-              activeTab === "ai"
-                ? "bg-teal-600 text-white shadow"
-                : "text-gray-700 hover:bg-gray-50"
+              activeTab === "ai" ? "bg-teal-600 text-white shadow" : "text-gray-700 hover:bg-gray-50"
             }`}
           >
             <Sparkles className="h-4 w-4" />
@@ -96,9 +90,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
           <button
             onClick={() => setActiveTab("plan")}
             className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-              activeTab === "plan"
-                ? "bg-teal-600 text-white shadow"
-                : "text-gray-700 hover:bg-gray-50"
+              activeTab === "plan" ? "bg-teal-600 text-white shadow" : "text-gray-700 hover:bg-gray-50"
             }`}
           >
             {t.safetyPlan}
@@ -108,16 +100,11 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
         {/* Chat Area */}
         {activeTab === "ai" && (
           <div className="flex-1 flex flex-col rounded-3xl border bg-gray-50 overflow-hidden">
-            <div
-              ref={scrollRef}
-              className="flex-1 overflow-y-auto bg-white p-4"
-            >
+            <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white p-4">
               {chatMessages.map((m, i) => (
                 <ChatBubble key={i} role={m.role} content={m.content} />
               ))}
-              {loading && (
-                <div className="mt-2 text-sm italic text-gray-500">Typing…</div>
-              )}
+              {loading && <div className="mt-2 text-sm italic text-gray-500">Typing…</div>}
             </div>
 
             <div className="flex items-center gap-2 p-3 border-t bg-white">
@@ -150,17 +137,42 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
               className="flex-1 w-full resize-none rounded-2xl border px-4 py-3 text-sm placeholder:text-gray-400"
               placeholder="Write your safety plan here…"
             />
-            <div className="mt-3 flex justify-between items-center">
-              <Link href="/">
-                <button className="inline-flex items-center gap-2 rounded-2xl bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow hover:brightness-110">
-                  Home
-                </button>
-              </Link>
-              <button className="inline-flex items-center gap-2 rounded-2xl bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow hover:brightness-110">
+            <div className="mt-3 flex justify-end items-center">
+              <button
+                onClick={handleSavePlan}
+                className="inline-flex items-center gap-2 rounded-2xl bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow hover:brightness-110"
+              >
                 <Save className="h-4 w-4" />
                 Save Plan
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Saved Plan */}
+        {activeTab === "saved" && (
+          <div className="flex-1 flex flex-col rounded-3xl border bg-white p-4 overflow-hidden">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Your Saved Plan
+            </label>
+            <div className="flex-1 overflow-y-auto rounded-2xl border p-4 bg-gray-50 text-gray-800 whitespace-pre-wrap">
+              {myPlan || "No plan saved yet."}
+            </div>
+            {myPlan && (
+              <button
+                onClick={() => {
+                  const blob = new Blob([myPlan], { type: "text/plain;charset=utf-8" });
+                  const link = document.createElement("a");
+                  link.href = URL.createObjectURL(blob);
+                  link.download = "safety-plan.txt";
+                  link.click();
+                }}
+                className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow hover:brightness-110"
+              >
+                <Download className="h-4 w-4" />
+                Download Plan
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -187,9 +199,7 @@ function ChatBubble({ role, content }: ChatMessage) {
 
   return (
     <div className="mb-3 flex items-end justify-end gap-2">
-      <div className="max-w-[85%] rounded-2xl bg-teal-600 p-3 text-sm text-white shadow-sm">
-        {content}
-      </div>
+      <div className="max-w-[85%] rounded-2xl bg-teal-600 p-3 text-sm text-white shadow-sm">{content}</div>
       <div className="h-8 w-8 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center text-xs font-bold">
         U
       </div>
