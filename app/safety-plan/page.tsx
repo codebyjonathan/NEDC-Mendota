@@ -3,12 +3,12 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { translations, type Language } from "@/lib/translations";
-import { Shield, Sparkles, Send, Save, Download } from "lucide-react";
+import { Sparkles, Send, Save, Download } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { BottomNav } from "@/components/bottom-nav";
 import jsPDF from "jspdf";
+import { Bot } from "lucide-react";
 
-// --- Types ---
 type ChatRole = "user" | "assistant";
 type ChatMessage = { role: ChatRole; content: string };
 
@@ -25,15 +25,61 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   ]);
   const [loading, setLoading] = useState(false);
 
+  const [listeningAI, setListeningAI] = useState(false);
+  const [listeningPlan, setListeningPlan] = useState(false);
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [chatMessages, loading]);
 
-  // --- Send AI Chat Message ---
-  async function sendMessage() {
+  // --- Speech Recognition ---
+  const startSpeechRecognition = (
+    setter: (text: string) => void,
+    micType: "ai" | "plan"
+  ) => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang =
+      lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    // Start
+    recognition.onstart = () => {
+      micType === "ai" ? setListeningAI(true) : setListeningPlan(true);
+    };
+    recognition.onend = () => {
+      micType === "ai" ? setListeningAI(false) : setListeningPlan(false);
+    };
+    recognition.onerror = () => {
+      micType === "ai" ? setListeningAI(false) : setListeningPlan(false);
+      alert("Speech recognition failed. Try again.");
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const [input, setInput] = useState<string>("");
+      const [myPlan, setMyPlan] = useState<string>("");
+
+      // When updating with voice:
+      setInput((prev: string) => (prev ? prev + " " : "") + transcript);
+      setMyPlan((prev: string) => (prev ? prev + " " : "") + transcript);
+    };
+
+    recognition.start();
+  };
+
+  // --- Send AI Chat ---
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
     const newMessages: ChatMessage[] = [...chatMessages, { role: "user", content: input.trim() }];
@@ -42,12 +88,11 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/safety-chat", {
+      const res = await fetch("/api/safety-chat", {
         method: "POST",
         body: JSON.stringify({ messages: newMessages }),
       });
-      const data = await response.json();
-
+      const data = await res.json();
       setChatMessages([
         ...newMessages,
         { role: "assistant", content: data.text || "No response from Safe AI." },
@@ -60,34 +105,16 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleSavePlan = () => {
     if (myPlan.trim()) setActiveTab("saved");
   };
 
-  const header = useMemo(() => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />, [t]);
-
-  // --- Speech Recognition Helper ---
-  const startSpeechRecognition = (setter: (text: string) => void) => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-    const recognition = new SpeechRecognition();
-    recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setMyPlan((prev: string) => prev + (prev ? " " : "") + transcript);
-    };
-
-    recognition.onerror = () => alert("Speech recognition failed. Try again.");
-    recognition.start();
-  };
+  const header = useMemo(
+    () => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />,
+    [t]
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -115,7 +142,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
           </button>
         </div>
 
-        {/* Chat Area */}
+        {/* AI Chat */}
         {activeTab === "ai" && (
           <div className="flex-1 flex flex-col rounded-3xl border bg-gray-50 overflow-hidden">
             <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white p-4">
@@ -133,12 +160,20 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                 className="flex-1 rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-gray-400"
                 placeholder="Type your message…"
               />
-              <button
-                onClick={() => startSpeechRecognition(setInput)}
-                className="inline-flex items-center justify-center rounded-full bg-teal-600 p-3 text-white shadow hover:brightness-110"
-              >
-                🎤
-              </button>
+
+              {/* Mic AI */}
+              <div className="flex items-center gap-2">
+                {listeningAI && <span className="text-sm text-teal-600 font-medium">Listening…</span>}
+                <button
+                  onClick={() => startSpeechRecognition(setInput, "ai")}
+                  className={`inline-flex items-center justify-center rounded-full bg-teal-600 p-3 text-white shadow hover:brightness-110 ${
+                    listeningAI ? "animate-ping-slow" : ""
+                  }`}
+                >
+                  🎤
+                </button>
+              </div>
+
               <button
                 onClick={sendMessage}
                 className="inline-flex items-center justify-center rounded-full bg-teal-600 p-3 text-white shadow hover:brightness-110"
@@ -149,10 +184,13 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
           </div>
         )}
 
-        {/* Plan Composer */}
+        {/* Safety Plan */}
         {activeTab === "plan" && (
           <div className="flex-1 flex flex-col rounded-3xl border bg-white p-4 overflow-hidden">
-            <label className="mb-2 block text-sm font-medium text-gray-700">Type your plan…</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Type your plan…
+            </label>
+
             <div className="relative flex items-center">
               <textarea
                 value={myPlan}
@@ -160,13 +198,19 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                 className="flex-1 w-full resize-none rounded-2xl border px-4 py-3 text-sm placeholder:text-gray-400"
                 placeholder="Write your safety plan here…"
               />
-              <button
-                onClick={() => startSpeechRecognition(setMyPlan)}
-                className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full bg-teal-600 p-2 text-white shadow hover:brightness-110"
-              >
-                🎤
-              </button>
+              <div className="absolute right-3 top-3 flex items-center gap-2">
+                {listeningPlan && <span className="text-xs text-teal-600 font-medium">Listening…</span>}
+                <button
+                  onClick={() => startSpeechRecognition(setMyPlan, "plan")}
+                  className={`inline-flex items-center justify-center rounded-full bg-teal-600 p-2 text-white shadow hover:brightness-110 ${
+                    listeningPlan ? "animate-ping-slow" : ""
+                  }`}
+                >
+                  🎤
+                </button>
+              </div>
             </div>
+
             <div className="mt-3 flex justify-end items-center">
               <button
                 onClick={handleSavePlan}
@@ -211,16 +255,18 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   );
 }
 
-// --- UI helpers ---
+// Chat bubble
 function ChatBubble({ role, content }: ChatMessage) {
   if (role === "assistant") {
     return (
       <div className="mb-3 flex items-start gap-2">
-      <div className="h-10 min-w-[60px] rounded-full bg-teal-600 text-white grid place-items-center text-sm font-bold px-2">
-          Safe AI
-        </div>
+         <div className="flex items-center gap-1 text-teal-700 font-semibold text-sm">
+           <Bot className="h-4 w-4" />
+           <span>Safe AI</span>
+         </div>
+
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">
-          <p className="text-gray-800 text-sm leading-relaxed">{content}</p>
+         <p className="text-gray-800 text-sm leading-relaxed">{content}</p>
         </div>
       </div>
     );
@@ -229,9 +275,7 @@ function ChatBubble({ role, content }: ChatMessage) {
   return (
     <div className="mb-3 flex items-end justify-end gap-2">
       <div className="max-w-[85%] rounded-2xl bg-teal-600 p-3 text-sm text-white shadow-sm">{content}</div>
-      <div className="h-8 w-8 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center text-xs font-bold">
-        U
-      </div>
+      <div className="h-8 w-8 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center text-xs font-bold">U</div>
     </div>
   );
 }
