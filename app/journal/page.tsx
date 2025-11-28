@@ -146,29 +146,33 @@ function JournalContent() {
                 {lang === "en" ? "What's on your mind?" : lang === "es" ? "¿Qué tienes en mente?" : "ما الذي يدور في ذهنك؟"}
               </label>
               <textarea
-                value={currentEntry}
-                onChange={(e) => setCurrentEntry(e.target.value)}
-                placeholder={
-                  lang === "en"
-                    ? "Write your thoughts here..."
-                    : lang === "es"
-                    ? "Escribe tus pensamientos aquí..."
-                    : "اكتب أفكارك هنا..."
-                }
-                className="w-full h-52 p-5 border-2 border-gray-200 rounded-2xl resize-none focus:border-amber-500 focus:outline-none text-base"
+                 value={currentEntry}
+                  onChange={(e) => setCurrentEntry(e.target.value)}
+              placeholder={
+                 lang === "en"
+                   ? "Write your thoughts here..."
+                   : lang === "es"
+                   ? "Escribe tus pensamientos aquí..."
+                   : "اكتب أفكارك هنا..."
+                  }
+              className="w-full h-52 p-5 border-2 border-gray-200 rounded-2xl resize-none focus:border-amber-500 focus:outline-none text-base"
               />
-              <div className="absolute right-4 top-4 flex items-center gap-2">
-                {listening && <span className="text-sm text-amber-600 font-medium animate-pulse">Listening… 🎤</span>}
-                <button
-                  onClick={handleVoiceInput}
-                  className={`inline-flex items-center justify-center rounded-full bg-amber-500 p-3 text-white shadow hover:brightness-110 ${
-                    listening ? "animate-ping-slow" : ""
-                  }`}
-                >
-                  🎤
-                </button>
-              </div>
-            </div>
+            <div className="absolute right-4 flex flex-col items-center top-0 -translate-y-6">
+              {listening && (
+                <span className="text-sm text-amber-600 font-medium animate-pulse mb-1">
+                Listening… 🎤
+              </span>
+            )}
+    <button
+      onClick={handleVoiceInput}
+      className={`inline-flex items-center justify-center rounded-full bg-amber-500 p-3 text-white shadow hover:brightness-110 ${
+        listening ? "animate-ping-slow" : ""
+      }`}
+    >
+      🎤
+    </button>
+  </div>
+</div>
 
             <Button
               onClick={saveEntry}
