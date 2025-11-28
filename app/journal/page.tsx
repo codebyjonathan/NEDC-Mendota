@@ -25,6 +25,7 @@ function JournalContent() {
   const [currentEntry, setCurrentEntry] = useState("");
   const [selectedMood, setSelectedMood] = useState<string>("");
   const [viewMode, setViewMode] = useState<"write" | "read">("write");
+  const [listening, setListening] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("journalEntries");
@@ -61,23 +62,31 @@ function JournalContent() {
     { emoji: "😡", label: lang === "en" ? "Angry" : lang === "es" ? "Enojado" : "غاضب" },
   ];
 
+  // --- Voice Input with Listening State ---
   const handleVoiceInput = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Speech recognition is not supported in this browser.");
       return;
     }
+
     const recognition = new SpeechRecognition();
     recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setListening(true);
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => {
+      setListening(false);
+      alert("Speech recognition failed. Try again.");
+    };
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
       setCurrentEntry((prev) => prev + (prev ? " " : "") + transcript);
     };
 
-    recognition.onerror = () => alert("Speech recognition failed. Try again.");
     recognition.start();
   };
 
@@ -134,11 +143,7 @@ function JournalContent() {
 
             <div className="relative">
               <label className="block text-base font-semibold text-gray-900 mb-3">
-                {lang === "en"
-                  ? "What's on your mind?"
-                  : lang === "es"
-                  ? "¿Qué tienes en mente?"
-                  : "ما الذي يدور في ذهنك؟"}
+                {lang === "en" ? "What's on your mind?" : lang === "es" ? "¿Qué tienes en mente?" : "ما الذي يدور في ذهنك؟"}
               </label>
               <textarea
                 value={currentEntry}
@@ -152,12 +157,17 @@ function JournalContent() {
                 }
                 className="w-full h-52 p-5 border-2 border-gray-200 rounded-2xl resize-none focus:border-amber-500 focus:outline-none text-base"
               />
-              <button
-                onClick={handleVoiceInput}
-                className="absolute right-4 top-4 inline-flex items-center justify-center rounded-full bg-amber-500 p-3 text-white shadow hover:brightness-110"
-              >
-                🎤
-              </button>
+              <div className="absolute right-4 top-4 flex items-center gap-2">
+                {listening && <span className="text-sm text-amber-600 font-medium animate-pulse">Listening… 🎤</span>}
+                <button
+                  onClick={handleVoiceInput}
+                  className={`inline-flex items-center justify-center rounded-full bg-amber-500 p-3 text-white shadow hover:brightness-110 ${
+                    listening ? "animate-ping-slow" : ""
+                  }`}
+                >
+                  🎤
+                </button>
+              </div>
             </div>
 
             <Button
