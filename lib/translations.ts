@@ -1,7 +1,7 @@
 export const translations = {
   en: {
     appTitle: "Student Suicide Prevention (S.S.P.)",
-    appSubtitle: "You're Not Alone.",
+    appSubtitle: "You're not alone!",
     greeting: "Hi, how are you feeling today?",
     getSupport: "Get Support Now",
     callLifeline: "Call LifeLine",
@@ -62,7 +62,7 @@ export const translations = {
   },
   es: {
     appTitle: "Prevención del Suicidio Estudiantil (S.S.P.)",
-    appSubtitle: "No Estás Solo.",
+    appSubtitle: "¡No estás solo!",
     greeting: "Hola, ¿cómo te sientes hoy?",
     getSupport: "Obtener Apoyo Ahora",
     callLifeline: "Llamar a LifeLine",
