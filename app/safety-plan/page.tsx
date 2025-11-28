@@ -216,7 +216,7 @@ function ChatBubble({ role, content }: ChatMessage) {
   if (role === "assistant") {
     return (
       <div className="mb-3 flex items-start gap-2">
-        <div className="h-8 w-8 shrink-0 rounded-full bg-teal-600 text-white grid place-items-center text-xs font-bold">
+      <div className="h-10 min-w-[60px] rounded-full bg-teal-600 text-white grid place-items-center text-sm font-bold px-2">
           Safe AI
         </div>
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">
