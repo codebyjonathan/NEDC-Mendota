@@ -1,61 +1,57 @@
-"use client"
+"use client";
 
-import { useSearchParams } from "next/navigation"
-import { Suspense, useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { BookOpen, Save, Trash2, Plus } from "lucide-react"
-import { AppHeader } from "@/components/app-header"
-import { BottomNav } from "@/components/bottom-nav"
-import { translations } from "@/lib/translations"
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { BookOpen, Save, Trash2, Plus } from "lucide-react";
+import { AppHeader } from "@/components/app-header";
+import { BottomNav } from "@/components/bottom-nav";
+import { translations } from "@/lib/translations";
 
 interface JournalEntry {
-  id: string
-  date: string
-  content: string
-  mood?: string
+  id: string;
+  date: string;
+  content: string;
+  mood?: string;
 }
 
 function JournalContent() {
-  const searchParams = useSearchParams()
-  const lang = (searchParams.get("lang") || "en") as keyof typeof translations
-  const t = translations[lang]
-  const isRTL = lang === "ar"
+  const searchParams = useSearchParams();
+  const lang = (searchParams.get("lang") || "en") as keyof typeof translations;
+  const t = translations[lang];
+  const isRTL = lang === "ar";
 
-  const [entries, setEntries] = useState<JournalEntry[]>([])
-  const [currentEntry, setCurrentEntry] = useState("")
-  const [selectedMood, setSelectedMood] = useState<string>("")
-  const [viewMode, setViewMode] = useState<"write" | "read">("write")
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [currentEntry, setCurrentEntry] = useState("");
+  const [selectedMood, setSelectedMood] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"write" | "read">("write");
 
   useEffect(() => {
-    const saved = localStorage.getItem("journalEntries")
-    if (saved) {
-      setEntries(JSON.parse(saved))
-    }
-  }, [])
+    const saved = localStorage.getItem("journalEntries");
+    if (saved) setEntries(JSON.parse(saved));
+  }, []);
 
   const saveEntry = () => {
-    if (!currentEntry.trim()) return
-
+    if (!currentEntry.trim()) return;
     const newEntry: JournalEntry = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
       content: currentEntry,
       mood: selectedMood,
-    }
-
-    const updatedEntries = [newEntry, ...entries]
-    setEntries(updatedEntries)
-    localStorage.setItem("journalEntries", JSON.stringify(updatedEntries))
-    setCurrentEntry("")
-    setSelectedMood("")
-    setViewMode("read")
-  }
+    };
+    const updatedEntries = [newEntry, ...entries];
+    setEntries(updatedEntries);
+    localStorage.setItem("journalEntries", JSON.stringify(updatedEntries));
+    setCurrentEntry("");
+    setSelectedMood("");
+    setViewMode("read");
+  };
 
   const deleteEntry = (id: string) => {
-    const updatedEntries = entries.filter((e) => e.id !== id)
-    setEntries(updatedEntries)
-    localStorage.setItem("journalEntries", JSON.stringify(updatedEntries))
-  }
+    const updatedEntries = entries.filter((e) => e.id !== id);
+    setEntries(updatedEntries);
+    localStorage.setItem("journalEntries", JSON.stringify(updatedEntries));
+  };
 
   const moods = [
     { emoji: "😊", label: lang === "en" ? "Happy" : lang === "es" ? "Feliz" : "سعيد" },
@@ -63,7 +59,27 @@ function JournalContent() {
     { emoji: "😰", label: lang === "en" ? "Anxious" : lang === "es" ? "Ansioso" : "قلق" },
     { emoji: "😌", label: lang === "en" ? "Calm" : lang === "es" ? "Tranquilo" : "هادئ" },
     { emoji: "😡", label: lang === "en" ? "Angry" : lang === "es" ? "Enojado" : "غاضب" },
-  ]
+  ];
+
+  const handleVoiceInput = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setCurrentEntry((prev) => prev + (prev ? " " : "") + transcript);
+    };
+
+    recognition.onerror = () => alert("Speech recognition failed. Try again.");
+    recognition.start();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-50 flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
@@ -116,13 +132,13 @@ function JournalContent() {
               </div>
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-base font-semibold text-gray-900 mb-3">
                 {lang === "en"
                   ? "What's on your mind?"
                   : lang === "es"
-                    ? "¿Qué tienes en mente?"
-                    : "ما الذي يدور في ذهنك؟"}
+                  ? "¿Qué tienes en mente?"
+                  : "ما الذي يدور في ذهنك؟"}
               </label>
               <textarea
                 value={currentEntry}
@@ -131,11 +147,17 @@ function JournalContent() {
                   lang === "en"
                     ? "Write your thoughts here..."
                     : lang === "es"
-                      ? "Escribe tus pensamientos aquí..."
-                      : "اكتب أفكارك هنا..."
+                    ? "Escribe tus pensamientos aquí..."
+                    : "اكتب أفكارك هنا..."
                 }
                 className="w-full h-52 p-5 border-2 border-gray-200 rounded-2xl resize-none focus:border-amber-500 focus:outline-none text-base"
               />
+              <button
+                onClick={handleVoiceInput}
+                className="absolute right-4 top-4 inline-flex items-center justify-center rounded-full bg-amber-500 p-3 text-white shadow hover:brightness-110"
+              >
+                🎤
+              </button>
             </div>
 
             <Button
@@ -156,8 +178,8 @@ function JournalContent() {
                 {lang === "en"
                   ? "No journal entries yet. Start writing!"
                   : lang === "es"
-                    ? "Aún no hay entradas de diario. ¡Comienza a escribir!"
-                    : "لا توجد إدخالات في اليومية حتى الآن. ابدأ الكتابة!"}
+                  ? "Aún no hay entradas de diario. ¡Comienza a escribir!"
+                  : "لا توجد إدخالات في اليومية حتى الآن. ابدأ الكتابة!"}
               </div>
             ) : (
               entries.map((entry) => (
@@ -185,7 +207,7 @@ function JournalContent() {
 
       <BottomNav lang={lang} />
     </div>
-  )
+  );
 }
 
 export default function JournalPage() {
@@ -199,5 +221,5 @@ export default function JournalPage() {
     >
       <JournalContent />
     </Suspense>
-  )
+  );
 }

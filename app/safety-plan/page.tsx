@@ -34,10 +34,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   async function sendMessage() {
     if (!input.trim()) return;
 
-    const newMessages: ChatMessage[] = [
-      ...chatMessages,
-      { role: "user", content: input.trim() },
-    ];
+    const newMessages: ChatMessage[] = [...chatMessages, { role: "user", content: input.trim() }];
 
     setChatMessages(newMessages);
     setInput("");
@@ -51,10 +48,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
       const data = await response.json();
 
-      setChatMessages([
-        ...newMessages,
-        { role: "assistant", content: data.text || "No response from AI." },
-      ]);
+      setChatMessages([...newMessages, { role: "assistant", content: data.text || "No response from AI." }]);
     } catch {
       setChatMessages((prev) => [
         ...prev,
@@ -128,15 +122,40 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
         {/* Plan Composer */}
         {activeTab === "plan" && (
           <div className="flex-1 flex flex-col rounded-3xl border bg-white p-4 overflow-hidden">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Type your plan…
-            </label>
-            <textarea
-              value={myPlan}
-              onChange={(e) => setMyPlan(e.target.value)}
-              className="flex-1 w-full resize-none rounded-2xl border px-4 py-3 text-sm placeholder:text-gray-400"
-              placeholder="Write your safety plan here…"
-            />
+            <label className="mb-2 block text-sm font-medium text-gray-700">Type your plan…</label>
+            <div className="relative flex items-center">
+              <textarea
+                value={myPlan}
+                onChange={(e) => setMyPlan(e.target.value)}
+                className="flex-1 w-full resize-none rounded-2xl border px-4 py-3 text-sm placeholder:text-gray-400"
+                placeholder="Write your safety plan here…"
+              />
+              <button
+                onClick={() => {
+                  const SpeechRecognition =
+                    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                  if (!SpeechRecognition) {
+                    alert("Speech recognition is not supported in this browser.");
+                    return;
+                  }
+                  const recognition = new SpeechRecognition();
+                  recognition.lang = "en-US"; // You can set dynamically based on lang
+                  recognition.interimResults = false;
+                  recognition.maxAlternatives = 1;
+
+                  recognition.onresult = (event: any) => {
+                    const transcript = event.results[0][0].transcript;
+                    setMyPlan((prev) => prev + (prev ? " " : "") + transcript);
+                  };
+
+                  recognition.onerror = () => alert("Speech recognition failed. Try again.");
+                  recognition.start();
+                }}
+                className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full bg-teal-600 p-2 text-white shadow hover:brightness-110"
+              >
+                🎤
+              </button>
+            </div>
             <div className="mt-3 flex justify-end items-center">
               <button
                 onClick={handleSavePlan}
@@ -152,9 +171,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
         {/* Saved Plan */}
         {activeTab === "saved" && (
           <div className="flex-1 flex flex-col rounded-3xl border bg-white p-4 overflow-hidden">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Your Saved Plan
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">Your Saved Plan</label>
             <div className="flex-1 overflow-y-auto rounded-2xl border p-4 bg-gray-50 text-gray-800 whitespace-pre-wrap">
               {myPlan || "No plan saved yet."}
             </div>
