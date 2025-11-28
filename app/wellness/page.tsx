@@ -58,6 +58,7 @@ function WellnessContent() {
     {
       title: t.takeAWalk,
       duration: t.takeAWalkDuration,
+      link: 'https://www.youtube.com/watch?v=ShG6kISrHoU',
     },
     {
       title: t.listenToMusic,

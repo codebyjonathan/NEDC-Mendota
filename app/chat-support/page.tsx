@@ -83,7 +83,7 @@ function ChatSupportContent() {
 
         <div className="space-y-4">
           {chatServices.map((service) => (
-            <div key={service.name} className="bg-white rounded-2xl p-5 shadow-md">
+              <div key={service.name} className={`rounded-2xl p-5 shadow-md ${service.color}`}>
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{service.name}</h3>
