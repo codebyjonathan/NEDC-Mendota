@@ -28,6 +28,7 @@ function ChatSupportContent() {
             : "دردش مع مستشاري الأزمات المدربين",
       url: CONFIG.CRISIS_CHAT,
       available: "24/7",
+      color: "bg-[#2B7FFF] text-white", 
     },
     {
       name: "Crisis Text Line",
@@ -39,6 +40,7 @@ function ChatSupportContent() {
             : "دعم الدردشة على الويب",
       url: "https://www.crisistextline.org/",
       available: "24/7",
+      color: "bg-[#ad46ff] text-white", 
     },
     {
       name: "The Trevor Project",
@@ -50,6 +52,7 @@ function ChatSupportContent() {
             : "دعم أزمات الشباب LGBTQ+",
       url: CONFIG.TREVOR_CHAT,
       available: "24/7",
+      color: "bg-[#f6339a] text-white", 
     },
   ]
 
