@@ -82,7 +82,7 @@ function SupportContent() {
           </p>
         </div>
 
-        <div className="space-y-10">
+        <div className="flex flex-col gap-6">
           {supportOptions.map((option) => {
             const Icon = option.icon
             return (
