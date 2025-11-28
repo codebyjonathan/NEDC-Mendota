@@ -204,7 +204,7 @@ function ResourcesContent() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h3 className="text-lg font-bold text-gray-900">
             {lang === "en" ? "Educational Materials" : lang === "es" ? "Materiales Educativos" : "المواد التعليمية"}
           </h3>
