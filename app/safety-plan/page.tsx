@@ -204,7 +204,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                   const blob = new Blob([myPlan], { type: "text/plain;charset=utf-8" });
                   const link = document.createElement("a");
                   link.href = URL.createObjectURL(blob);
-                  link.download = "safety-plan.txt";
+                  link.download = "safety-plan.pdf";
                   link.click();
                 }}
                 className="mt-4 inline-flex items-center gap-2 rounded-2xl bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow hover:brightness-110"
