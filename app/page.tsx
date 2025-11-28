@@ -41,7 +41,7 @@ export default function HomePage() {
           </h1>
         </div>
 
-        <p className="text-3xl font-serif text-gray-100 italic">You're Not Alone.</p>
+        <p className="text-3xl font-serif text-gray-100 italic">You're Not Alone!</p>
 
         <div className="w-64">
           <Select value={selectedLanguage} onValueChange={handleLanguageSelect}>
