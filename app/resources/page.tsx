@@ -168,7 +168,7 @@ function ResourcesContent() {
                 ? "Organizaciones de Apoyo en Crisis"
                 : "منظمات دعم الأزمات"}
           </h3>
-          <div className="space-y-6">
+          <div className="space-y-10">
             {resources.map((resource) => {
               const Icon = resource.icon
               const isLink = !!resource.url && resource.url.length > 0
