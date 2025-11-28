@@ -4,10 +4,10 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { translations, type Language } from "@/lib/translations";
 import { Sparkles, Send, Save, Download } from "lucide-react";
+import { Bot } from "lucide-react"; // ✅ Imported Bot icon
 import { AppHeader } from "@/components/app-header";
 import { BottomNav } from "@/components/bottom-nav";
 import jsPDF from "jspdf";
-import { Bot } from "lucide-react";
 
 type ChatRole = "user" | "assistant";
 type ChatMessage = { role: ChatRole; content: string };
@@ -35,7 +35,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
   // --- Speech Recognition ---
   const startSpeechRecognition = (
-    setter: (text: string) => void,
+    setter: React.Dispatch<React.SetStateAction<string>>,
     micType: "ai" | "plan"
   ) => {
     const SpeechRecognition =
@@ -53,7 +53,6 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    // Start
     recognition.onstart = () => {
       micType === "ai" ? setListeningAI(true) : setListeningPlan(true);
     };
@@ -67,12 +66,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
-      const [input, setInput] = useState<string>("");
-      const [myPlan, setMyPlan] = useState<string>("");
-
-      // When updating with voice:
-      setInput((prev: string) => (prev ? prev + " " : "") + transcript);
-      setMyPlan((prev: string) => (prev ? prev + " " : "") + transcript);
+      setter((prev) => (prev ? prev + " " : "") + transcript);
     };
 
     recognition.start();
@@ -111,10 +105,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     if (myPlan.trim()) setActiveTab("saved");
   };
 
-  const header = useMemo(
-    () => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />,
-    [t]
-  );
+  const header = useMemo(() => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />, [t]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -163,7 +154,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
               {/* Mic AI */}
               <div className="flex items-center gap-2">
-                {listeningAI && <span className="text-sm text-teal-600 font-medium">Listening…</span>}
+                {listeningAI && <span className="text-sm text-teal-600 font-medium">Listening… 🎤</span>}
                 <button
                   onClick={() => startSpeechRecognition(setInput, "ai")}
                   className={`inline-flex items-center justify-center rounded-full bg-teal-600 p-3 text-white shadow hover:brightness-110 ${
@@ -187,9 +178,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
         {/* Safety Plan */}
         {activeTab === "plan" && (
           <div className="flex-1 flex flex-col rounded-3xl border bg-white p-4 overflow-hidden">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Type your plan…
-            </label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">Type your plan…</label>
 
             <div className="relative flex items-center">
               <textarea
@@ -199,7 +188,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                 placeholder="Write your safety plan here…"
               />
               <div className="absolute right-3 top-3 flex items-center gap-2">
-                {listeningPlan && <span className="text-xs text-teal-600 font-medium">Listening…</span>}
+                {listeningPlan && <span className="text-xs text-teal-600 font-medium">Listening… 🎤</span>}
                 <button
                   onClick={() => startSpeechRecognition(setMyPlan, "plan")}
                   className={`inline-flex items-center justify-center rounded-full bg-teal-600 p-2 text-white shadow hover:brightness-110 ${
@@ -255,18 +244,17 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   );
 }
 
-// Chat bubble
+// --- Chat Bubble ---
 function ChatBubble({ role, content }: ChatMessage) {
   if (role === "assistant") {
     return (
       <div className="mb-3 flex items-start gap-2">
-         <div className="flex items-center gap-1 text-teal-700 font-semibold text-sm">
-           <Bot className="h-4 w-4" />
-           <span>Safe AI</span>
-         </div>
-
+        <div className="flex items-center gap-2 text-teal-700 font-bold text-lg">
+          <Bot className="h-6 w-6" />
+          <span>Safe AI</span>
+        </div>
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">
-         <p className="text-gray-800 text-sm leading-relaxed">{content}</p>
+          <p className="text-gray-800 text-sm leading-relaxed">{content}</p>
         </div>
       </div>
     );
