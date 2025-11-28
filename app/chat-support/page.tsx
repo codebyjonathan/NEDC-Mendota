@@ -40,7 +40,7 @@ function ChatSupportContent() {
             : "دعم الدردشة على الويب",
       url: "https://www.crisistextline.org/",
       available: "24/7",
-      color: "bg-[#ad46ff] text-white", 
+      color: "bg-gradient-to-r from-[#ad46ff] to-[#6e1aff] text-white", // gradient purple
     },
     {
       name: "The Trevor Project",
@@ -83,8 +83,8 @@ function ChatSupportContent() {
 
         <div className="space-y-4">
           {chatServices.map((service) => (
-              <div key={service.name} className={`rounded-2xl p-5 shadow-md ${service.color}`}>
-              <div className="flex items-start justify-between mb-3">
+                <div key={service.name} className="bg-white rounded-2xl p-5 shadow-md">
+                <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{service.name}</h3>
                   <p className="text-sm text-gray-600 mt-1">{service.description}</p>
@@ -96,7 +96,7 @@ function ChatSupportContent() {
               <Button
                 onClick={() => handleOpenChat(service.url)}
                 disabled={loading}
-                className="w-full h-12 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-xl flex items-center justify-center gap-2"
+                className={`w-full h-12 ${service.color} font-semibold rounded-xl flex items-center justify-center gap-2`}
               >
                 <ExternalLink className="w-5 h-5" />
                 {lang === "en" ? "Start Chat" : lang === "es" ? "Iniciar Chat" : "ابدأ الدردشة"}
