@@ -120,7 +120,7 @@ export const translations = {
     breathingExercise: "Ejercicio de Respiración",
     breathingExerciseDuration: "3-5 minutos",
     journalDuration: "10-15 minutos",
-    teamDescription: "Somos Safe Space. El Equipo NEDC en la Escuela Secundaria Mendota (MHS), Mendota, CA. Compuesto por nuestro Asesors del Equipo - Eloy Peña & Rudy Torres; Ingeniero Informático Jefe - Jonathan Alfaro (11º); Diseñador Principal de UI/UX - Manuel Reyes (11º); Analista de Datos e Investigación - Christopher Torres (11º). Como miembros activos de nuestro club escolar: MHS NAMI; colaboramos con ellos para demostrar nuestro compromiso en sensibilizar y brindar apoyo sobre la Prevención del Suicidio, esforzándonos por impactar a nuestro Cuerpo Estudiantil de aproximadamente 1,000 estudiantes.\n\nRecuerda que con Safe Space, ¡nunca estás solo!",
+    teamDescription: "¡Somos Safe Space! El Equipo NEDC en la Escuela Secundaria Mendota (MHS), Mendota, CA. Compuesto por nuestro Asesors del Equipo - Eloy Peña & Rudy Torres; Ingeniero Informático Jefe - Jonathan Alfaro (11º); Diseñador Principal de UI/UX - Manuel Reyes (11º); Analista de Datos e Investigación - Christopher Torres (11º). Como miembros activos de nuestro club escolar: MHS NAMI; colaboramos con ellos para demostrar nuestro compromiso en sensibilizar y brindar apoyo sobre la Prevención del Suicidio, esforzándonos por impactar a nuestro Cuerpo Estudiantil de aproximadamente 1,000 estudiantes.\n\nRecuerda que con Safe Space, ¡nunca estás solo!",
   },
   ar: {
     appTitle: "الوقاية من انتحار الطلاب (S.S.P.)",
