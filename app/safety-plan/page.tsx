@@ -250,7 +250,7 @@ function ChatBubble({ role, content }: ChatMessage) {
     return (
       <div className="mb-3 flex items-start gap-2">
         <div className="flex items-center gap-2 text-teal-700 font-bold text-lg">
-          <Bot className="h-6 w-6" />
+          <Bot className="h-5 w-5" />
           <span>Safe AI</span>
         </div>
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">
