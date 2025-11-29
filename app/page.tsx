@@ -26,8 +26,8 @@ export default function HomePage() {
           <Image
             src="/logo.png"
             alt="Safe Space Logo"
-            width={320}
-            height={320}
+            width={300}
+            height={300}
             className="w-full h-full object-contain drop-shadow-2xl relative z-10"
             priority
           />
