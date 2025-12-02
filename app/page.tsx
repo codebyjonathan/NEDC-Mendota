@@ -7,11 +7,18 @@ import Image from "next/image"
 
 export default function HomePage() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("")
+  const [linkChecked, setLinkChecked] = useState(false) // Track checklist state
   const router = useRouter()
 
   const handleLanguageSelect = (language: string) => {
     setSelectedLanguage(language)
     router.push(`/main?lang=${language}`)
+  }
+
+  // Link button click handler
+  const handleLinkClick = () => {
+    const url = "https://forms.gle/Lt2i4K3nkQvb7RvM9" // <-- Put your counselor link here
+    window.open(url, "_blank") // Opens in a new tab
   }
 
   return (
@@ -26,8 +33,8 @@ export default function HomePage() {
           <Image
             src="/logo.png"
             alt="Safe Space Logo"
-            width={300}
-            height={300}
+            width={350}
+            height={350}
             className="w-full h-full object-contain drop-shadow-2xl relative z-10"
             priority
           />
@@ -43,9 +50,9 @@ export default function HomePage() {
 
         <p className="text-3xl font-serif text-gray-100 italic">You're Not Alone!</p>
 
-        <div className="w-64">
+        <div className="w-64 flex flex-col items-center space-y-4">
           <Select value={selectedLanguage} onValueChange={handleLanguageSelect}>
-              <SelectTrigger className="w-full h-14 bg-gray-200 hover:bg-gray-300 text-black border-none rounded-full text-lg font-medium shadow-lg">
+            <SelectTrigger className="w-full h-14 bg-gray-200 hover:bg-gray-300 text-black border-none rounded-full text-lg font-medium shadow-lg">
               <SelectValue placeholder="Languages ▼" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl">
@@ -60,6 +67,32 @@ export default function HomePage() {
               </SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Checklist with minimal circular button */}
+          <div className="flex items-center space-x-2">
+            <label className="flex items-center cursor-pointer space-x-2 text-black font-medium">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-green-500"
+                checked={linkChecked}
+                onChange={() => setLinkChecked(!linkChecked)}
+              />
+              <span className="text-[13px]">Link to your MHS Counselor</span>
+            </label>
+
+            {/* Minimal circular button appears only if checklist is checked */}
+            {linkChecked && (
+              <button
+                onClick={handleLinkClick}
+                className="w-8 h-8 rounded-full bg-white/80 flex items-center justify-center relative shadow-sm hover:shadow-md transition"
+              >
+                {/* Subtle glow */}
+                <div className="absolute inset-0 rounded-full bg-green-400/30 blur-sm animate-pulse"></div>
+                {/* Checkmark */}
+                <span className="relative text-green-700 font-semibold text-base">✔</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
