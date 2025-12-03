@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Hope & Support - Suicide Prevention",
+  title: "Safe Space",
   description: "A multilingual suicide prevention and mental health support app. You are not alone.",
   generator: "v0.app",
   icons: {

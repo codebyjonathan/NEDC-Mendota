@@ -123,3 +123,40 @@
     @apply bg-background text-foreground;
   }
 }
+
+.rocket-glow {
+  filter: drop-shadow(0 0 20px #ff6f61) drop-shadow(0 0 30px #ff6f61);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+}
+
+/* Rocket loops around the screen with rotations and flips */
+@keyframes rocketLoop {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) translateX(0px) rotate(0deg) scale(1);
+  }
+  20% {
+    transform: translate(-50%, -50%) rotate(45deg) translateX(400px) rotate(-45deg) scale(1.1);
+  }
+  40% {
+    transform: translate(-50%, -50%) rotate(120deg) translateX(-500px) rotate(-120deg) scale(0.9);
+  }
+  60% {
+    transform: translate(-50%, -50%) rotate(200deg) translateX(350px) rotate(-200deg) scale(1.2);
+  }
+  80% {
+    transform: translate(-50%, -50%) rotate(300deg) translateX(-400px) rotate(-300deg) scale(0.95);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) translateX(0px) rotate(-360deg) scale(1);
+  }
+}
+
+.rocket-loop {
+  animation: rocketLoop 2.5s ease-in-out forwards;
+}
