@@ -2,36 +2,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import RocketLogoAnimation from "@/components/rocket-logo-animation";
+import { useRouter } from "next/navigation";
 
 interface IntroPageProps {
   onFinish?: () => void;
 }
 
 export default function IntroPage({ onFinish }: IntroPageProps) {
-  const [started, setStarted] = useState(false);
-  const [fadeText, setFadeText] = useState(false);
-  const [fadeOut, setFadeOut] = useState(false);
+  const [animationStarted, setAnimationStarted] = useState(false);
+  const router = useRouter();
 
-  const handleStart = () => {
-    setStarted(true);
-    setFadeText(true);
-
-    const audio = new Audio("/rocket_whoosh.wav");
-    audio.volume = 0.4;
-    audio.play();
-
-    setTimeout(() => setFadeOut(true), 3200);
-
-    setTimeout(() => {
-      sessionStorage.setItem("introShown", "true");
-      if (onFinish) onFinish();
-    }, 3500);
-  };
-
-  // Starfield effect
+  // Starfield effect - hooks must be before any conditional returns
   useEffect(() => {
-    const canvas = document.getElementById("stars") as HTMLCanvasElement;
+    const canvas = document.getElementById("stars-intro") as HTMLCanvasElement;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -43,11 +27,12 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       radius: Math.random() * 1.5,
-      alpha: Math.random(),
-      dx: (Math.random() - 0.5) * 0.3,
-      dy: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.7 + 0.3,
+      dx: (Math.random() - 0.5) * 0.2,
+      dy: (Math.random() - 0.5) * 0.2,
     }));
 
+    let animationId: number;
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       stars.forEach((s) => {
@@ -60,47 +45,62 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
         if (s.x < 0 || s.x > canvas.width) s.dx = -s.dx;
         if (s.y < 0 || s.y > canvas.height) s.dy = -s.dy;
       });
-      requestAnimationFrame(draw);
+      animationId = requestAnimationFrame(draw);
     };
 
     draw();
+
     const handleResize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationId);
+    };
   }, []);
 
-  return (
-    <div
-      className={`w-full h-screen bg-black flex items-center justify-center relative overflow-hidden transition-opacity duration-700 ${
-        fadeOut ? "opacity-0" : "opacity-100"
-      }`}
-    >
-      <canvas id="stars" className="absolute inset-0 w-full h-full" />
+  const handleAnimationComplete = () => {
+    // Mark intro as shown and navigate after a brief delay
+    sessionStorage.setItem("introShown", "true");
+    
+    setTimeout(() => {
+      if (onFinish) {
+        onFinish();
+      } else {
+        router.push("/starters");
+      }
+    }, 800);
+  };
 
-      {!started && (
+  const handleStart = () => {
+    setAnimationStarted(true);
+  };
+
+  // Conditional rendering based on animation state
+  if (animationStarted) {
+    return (
+      <RocketLogoAnimation onComplete={handleAnimationComplete} autoStart={true} />
+    );
+  }
+
+  return (
+    <div className="w-full h-screen bg-black flex items-center justify-center relative overflow-hidden">
+      <canvas
+        id="stars-intro"
+        className="absolute inset-0 w-full h-full"
+      />
+      <div className="relative z-10 flex flex-col items-center justify-center gap-3">
         <button
           onClick={handleStart}
-          className={`text-6xl font-extrabold text-white transition-opacity duration-500 hover:text-gray-300 ${
-            fadeText ? "opacity-0" : "opacity-100"
-          }`}
+          className="text-6xl font-extrabold text-white transition-all duration-300 hover:text-gray-300 hover:scale-110 cursor-pointer"
         >
           <span className="animate-pulse">FLY IN!</span>
         </button>
-      )}
-
-      {started && (
-        <Image
-          src="/rocket.png"
-          alt="Rocket"
-          width={300}
-          height={300}
-          className="rocket-glow rocket-loop"
-          priority
-        />
-      )}
+        <p className="text-sm text-gray-400 tracking-wider">Click to Start!</p>
+      </div>
     </div>
   );
 }

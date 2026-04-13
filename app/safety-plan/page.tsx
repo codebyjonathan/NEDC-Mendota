@@ -4,13 +4,21 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { translations, type Language } from "@/lib/translations";
 import { Sparkles, Send, Save, Download } from "lucide-react";
-import { Bot } from "lucide-react"; // ✅ Imported Bot icon
 import { AppHeader } from "@/components/app-header";
 import { BottomNav } from "@/components/bottom-nav";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import jsPDF from "jspdf";
 
 type ChatRole = "user" | "assistant";
 type ChatMessage = { role: ChatRole; content: string };
+
+const ROBOT_STYLES = [
+  { id: "default", label: "Default", icon: "🤖" },
+  { id: "sparkle", label: "Sparkle", icon: "✨" },
+  { id: "heart", label: "Heart", icon: "❤️" },
+  { id: "bolt", label: "Energy", icon: "⚡" },
+  { id: "shield", label: "Shield", icon: "🛡️" },
+];
 
 export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const searchParams = useSearchParams();
@@ -24,14 +32,33 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     { role: "assistant", content: t.greeting },
   ]);
   const [loading, setLoading] = useState(false);
+  const [selectedRobot, setSelectedRobot] = useState<string>("default");
+  const [isRobotMenuOpen, setIsRobotMenuOpen] = useState(false);
 
   const [listeningAI, setListeningAI] = useState(false);
   const [listeningPlan, setListeningPlan] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Load saved robot preference from localStorage
+    const saved = localStorage.getItem("selectedRobot");
+    if (saved) {
+      setSelectedRobot(saved);
+    }
+  }, []);
+
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [chatMessages, loading]);
+
+  const handleRobotChange = (robotId: string) => {
+    setSelectedRobot(robotId);
+    localStorage.setItem("selectedRobot", robotId);
+    setIsRobotMenuOpen(false);
+  };
+
+  const currentRobot = ROBOT_STYLES.find(r => r.id === selectedRobot) || ROBOT_STYLES[0];
 
   // --- Speech Recognition ---
   const startSpeechRecognition = (
@@ -136,9 +163,48 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
         {/* AI Chat */}
         {activeTab === "ai" && (
           <div className="flex-1 flex flex-col rounded-3xl border bg-gray-50 overflow-hidden">
+            {/* Safe AI Header with Customization */}
+            <div className="bg-white border-b px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{currentRobot.icon}</span>
+                <span className="font-bold text-teal-700">Safe AI</span>
+              </div>
+              <Popover open={isRobotMenuOpen} onOpenChange={setIsRobotMenuOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                    title="Customize Safe AI icon"
+                  >
+                    ⚙️ Customize
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56">
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-gray-900 text-sm">Choose Your AI Icon</h3>
+                    <div className="grid grid-cols-5 gap-2">
+                      {ROBOT_STYLES.map((robot) => (
+                        <button
+                          key={robot.id}
+                          onClick={() => handleRobotChange(robot.id)}
+                          className={`flex flex-col items-center justify-center p-2 rounded-lg text-2xl transition-all ${
+                            selectedRobot === robot.id
+                              ? "bg-indigo-100 ring-2 ring-indigo-500"
+                              : "bg-gray-100 hover:bg-gray-200"
+                          }`}
+                          title={robot.label}
+                        >
+                          {robot.icon}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
             <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white p-4">
               {chatMessages.map((m, i) => (
-                <ChatBubble key={i} role={m.role} content={m.content} />
+                <ChatBubble key={i} role={m.role} content={m.content} robotIcon={currentRobot.icon} />
               ))}
               {loading && <div className="mt-2 text-sm italic text-gray-500">Typing…</div>}
             </div>
@@ -245,12 +311,12 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 }
 
 // --- Chat Bubble ---
-function ChatBubble({ role, content }: ChatMessage) {
+function ChatBubble({ role, content, robotIcon }: ChatMessage & { robotIcon?: string }) {
   if (role === "assistant") {
     return (
       <div className="mb-3 flex items-start gap-2">
         <div className="flex items-center gap-2 text-teal-700 font-bold text-lg">
-          <Bot className="h-5 w-5" />
+          <span className="text-2xl">{robotIcon || "🤖"}</span>
           <span>Safe AI</span>
         </div>
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">

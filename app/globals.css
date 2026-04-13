@@ -125,39 +125,192 @@
   }
 }
 
-.rocket-glow {
-  filter: drop-shadow(0 0 20px #ff6f61) drop-shadow(0 0 30px #ff6f61);
+/* ============================================
+   ROCKET LOGO ANIMATION STYLES
+   ============================================ */
+
+/* Phase 1: Smooth circular orbit with tangent rotation */
+@keyframes rocket-circular-orbit {
+  0% {
+    transform: translate(-50%, -50%) translate(0px, -280px) rotate(0deg);
+  }
+  3.125% {
+    transform: translate(-50%, -50%) translate(38px, -276px) rotate(11.25deg);
+  }
+  6.25% {
+    transform: translate(-50%, -50%) translate(73px, -271px) rotate(22.5deg);
+  }
+  9.375% {
+    transform: translate(-50%, -50%) translate(135px, -241px) rotate(33.75deg);
+  }
+  12.5% {
+    transform: translate(-50%, -50%) translate(198px, -198px) rotate(45deg);
+  }
+  15.625% {
+    transform: translate(-50%, -50%) translate(241px, -135px) rotate(56.25deg);
+  }
+  18.75% {
+    transform: translate(-50%, -50%) translate(271px, -73px) rotate(67.5deg);
+  }
+  21.875% {
+    transform: translate(-50%, -50%) translate(276px, -38px) rotate(78.75deg);
+  }
+  25% {
+    transform: translate(-50%, -50%) translate(280px, 0px) rotate(90deg);
+  }
+  28.125% {
+    transform: translate(-50%, -50%) translate(276px, 38px) rotate(101.25deg);
+  }
+  31.25% {
+    transform: translate(-50%, -50%) translate(271px, 73px) rotate(112.5deg);
+  }
+  34.375% {
+    transform: translate(-50%, -50%) translate(241px, 135px) rotate(123.75deg);
+  }
+  37.5% {
+    transform: translate(-50%, -50%) translate(198px, 198px) rotate(135deg);
+  }
+  40.625% {
+    transform: translate(-50%, -50%) translate(135px, 241px) rotate(146.25deg);
+  }
+  43.75% {
+    transform: translate(-50%, -50%) translate(73px, 271px) rotate(157.5deg);
+  }
+  46.875% {
+    transform: translate(-50%, -50%) translate(38px, 276px) rotate(168.75deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) translate(0px, 280px) rotate(180deg);
+  }
+  53.125% {
+    transform: translate(-50%, -50%) translate(-38px, 276px) rotate(191.25deg);
+  }
+  56.25% {
+    transform: translate(-50%, -50%) translate(-73px, 271px) rotate(202.5deg);
+  }
+  59.375% {
+    transform: translate(-50%, -50%) translate(-135px, 241px) rotate(213.75deg);
+  }
+  62.5% {
+    transform: translate(-50%, -50%) translate(-198px, 198px) rotate(225deg);
+  }
+  65.625% {
+    transform: translate(-50%, -50%) translate(-241px, 135px) rotate(236.25deg);
+  }
+  68.75% {
+    transform: translate(-50%, -50%) translate(-271px, 73px) rotate(247.5deg);
+  }
+  71.875% {
+    transform: translate(-50%, -50%) translate(-276px, 38px) rotate(258.75deg);
+  }
+  75% {
+    transform: translate(-50%, -50%) translate(-280px, 0px) rotate(270deg);
+  }
+  78.125% {
+    transform: translate(-50%, -50%) translate(-276px, -38px) rotate(281.25deg);
+  }
+  81.25% {
+    transform: translate(-50%, -50%) translate(-271px, -73px) rotate(292.5deg);
+  }
+  84.375% {
+    transform: translate(-50%, -50%) translate(-241px, -135px) rotate(303.75deg);
+  }
+  87.5% {
+    transform: translate(-50%, -50%) translate(-198px, -198px) rotate(315deg);
+  }
+  90.625% {
+    transform: translate(-50%, -50%) translate(-135px, -241px) rotate(326.25deg);
+  }
+  93.75% {
+    transform: translate(-50%, -50%) translate(-73px, -271px) rotate(337.5deg);
+  }
+  96.875% {
+    transform: translate(-50%, -50%) translate(-38px, -276px) rotate(348.75deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(0px, -280px) rotate(360deg);
+  }
+}
+
+.rocket-circular-orbit {
+  animation: rocket-circular-orbit 1s linear forwards;
+  transform-origin: center;
+  z-index: 50;
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 120px;
-  height: 120px;
-  transform: translate(-50%, -50%);
-  z-index: 50;
 }
 
-/* Rocket loops around the screen with rotations and flips */
-@keyframes rocketLoop {
+/* Phase 2: Smooth return to center */
+@keyframes rocket-return-center {
   0% {
-    transform: translate(-50%, -50%) rotate(0deg) translateX(0px) rotate(0deg) scale(1);
+    /* Come from last position (top, 360°) */
+    transform: translate(-50%, -50%) translate(0px, -280px) rotate(360deg);
   }
-  20% {
-    transform: translate(-50%, -50%) rotate(45deg) translateX(400px) rotate(-45deg) scale(1.1);
-  }
-  40% {
-    transform: translate(-50%, -50%) rotate(120deg) translateX(-500px) rotate(-120deg) scale(0.9);
-  }
-  60% {
-    transform: translate(-50%, -50%) rotate(200deg) translateX(350px) rotate(-200deg) scale(1.2);
-  }
-  80% {
-    transform: translate(-50%, -50%) rotate(300deg) translateX(-400px) rotate(-300deg) scale(0.95);
+  50% {
+    /* Midway - rotate smoothly toward 0° */
+    transform: translate(-50%, -50%) translate(-140px, -140px) rotate(270deg);
   }
   100% {
-    transform: translate(-50%, -50%) rotate(360deg) translateX(0px) rotate(-360deg) scale(1);
+    /* Back at center, rotation 0° */
+    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg);
   }
 }
 
-.rocket-loop {
-  animation: rocketLoop 2.5s ease-in-out forwards;
+.rocket-return-center {
+  animation: rocket-return-center 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: center;
+  z-index: 50;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+/* Phase 3: Glow pulse effect during merge */
+@keyframes rocket-glow-pulse {
+  0% {
+    filter: drop-shadow(0 0 10px #ff6f61) drop-shadow(0 0 20px #ff6f61);
+    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 30px #ff6f61) drop-shadow(0 0 50px #ff6f61) drop-shadow(0 0 70px #ff6f61);
+    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(1.05);
+  }
+  100% {
+    filter: drop-shadow(0 0 40px #ff6f61) drop-shadow(0 0 60px #ff6f61);
+    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(1);
+  }
+}
+
+.rocket-glow-pulse {
+  animation: rocket-glow-pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  transform-origin: center;
+  z-index: 50;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+/* Phase 4: Final centered state */
+.rocket-final-center {
+  transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg);
+  filter: drop-shadow(0 0 20px #ff6f61) drop-shadow(0 0 30px #ff6f61);
+  z-index: 50;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+
+/* Fade in animation for final logo */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
