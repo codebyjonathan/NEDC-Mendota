@@ -78,24 +78,32 @@ function ResourcesContent() {
       featured: true,
     },
     {
-      title: "The Trevor Project",
+      title: "United Health Centers",
       description:
         lang === "en"
-          ? "Crisis support for LGBTQ+ youth"
+          ? "Resource Center helping Behavioral Health"
           : lang === "es"
-            ? "Apoyo en crisis para jóvenes LGBTQ+"
-            : "دعم الأزمات لشباب LGBTQ+",
-      url: "https://www.thetrevorproject.org/",
+            ? "Centro de Recursos de Salud del Comportamiento"
+            : "مركز المورد لمساعدة الصحة السلوكية",
+      url: "https://unitedhealthcenters.org/locations/mendota-119",
       icon: BookOpen,
-      color: "bg-pink-500",
+      color: "bg-blue-500",
+      featured: true,
+      borderColor: "border-blue-300",
     },
     {
-      title: "MentalHealth.gov",
+      title: "AMOR Wellness Center",
       description:
-        lang === "en" ? "Information and resources" : lang === "es" ? "Información y recursos" : "المعلومات والموارد",
-      url: "https://www.mentalhealth.gov/",
+        lang === "en"
+          ? "Local Health Neighborhood Resource Center"
+          : lang === "es"
+            ? "Centro de Recursos de Salud de la Comunidad Local"
+            : "مركز الموارد الصحية للحي المحلي",
+      url: "https://amorwellness.org/",
       icon: FileText,
-      color: "bg-teal-500",
+      color: "bg-yellow-500",
+      featured: true,
+      borderColor: "border-yellow-300",
     },
     {
       title: "SAMHSA National Helpline",
@@ -176,7 +184,7 @@ function ResourcesContent() {
                 <a key={resource.title} href={resource.url} target="_blank" rel="noopener noreferrer">
                   <div
                     className={`bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4 ${
-                      resource.featured ? "border-2 border-green-300" : ""
+                      resource.featured ? `border-2 ${resource.borderColor || "border-green-300"}` : ""
                     }`}
                   >
                     <div

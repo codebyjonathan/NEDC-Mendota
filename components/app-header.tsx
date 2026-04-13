@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { NotificationBell } from "./notification-bell"
 
 export function AppHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
@@ -11,6 +12,9 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle: string
       <div className="flex-1">
         <h1 className="text-base font-bold text-gray-900 leading-tight">{title}</h1>
         <p className="text-xs text-gray-600">{subtitle}</p>
+      </div>
+      <div className="flex-shrink-0">
+        <NotificationBell />
       </div>
     </div>
   )
