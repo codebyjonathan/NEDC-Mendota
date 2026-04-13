@@ -5,11 +5,14 @@ import {
   scheduleNotification,
   requestNotificationPermission,
   getNotificationState,
+  getNotificationStateSync,
   getStoredNotifications,
+  getStoredNotificationsSync,
   markNotificationAsRead,
   clearNotification,
   clearAllNotifications,
   getUnreadNotificationCount,
+  getUnreadNotificationCountSync,
   isNotificationSupported,
   getNotificationPermission,
   type ScheduledNotification,
@@ -25,28 +28,50 @@ export function useNotifications() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Initialize state on mount
+  // Initialize state on mount with sync version, then fetch from server
   useEffect(() => {
     // Only run on client side
     if (typeof window === "undefined") return
 
     if (isNotificationSupported()) {
-      setState(getNotificationState())
+      // Start with sync state
+      setState(getNotificationStateSync())
+
+      // Fetch from server asynchronously
+      getNotificationState().then(setState).catch((err) => {
+        console.error("Failed to fetch notification state from server:", err)
+      })
+
+      // Set up periodic sync with server every 30 seconds
+      const syncInterval = setInterval(() => {
+        getNotificationState().then(setState).catch((err) => {
+          console.error("Failed to sync notifications:", err)
+        })
+      }, 30000)
 
       // Listen for storage changes
       const handleStorageChange = () => {
-        setState(getNotificationState())
+        setState(getNotificationStateSync())
       }
 
       window.addEventListener("storage", handleStorageChange)
-      return () => window.removeEventListener("storage", handleStorageChange)
+      return () => {
+        clearInterval(syncInterval)
+        window.removeEventListener("storage", handleStorageChange)
+      }
     }
   }, [])
 
-  // Refresh state
-  const refresh = useCallback(() => {
+  // Refresh state from server
+  const refresh = useCallback(async () => {
     if (isNotificationSupported()) {
-      setState(getNotificationState())
+      try {
+        const newState = await getNotificationState()
+        setState(newState)
+      } catch (err) {
+        console.error("Failed to refresh notifications:", err)
+        setState(getNotificationStateSync())
+      }
     }
   }, [])
 
@@ -64,10 +89,10 @@ export function useNotifications() {
         }
 
         // Schedule the notification
-        const notificationId = scheduleNotification(intervalMs, title, options)
+        const notificationId = await scheduleNotification(intervalMs, title, options)
 
         // Refresh state
-        setState(getNotificationState())
+        await refresh()
 
         return notificationId
       } catch (err) {
@@ -78,7 +103,7 @@ export function useNotifications() {
         setLoading(false)
       }
     },
-    []
+    [refresh]
   )
 
   // Request permission
@@ -101,13 +126,17 @@ export function useNotifications() {
   // Mark as read
   const markAsRead = useCallback((notificationId: string) => {
     markNotificationAsRead(notificationId)
-    setState(getNotificationState())
+    setState(getNotificationStateSync())
+    // Also sync with server in background
+    getNotificationState().then(setState).catch(console.error)
   }, [])
 
   // Clear notification
   const clear = useCallback((notificationId: string) => {
     clearNotification(notificationId)
-    setState(getNotificationState())
+    setState(getNotificationStateSync())
+    // Also sync with server in background
+    getNotificationState().then(setState).catch(console.error)
   }, [])
 
   // Clear all
@@ -118,6 +147,8 @@ export function useNotifications() {
       unreadCount: 0,
       permission: getNotificationPermission(),
     })
+    // Also sync with server in background
+    getNotificationState().then(setState).catch(console.error)
   }, [])
 
   return {

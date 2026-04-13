@@ -75,12 +75,12 @@ export function NotificationBell({ className }: NotificationBellProps) {
           variant="ghost"
           size="icon"
           className={cn(
-            "relative h-10 w-10 rounded-full hover:bg-gray-100 transition-colors",
+            "relative h-10 w-10 md:h-10 md:w-10 rounded-full hover:bg-gray-100 transition-colors z-50",
             className
           )}
           aria-label="Notifications"
         >
-          <Bell className="h-5 w-5 text-gray-700" />
+          <Bell className="h-5 w-5 md:h-5 md:w-5 text-gray-700" />
 
           {/* Unread badge */}
           {unreadCount > 0 && (
@@ -91,13 +91,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-80 p-0">
+      <DropdownMenuContent align="end" className="w-screen sm:w-96 md:w-80 max-h-96 p-0 fixed right-0 sm:fixed" sideOffset={8}>
         {/* Tab Navigation */}
-        <div className="flex border-b bg-gray-50">
+        <div className="flex border-b bg-gray-50 sticky top-0 z-10">
           <button
             onClick={() => setActiveTab("schedule")}
             className={cn(
-              "flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2",
+              "flex-1 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors border-b-2",
               activeTab === "schedule"
                 ? "border-green-500 text-green-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
@@ -108,7 +108,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
           <button
             onClick={() => setActiveTab("history")}
             className={cn(
-              "flex-1 px-4 py-3 text-sm font-medium transition-colors border-b-2 relative",
+              "flex-1 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 relative",
               activeTab === "history"
                 ? "border-green-500 text-green-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
@@ -116,7 +116,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
           >
             History
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-2 text-xs font-bold text-red-500">
+              <span className="absolute top-1 right-1 sm:right-2 text-xs font-bold text-red-500">
                 {unreadCount}
               </span>
             )}
@@ -124,7 +124,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
         </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(100vh-200px)] sm:max-h-96">
           {activeTab === "schedule" ? (
             <ScheduleTab
               intervals={CHECK_IN_INTERVALS}
@@ -158,14 +158,14 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
   return (
     <div className="space-y-3">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2">Set a check-in reminder</h3>
+        <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2">Set a check-in reminder</h3>
         <p className="text-xs text-gray-600">
-          Get notified to take a moment and check in with yourself
+          Get notified to check in with yourself
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3 text-xs text-red-700">
           {error}
         </div>
       )}
@@ -173,7 +173,7 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
       {confirmMessage && (
         <div
           className={cn(
-            "rounded-lg p-3 text-xs font-medium transition-all",
+            "rounded-lg p-2 sm:p-3 text-xs font-medium transition-all",
             confirmMessage.startsWith("✓")
               ? "bg-green-50 border border-green-200 text-green-700"
               : "bg-red-50 border border-red-200 text-red-700"
@@ -190,13 +190,13 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
             onClick={() => onSchedule(interval)}
             disabled={loading}
             className={cn(
-              "w-full px-4 py-3 rounded-lg border-2 transition-all text-left",
+              "w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 transition-all text-left text-sm",
               "hover:border-green-400 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed",
-              "border-gray-200 hover:border-green-400"
+              "border-gray-200"
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900">{interval.label}</span>
+              <span className="font-medium text-gray-900 text-sm">{interval.label}</span>
               <span className="text-xs text-gray-500">
                 {loading ? "..." : "→"}
               </span>
@@ -205,9 +205,8 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
         ))}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 mt-4">
-        💡 <span className="font-medium">Tip:</span> You'll receive a browser notification at the
-        set time. Click it to go directly to the check-in screen!
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 text-xs text-blue-700 mt-4">
+        💡 <span className="font-medium">Tip:</span> You'll get a notification at the set time!
       </div>
     </div>
   )
@@ -233,7 +232,7 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Notification History</h3>
+          <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Notification History</h3>
           <p className="text-xs text-gray-600">
             {sortedNotifications.length === 0 ? "No reminders set yet" : `${sortedNotifications.length} reminder${sortedNotifications.length === 1 ? "" : "s"}`}
           </p>
@@ -241,7 +240,7 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
         {sortedNotifications.length > 0 && (
           <button
             onClick={onClearAll}
-            className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-xs text-gray-500 hover:text-gray-700 transition-colors flex-shrink-0"
           >
             Clear all
           </button>
@@ -249,9 +248,9 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
       </div>
 
       {sortedNotifications.length === 0 ? (
-        <div className="text-center py-6 text-gray-500">
-          <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No reminders yet. Schedule one above!</p>
+        <div className="text-center py-4 sm:py-6 text-gray-500">
+          <Bell className="h-6 sm:h-8 w-6 sm:w-8 mx-auto mb-2 opacity-50" />
+          <p className="text-xs sm:text-sm">No reminders yet. Schedule one above!</p>
         </div>
       ) : (
         <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -259,7 +258,7 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
             <div
               key={notification.id}
               className={cn(
-                "p-3 rounded-lg border transition-all",
+                "p-2 sm:p-3 rounded-lg border transition-all text-xs sm:text-sm",
                 notification.read
                   ? "bg-gray-50 border-gray-200"
                   : "bg-green-50 border-green-200"
@@ -268,11 +267,11 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="font-medium text-gray-900 truncate">
                       {notification.title}
                     </p>
                     {!notification.read && (
-                      <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0">
+                      <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 whitespace-nowrap">
                         <Check className="h-3 w-3" />
                         New
                       </span>
@@ -284,7 +283,7 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
                 </div>
                 <button
                   onClick={() => onClear(notification.id)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                  className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 mt-1"
                   aria-label="Remove notification"
                 >
                   <X className="h-4 w-4" />
