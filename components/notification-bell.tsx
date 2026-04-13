@@ -29,7 +29,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
   const [activeTab, setActiveTab] = useState<"schedule" | "history">("schedule")
   const [scheduling, setScheduling] = useState(false)
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
   const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+
+  // Only show bell after client-side mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -64,8 +70,10 @@ export function NotificationBell({ className }: NotificationBellProps) {
     }
   }
 
-  if (!isSupported) {
-    return null
+  // Show bell on mobile even if Notification API isn't fully supported
+  // Service workers can handle notifications
+  if (!mounted) {
+    return null // Hide during SSR
   }
 
   return (

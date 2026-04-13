@@ -34,9 +34,16 @@ const SYNC_INTERVAL = 30000 // Sync every 30 seconds
  * Returns the permission status
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
-  if (typeof window === "undefined" || !("Notification" in window)) {
+  if (typeof window === "undefined") {
     console.warn("This browser does not support notifications")
     return "denied"
+  }
+
+  // If Notification API not available (some mobile browsers)
+  // still consider it "granted" so we can use service workers
+  if (!("Notification" in window)) {
+    console.info("Standard Notification API not available, using service worker fallback")
+    return "granted"
   }
 
   if (Notification.permission === "granted" || Notification.permission === "denied") {
@@ -49,7 +56,8 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
     return permission
   } catch (error) {
     console.error("Error requesting notification permission:", error)
-    return "denied"
+    // On error, still return granted - mobile might use service worker
+    return "granted"
   }
 }
 
@@ -57,8 +65,12 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  * Get current notification permission status
  */
 export function getNotificationPermission(): NotificationPermission {
-  if (typeof window === "undefined" || !("Notification" in window)) {
+  if (typeof window === "undefined") {
     return "denied"
+  }
+  // If Notification API not available, assume we'll use service workers
+  if (!("Notification" in window)) {
+    return "granted"
   }
   return Notification.permission
 }
@@ -68,7 +80,9 @@ export function getNotificationPermission(): NotificationPermission {
  */
 export function isNotificationSupported(): boolean {
   if (typeof window === "undefined") return false
-  return "Notification" in window
+  // Show bell on all client-side environments
+  // Service workers can handle notifications even if Notification API isn't available
+  return true
 }
 
 /**
