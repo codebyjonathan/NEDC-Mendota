@@ -29,7 +29,7 @@ const NOTIFICATION_PERMISSION_KEY = "notification_permission_checked"
  * Returns the permission status
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
-  if (!("Notification" in window)) {
+  if (typeof window === "undefined" || !("Notification" in window)) {
     console.warn("This browser does not support notifications")
     return "denied"
   }
@@ -52,7 +52,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
  * Get current notification permission status
  */
 export function getNotificationPermission(): NotificationPermission {
-  if (!("Notification" in window)) {
+  if (typeof window === "undefined" || !("Notification" in window)) {
     return "denied"
   }
   return Notification.permission
@@ -62,6 +62,7 @@ export function getNotificationPermission(): NotificationPermission {
  * Check if notifications are supported by the browser
  */
 export function isNotificationSupported(): boolean {
+  if (typeof window === "undefined") return false
   return "Notification" in window
 }
 
@@ -77,6 +78,8 @@ export function scheduleNotification(
   title: string = "Time to check in!",
   options?: NotificationOptions & { actionUrl?: string }
 ): string {
+  if (typeof window === "undefined") return ""
+  
   const notificationId = `notif_${Date.now()}_${Math.random()}`
   const scheduledFor = Date.now() + interval
   
@@ -167,6 +170,7 @@ export async function showNotification(
  * Get stored notifications from localStorage
  */
 export function getStoredNotifications(): ScheduledNotification[] {
+  if (typeof window === "undefined") return []
   try {
     const stored = localStorage.getItem(NOTIFICATIONS_STORAGE_KEY)
     return stored ? JSON.parse(stored) : []
@@ -179,6 +183,7 @@ export function getStoredNotifications(): ScheduledNotification[] {
  * Mark notification as read
  */
 export function markNotificationAsRead(notificationId: string): void {
+  if (typeof window === "undefined") return
   const notifications = getStoredNotifications()
   const notification = notifications.find((n) => n.id === notificationId)
   if (notification) {
@@ -191,6 +196,7 @@ export function markNotificationAsRead(notificationId: string): void {
  * Clear a specific notification
  */
 export function clearNotification(notificationId: string): void {
+  if (typeof window === "undefined") return
   let notifications = getStoredNotifications()
   notifications = notifications.filter((n) => n.id !== notificationId)
   localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(notifications))
@@ -208,6 +214,7 @@ export function clearNotification(notificationId: string): void {
  * Clear all notifications
  */
 export function clearAllNotifications(): void {
+  if (typeof window === "undefined") return
   localStorage.removeItem(NOTIFICATIONS_STORAGE_KEY)
   sessionStorage.removeItem("notification_timeouts")
 }
@@ -244,6 +251,8 @@ export async function sendCrossPlatformNotification(
     actionUrl?: string
   }
 ): Promise<string> {
+  if (typeof window === "undefined") return ""
+
   const title = options?.title || "Time to check in!"
 
   // Check if running in native app context
