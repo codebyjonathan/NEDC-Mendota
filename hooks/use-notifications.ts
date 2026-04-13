@@ -27,6 +27,9 @@ export function useNotifications() {
 
   // Initialize state on mount
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === "undefined") return
+
     if (isNotificationSupported()) {
       setState(getNotificationState())
 
