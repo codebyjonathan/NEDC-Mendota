@@ -27,7 +27,7 @@ function MainScreenContent() {
         <h2 className="text-2xl font-bold text-gray-900 text-center px-4">{t.greeting}</h2>
 
         <Link href={`/support?lang=${lang}`}>
-          <Button className="w-full h-20 bg-[#1BBCAD] hover:bg-[#159A8D] text-white text-xl font-semibold rounded-3xl shadow-lg">
+          <Button className="app-cta w-full h-20 text-xl font-semibold rounded-3xl shadow-lg">
             {t.getSupport}
           </Button>
         </Link>
@@ -101,7 +101,7 @@ function MainScreenContent() {
           <h3 className="text-xl font-bold text-gray-900">{t.safetyPlan}</h3>
           <p className="text-base text-gray-600 leading-relaxed">{t.safetyDesc}</p>
           <Link href={`/safety-plan?lang=${lang}`}>
-            <Button className="w-full h-14 bg-[#1BBCAD] hover:bg-[#159A8D] text-white text-lg font-semibold rounded-2xl">
+            <Button className="app-cta w-full h-14 text-lg font-semibold rounded-2xl">
               {t.openSafety}
             </Button>
           </Link>
@@ -118,7 +118,7 @@ export default function MainScreen() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1BBCAD]" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: "var(--app-accent)" }} />
         </div>
       }
     >

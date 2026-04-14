@@ -1,75 +1,85 @@
-import OpenAI from "openai";
+import OpenAI from "openai"
 
-let client: OpenAI | undefined;
+let client: OpenAI | undefined
 
 function getClient() {
   if (!client) {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("Missing OPENAI_API_KEY");
-    client = new OpenAI({ apiKey });
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) throw new Error("Missing OPENAI_API_KEY")
+    client = new OpenAI({ apiKey })
   }
-  return client;
+
+  return client
 }
 
-export const maxDuration = 30;
+export const runtime = "nodejs"
+export const maxDuration = 30
 
 const SAFETY_PLAN_PROMPT = `
 You are a supportive mental health assistant who helps users create
 a simple and realistic safety plan. Provide calm, short suggestions.
 Avoid medical advice. Ask gentle questions when needed.
-`;
+`
+
+const FALLBACK_RESPONSE =
+  "I am here with you. Try one next step: 1) name one person to contact, 2) pick one calming activity for 10 minutes, 3) remove one immediate trigger from your space."
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages } = await req.json()
 
     if (!messages || messages.length === 0) {
-      return new Response(
-        JSON.stringify({ text: "No messages received." }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ text: "No messages received." }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
     }
 
-    const openai = getClient();
+    if (!process.env.OPENAI_API_KEY) {
+      return new Response(JSON.stringify({ text: FALLBACK_RESPONSE, fallback: true, reason: "missing_api_key" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    const openai = getClient()
+    const model = process.env.OPENAI_MODEL || "gpt-4o-mini"
 
     const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo", // safer test model
-      messages: [
-        { role: "system", content: SAFETY_PLAN_PROMPT },
-        ...messages,
-      ],
-      max_completion_tokens: 200,
-    });
+      model,
+      messages: [{ role: "system", content: SAFETY_PLAN_PROMPT }, ...messages],
+      max_tokens: 220,
+    })
 
-    console.log("OpenAI response:", response); // ← check in terminal
+    const aiMessage = response.choices?.[0]?.message?.content ?? FALLBACK_RESPONSE
 
-    const aiMessage = response.choices?.[0]?.message?.content ?? "No response from AI.";
-
-    return new Response(
-      JSON.stringify({ text: aiMessage }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ text: aiMessage }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    })
   } catch (err) {
-    console.error("Safety Chat API error:", err);
+    console.error("Safety Chat API error:", err)
     return new Response(
-      JSON.stringify({ error: err instanceof Error ? err.message : "Unknown error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+      JSON.stringify({
+        text: FALLBACK_RESPONSE,
+        fallback: true,
+        error: err instanceof Error ? err.message : "Unknown error",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    )
   }
 }
 
-// Optional test route
 export async function GET() {
-  const openai = getClient();
-  const testResponse = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
-    messages: [
-      { role: "system", content: "You are a friendly assistant." },
-      { role: "user", content: "Say hello" },
-    ],
-  });
-  console.log("API test response:", testResponse);
-  return new Response(JSON.stringify({ text: testResponse.choices[0].message.content }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      route: "/api/safety-chat",
+      hasOpenAIKey: Boolean(process.env.OPENAI_API_KEY),
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  )
 }

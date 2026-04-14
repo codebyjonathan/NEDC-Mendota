@@ -38,6 +38,15 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --app-accent: #1bbcad;
+  --app-accent-strong: #159a8d;
+  --app-accent-soft: #d8f6f1;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f3fbf9;
+  --app-surface-hover: #e8f7f4;
+  --app-border: #c6ece5;
+  --app-text: #10312d;
+  --app-text-muted: #4f6f6b;
 }
 
 .dark {
@@ -123,6 +132,48 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer components {
+  .app-cta {
+    background: linear-gradient(135deg, var(--app-accent), var(--app-accent-strong));
+    color: white;
+  }
+
+  .app-cta:hover {
+    filter: brightness(0.96);
+  }
+}
+
+:root[data-app-theme] .bg-white {
+  background-color: var(--app-surface) !important;
+}
+
+:root[data-app-theme] .bg-gray-50 {
+  background-color: var(--app-surface-muted) !important;
+}
+
+:root[data-app-theme] .bg-gray-100 {
+  background-color: var(--app-surface-hover) !important;
+}
+
+:root[data-app-theme] .text-gray-900 {
+  color: var(--app-text) !important;
+}
+
+:root[data-app-theme] .text-gray-700,
+:root[data-app-theme] .text-gray-600,
+:root[data-app-theme] .text-gray-500 {
+  color: var(--app-text-muted) !important;
+}
+
+:root[data-app-theme] .border-gray-200 {
+  border-color: var(--app-border) !important;
+}
+
+:root[data-app-theme] .hover\:bg-gray-100:hover,
+:root[data-app-theme] .hover\:bg-gray-50:hover {
+  background-color: var(--app-surface-hover) !important;
 }
 
 /* ============================================

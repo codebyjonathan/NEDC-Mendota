@@ -2,7 +2,9 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { AppThemeProvider } from "@/components/app-theme-provider"
 import { NotificationProvider } from "@/components/notification-provider"
+import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -33,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -42,9 +44,11 @@ export default function RootLayout({
         <meta name="theme-color" content="#10b981" />
       </head>
       <body className={`font-sans antialiased`}>
-        <NotificationProvider>
-          {children}
-        </NotificationProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <AppThemeProvider>
+            <NotificationProvider>{children}</NotificationProvider>
+          </AppThemeProvider>
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

@@ -61,10 +61,12 @@ export function BottomNav({ lang }: BottomNavProps) {
             className="flex flex-col items-center gap-1 py-2 px-1 min-w-0 flex-1"
           >
             <Icon
-              className={`w-6 h-6 flex-shrink-0 ${isEmergency ? "text-red-600" : isActive ? "text-gray-900" : "text-gray-600"}`}
+              className={`w-6 h-6 flex-shrink-0 ${isEmergency ? "text-red-600" : isActive ? "" : "text-gray-600"}`}
+              style={isEmergency ? undefined : isActive ? { color: "var(--app-accent-strong)" } : undefined}
             />
             <span
-              className={`text-[10px] font-semibold text-center leading-tight ${isEmergency ? "text-red-600" : isActive ? "text-gray-900" : "text-gray-600"}`}
+              className={`text-[10px] font-semibold text-center leading-tight ${isEmergency ? "text-red-600" : isActive ? "" : "text-gray-600"}`}
+              style={isEmergency ? undefined : isActive ? { color: "var(--app-accent-strong)" } : undefined}
             >
               {item.label}
             </span>

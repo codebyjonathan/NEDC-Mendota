@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { NotificationBell } from "./notification-bell-v2"
 import { NotificationSettingsButton } from "./notification-settings-button"
+import { ThemeCustomizerButton } from "./theme-customizer-button"
 
 export function AppHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
@@ -15,6 +16,7 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle: string
         <p className="text-xs text-gray-600">{subtitle}</p>
       </div>
       <div className="flex flex-shrink-0 items-center gap-1">
+        <ThemeCustomizerButton />
         <NotificationSettingsButton />
         <NotificationBell />
       </div>
