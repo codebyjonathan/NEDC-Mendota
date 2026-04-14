@@ -1,9 +1,12 @@
 node_modules/
 .next/
+.next-prod/
+.next-prod-verify/
 dist/
 .env
 .env.local
 .vscode/
+tsconfig.tsbuildinfo
 pnpm-lock.yaml
 yarn.lock
 npm-debug.log
