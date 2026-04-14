@@ -30,7 +30,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
   const [scheduling, setScheduling] = useState(false)
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Only show bell after client-side mount
   useEffect(() => {
@@ -99,13 +99,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-screen sm:w-96 md:w-80 max-h-96 p-0 fixed right-0 sm:fixed" sideOffset={8}>
+      <DropdownMenuContent align="end" className="w-[90vw] sm:w-96 md:w-80 max-h-[70vh] sm:max-h-96 p-0 m-2" sideOffset={8}>
         {/* Tab Navigation */}
         <div className="flex border-b bg-gray-50 sticky top-0 z-10">
           <button
             onClick={() => setActiveTab("schedule")}
             className={cn(
-              "flex-1 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors border-b-2",
+              "flex-1 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors border-b-2",
               activeTab === "schedule"
                 ? "border-green-500 text-green-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
@@ -116,7 +116,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
           <button
             onClick={() => setActiveTab("history")}
             className={cn(
-              "flex-1 px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium transition-colors border-b-2 relative",
+              "flex-1 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors border-b-2 relative",
               activeTab === "history"
                 ? "border-green-500 text-green-600"
                 : "border-transparent text-gray-600 hover:text-gray-900"
@@ -132,7 +132,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
         </div>
 
         {/* Content */}
-        <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(100vh-200px)] sm:max-h-96">
+        <div className="p-2 sm:p-4 overflow-y-auto max-h-[calc(70vh-120px)] sm:max-h-96">
           {activeTab === "schedule" ? (
             <ScheduleTab
               intervals={CHECK_IN_INTERVALS}
@@ -166,14 +166,14 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
   return (
     <div className="space-y-3">
       <div className="mb-4">
-        <h3 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2">Set a check-in reminder</h3>
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1 sm:mb-2">Set a check-in reminder</h3>
         <p className="text-xs text-gray-600">
           Get notified to check in with yourself
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-2 sm:p-3 text-xs text-red-700">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-2 text-xs text-red-700">
           {error}
         </div>
       )}
@@ -181,7 +181,7 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
       {confirmMessage && (
         <div
           className={cn(
-            "rounded-lg p-2 sm:p-3 text-xs font-medium transition-all",
+            "rounded-lg p-2 text-xs font-medium transition-all",
             confirmMessage.startsWith("✓")
               ? "bg-green-50 border border-green-200 text-green-700"
               : "bg-red-50 border border-red-200 text-red-700"
@@ -198,14 +198,14 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
             onClick={() => onSchedule(interval)}
             disabled={loading}
             className={cn(
-              "w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 transition-all text-left text-sm",
+              "w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg border-2 transition-all text-left",
               "hover:border-green-400 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed",
-              "border-gray-200"
+              "border-gray-200 text-sm sm:text-base"
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium text-gray-900 text-sm">{interval.label}</span>
-              <span className="text-xs text-gray-500">
+              <span className="font-medium text-gray-900">{interval.label}</span>
+              <span className="text-xs sm:text-sm text-gray-500">
                 {loading ? "..." : "→"}
               </span>
             </div>
@@ -213,7 +213,7 @@ function ScheduleTab({ intervals, onSchedule, loading, confirmMessage, error }: 
         ))}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 text-xs text-blue-700 mt-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-700 mt-4">
         💡 <span className="font-medium">Tip:</span> You'll get a notification at the set time!
       </div>
     </div>
@@ -238,9 +238,9 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
         <div>
-          <h3 className="text-xs sm:text-sm font-semibold text-gray-900">Notification History</h3>
+          <h3 className="text-sm sm:text-base font-semibold text-gray-900">Notification History</h3>
           <p className="text-xs text-gray-600">
             {sortedNotifications.length === 0 ? "No reminders set yet" : `${sortedNotifications.length} reminder${sortedNotifications.length === 1 ? "" : "s"}`}
           </p>
@@ -256,12 +256,12 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
       </div>
 
       {sortedNotifications.length === 0 ? (
-        <div className="text-center py-4 sm:py-6 text-gray-500">
-          <Bell className="h-6 sm:h-8 w-6 sm:w-8 mx-auto mb-2 opacity-50" />
+        <div className="text-center py-4 text-gray-500">
+          <Bell className="h-6 w-6 mx-auto mb-2 opacity-50" />
           <p className="text-xs sm:text-sm">No reminders yet. Schedule one above!</p>
         </div>
       ) : (
-        <div className="space-y-2 max-h-64 overflow-y-auto">
+        <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
           {sortedNotifications.map((notification) => (
             <div
               key={notification.id}
@@ -274,8 +274,8 @@ function HistoryTab({ notifications, onClear, onClearAll }: HistoryTabProps) {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="font-medium text-gray-900 truncate">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <p className="font-medium text-gray-900 truncate text-xs sm:text-sm">
                       {notification.title}
                     </p>
                     {!notification.read && (

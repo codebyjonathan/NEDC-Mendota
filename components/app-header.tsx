@@ -1,7 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import { NotificationBell } from "./notification-bell"
+import { NotificationBell } from "./notification-bell-v2"
+import { NotificationSettingsButton } from "./notification-settings-button"
 
 export function AppHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
@@ -13,7 +14,8 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle: string
         <h1 className="text-base font-bold text-gray-900 leading-tight">{title}</h1>
         <p className="text-xs text-gray-600">{subtitle}</p>
       </div>
-      <div className="flex-shrink-0">
+      <div className="flex flex-shrink-0 items-center gap-1">
+        <NotificationSettingsButton />
         <NotificationBell />
       </div>
     </div>
