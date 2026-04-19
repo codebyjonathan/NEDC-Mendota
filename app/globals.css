@@ -524,4 +524,377 @@
   display: inline-block;
   animation: fly-in-flash 1.5s ease-in-out infinite;
 }
+/* ============================================
+   ROUTE TRANSITIONS
+   ============================================ */
 
+:root {
+  --route-enter-duration: 520ms;
+  --route-exit-duration: 340ms;
+  --route-enter-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --route-exit-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --route-slide-distance: 30px;
+  --route-lift-distance: 20px;
+}
+
+@keyframes route-enter-lift {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--route-lift-distance), 0) scale(0.992);
+    filter: blur(1.3px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.route-shell {
+  animation: route-enter-lift var(--route-enter-duration) var(--route-enter-ease);
+  will-change: opacity, transform, filter;
+}
+
+.route-shell.route-shell-no-transition {
+  animation: none;
+}
+
+html[data-supports-view-transitions="true"] .route-shell {
+  animation: none;
+}
+
+.route-shell.route-shell-lift {
+  animation-name: route-enter-lift;
+}
+
+.route-shell.route-shell-slide-left {
+  animation-name: route-enter-slide-left;
+}
+
+.route-shell.route-shell-slide-right {
+  animation-name: route-enter-slide-right;
+}
+
+.route-shell.route-shell-slide-up {
+  animation-name: route-enter-slide-up;
+}
+
+.route-shell.route-shell-slide-down {
+  animation-name: route-enter-slide-down;
+}
+
+.route-shell.route-shell-soft-zoom {
+  animation-name: route-enter-soft-zoom;
+}
+
+html[data-route-transition="lift"] .route-shell {
+  animation-name: route-enter-lift;
+}
+
+html[data-route-transition="slide-left"] .route-shell {
+  animation-name: route-enter-slide-left;
+}
+
+@keyframes route-enter-slide-left {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--route-slide-distance), 0, 0) scale(0.995);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes route-enter-slide-right {
+  from {
+    opacity: 0;
+    transform: translate3d(calc(var(--route-slide-distance) * -1), 0, 0) scale(0.995);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes route-enter-slide-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--route-slide-distance), 0) scale(0.995);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes route-enter-slide-down {
+  from {
+    opacity: 0;
+    transform: translate3d(0, calc(var(--route-slide-distance) * -1), 0) scale(0.995);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="slide-right"] .route-shell {
+  animation-name: route-enter-slide-right;
+}
+
+html[data-route-transition="slide-up"] .route-shell {
+  animation-name: route-enter-slide-up;
+}
+
+html[data-route-transition="slide-down"] .route-shell {
+  animation-name: route-enter-slide-down;
+}
+
+@keyframes route-enter-soft-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.982);
+    filter: blur(1.2px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="soft-zoom"] .route-shell {
+  animation-name: route-enter-soft-zoom;
+}
+
+::view-transition-old(root) {
+  animation: old-screen-out var(--route-exit-duration) var(--route-exit-ease) both;
+}
+
+::view-transition-new(root) {
+  animation: new-screen-in var(--route-enter-duration) var(--route-enter-ease) both;
+}
+
+@keyframes old-screen-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.22;
+    transform: scale(0.985);
+    filter: blur(1.5px);
+  }
+}
+
+@keyframes new-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.992);
+    filter: blur(1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="slide-left"] ::view-transition-old(root) {
+  animation-name: old-screen-out-slide-left;
+}
+
+html[data-route-transition="slide-left"] ::view-transition-new(root) {
+  animation-name: new-screen-in-slide-left;
+}
+
+@keyframes old-screen-out-slide-left {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.3;
+    transform: translateX(calc(var(--route-slide-distance) * -0.66)) scale(0.995);
+    filter: blur(1.2px);
+  }
+}
+
+@keyframes new-screen-in-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(var(--route-slide-distance)) scale(0.995);
+    filter: blur(1.2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="slide-right"] ::view-transition-old(root) {
+  animation-name: old-screen-out-slide-right;
+}
+
+html[data-route-transition="slide-right"] ::view-transition-new(root) {
+  animation-name: new-screen-in-slide-right;
+}
+
+@keyframes old-screen-out-slide-right {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.3;
+    transform: translateX(calc(var(--route-slide-distance) * 0.66)) scale(0.995);
+    filter: blur(1.2px);
+  }
+}
+
+@keyframes new-screen-in-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--route-slide-distance) * -1)) scale(0.995);
+    filter: blur(1.2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="slide-up"] ::view-transition-old(root) {
+  animation-name: old-screen-out-slide-up;
+}
+
+html[data-route-transition="slide-up"] ::view-transition-new(root) {
+  animation-name: new-screen-in-slide-up;
+}
+
+@keyframes old-screen-out-slide-up {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.3;
+    transform: translateY(calc(var(--route-slide-distance) * -0.66)) scale(0.995);
+    filter: blur(1.2px);
+  }
+}
+
+@keyframes new-screen-in-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(var(--route-slide-distance)) scale(0.995);
+    filter: blur(1.2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="slide-down"] ::view-transition-old(root) {
+  animation-name: old-screen-out-slide-down;
+}
+
+html[data-route-transition="slide-down"] ::view-transition-new(root) {
+  animation-name: new-screen-in-slide-down;
+}
+
+@keyframes old-screen-out-slide-down {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.3;
+    transform: translateY(calc(var(--route-slide-distance) * 0.66)) scale(0.995);
+    filter: blur(1.2px);
+  }
+}
+
+@keyframes new-screen-in-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--route-slide-distance) * -1)) scale(0.995);
+    filter: blur(1.2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="soft-zoom"] ::view-transition-old(root) {
+  animation-name: old-screen-out-soft-zoom;
+}
+
+html[data-route-transition="soft-zoom"] ::view-transition-new(root) {
+  animation-name: new-screen-in-soft-zoom;
+}
+
+@keyframes old-screen-out-soft-zoom {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.28;
+    transform: scale(0.976);
+    filter: blur(2px);
+  }
+}
+
+@keyframes new-screen-in-soft-zoom {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+    filter: blur(1.5px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-shell {
+    animation: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+
+  .intro-nebula-layer,
+  .intro-dust,
+  .intro-rocket-flame-main,
+  .intro-rocket-flame-core {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

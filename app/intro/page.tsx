@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import RocketLogoAnimation from "@/components/rocket-logo-animation";
 import { useRouter } from "next/navigation";
 import { playIntroAudio } from "@/lib/intro-audio";
+import { navigateWithViewTransition } from "@/lib/view-transition";
 
 interface IntroPageProps {
   onFinish?: () => void;
@@ -72,7 +73,9 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
       if (onFinish) {
         onFinish();
       } else {
-        router.push("/starters");
+        navigateWithViewTransition(() => {
+          router.push("/starters");
+        });
       }
     }, 380);
   };

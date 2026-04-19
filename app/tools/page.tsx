@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { translations } from "@/lib/translations"
 import { Button } from "@/components/ui/button"
+import { navigateWithViewTransition } from "@/lib/view-transition"
 
 function ToolsContent() {
   const searchParams = useSearchParams()
@@ -20,7 +21,9 @@ function ToolsContent() {
   const isRTL = lang === "ar"
 
   const changeLanguage = (newLang: string) => {
-    router.push(`/tools?lang=${newLang}`)
+    navigateWithViewTransition(() => {
+      router.push(`/tools?lang=${newLang}`)
+    })
   }
 
   const toolCategories = [

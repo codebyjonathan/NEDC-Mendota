@@ -2,9 +2,21 @@
 
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState, useRef, useEffect } from "react"
-import { Music, Play, Pause, Volume2, X } from "lucide-react"
+import { Music, Play, Pause, Volume2 } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
+import { Switch } from "@/components/ui/switch"
+import {
+  clearMusicSession,
+  clearSharedMusicAudio,
+  getBackgroundPlaybackEnabled,
+  getMusicSession,
+  getSharedMusicAudio,
+  setBackgroundPlaybackEnabled,
+  setMusicSession,
+  setSharedMusicAudio,
+  stopSharedMusicAudio,
+} from "@/lib/music-audio"
 import { translations } from "@/lib/translations"
 
 interface MusicTrack {
@@ -37,17 +49,39 @@ function MusicContent() {
   const [customMusicType, setCustomMusicType] = useState<"audio" | "youtube" | "spotify" | null>(null)
   const [youtubeVideoId, setYoutubeVideoId] = useState("")
   const [spotifyTrackId, setSpotifyTrackId] = useState("")
+  const [allowBackgroundPlayback, setAllowBackgroundPlaybackState] = useState(false)
+  const allowBackgroundPlaybackRef = useRef(false)
 
   useEffect(() => {
+    const backgroundEnabled = getBackgroundPlaybackEnabled()
+    setAllowBackgroundPlaybackState(backgroundEnabled)
+    allowBackgroundPlaybackRef.current = backgroundEnabled
+
+    const sharedAudio = getSharedMusicAudio()
+    const session = getMusicSession()
+
+    if (sharedAudio && !sharedAudio.paused) {
+      if (session.kind === "track" && session.trackId) {
+        audioRef.current = sharedAudio
+        setPlaying(session.trackId)
+      } else if (session.kind === "custom-audio") {
+        customAudioRef.current = sharedAudio
+        setCustomMusicPlaying(true)
+        setCustomMusicType("audio")
+        setCustomMusicUrl(session.customUrl ?? "")
+        setCustomSongName(session.customSongName ?? "")
+        setCustomArtistName(session.customArtistName ?? "")
+      }
+    }
+
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
+      if (!allowBackgroundPlaybackRef.current) {
+        stopSharedMusicAudio()
+        clearSharedMusicAudio()
+        clearMusicSession()
       }
-      if (customAudioRef.current) {
-        customAudioRef.current.pause()
-        customAudioRef.current = null
-      }
+      audioRef.current = null
+      customAudioRef.current = null
     }
   }, [])
 
@@ -266,6 +300,7 @@ function MusicContent() {
       if (customAudioRef.current) {
         customAudioRef.current.pause()
       }
+      clearMusicSession()
       setYoutubeVideoId("")
       setSpotifyTrackId("")
       setCustomMusicPlaying(false)
@@ -285,6 +320,11 @@ function MusicContent() {
         if (audioRef.current) {
           audioRef.current.pause()
         }
+        if (customAudioRef.current) {
+          customAudioRef.current.pause()
+        }
+        clearSharedMusicAudio()
+        clearMusicSession()
         setPlaying(null)
         const info = extractSongInfo(customMusicUrl)
         setCustomSongName(info.song)
@@ -304,6 +344,11 @@ function MusicContent() {
         if (audioRef.current) {
           audioRef.current.pause()
         }
+        if (customAudioRef.current) {
+          customAudioRef.current.pause()
+        }
+        clearSharedMusicAudio()
+        clearMusicSession()
         setPlaying(null)
         const info = extractSongInfo(customMusicUrl)
         setCustomSongName(info.song)
@@ -321,12 +366,21 @@ function MusicContent() {
       if (audioRef.current) {
         audioRef.current.pause()
       }
+      if (customAudioRef.current) {
+        customAudioRef.current.pause()
+      }
       setYoutubeVideoId("")
       setSpotifyTrackId("")
       setPlaying(null)
 
-      const audio = new Audio(customMusicUrl)
+      const existingAudio = getSharedMusicAudio()
+      const targetUrl = new URL(customMusicUrl, window.location.href).href
+      if (existingAudio && existingAudio.src !== targetUrl) {
+        existingAudio.pause()
+      }
+      const audio = existingAudio && existingAudio.src === targetUrl ? existingAudio : new Audio(customMusicUrl)
       audio.crossOrigin = "anonymous"
+      audio.loop = true
 
       audio.addEventListener(
         "canplay",
@@ -344,11 +398,18 @@ function MusicContent() {
 
       audio.play()
       customAudioRef.current = audio
+      setSharedMusicAudio(audio)
       const info = extractSongInfo(customMusicUrl)
       setCustomSongName(info.song)
       setCustomArtistName(info.artist)
       setCustomMusicType("audio")
       setCustomMusicPlaying(true)
+      setMusicSession({
+        kind: "custom-audio",
+        customUrl: customMusicUrl,
+        customSongName: info.song,
+        customArtistName: info.artist,
+      })
     } catch (error) {
       setCustomMusicError(t.unableToPLay)
       setCustomMusicPlaying(false)
@@ -358,6 +419,7 @@ function MusicContent() {
   const togglePlay = (track: MusicTrack) => {
     if (playing === track.id) {
       audioRef.current?.pause()
+      clearMusicSession()
       setPlaying(null)
       setCurrentTime(0)
     } else {
@@ -367,10 +429,17 @@ function MusicContent() {
       if (customAudioRef.current) {
         customAudioRef.current.pause()
       }
+      clearMusicSession()
       setCustomMusicPlaying(false)
 
-      const audio = new Audio(track.url)
+      const existingAudio = getSharedMusicAudio()
+      const targetUrl = new URL(track.url, window.location.href).href
+      if (existingAudio && existingAudio.src !== targetUrl) {
+        existingAudio.pause()
+      }
+      const audio = existingAudio && existingAudio.src === targetUrl ? existingAudio : new Audio(track.url)
       audio.crossOrigin = "anonymous"
+      audio.loop = true
       
       audio.addEventListener("timeupdate", () => {
         setCurrentTime(audio.currentTime)
@@ -387,8 +456,16 @@ function MusicContent() {
 
       audio.play()
       audioRef.current = audio
+      setSharedMusicAudio(audio)
+      setMusicSession({ kind: "track", trackId: track.id })
       setPlaying(track.id)
     }
+  }
+
+  const toggleBackgroundPlayback = (enabled: boolean) => {
+    setAllowBackgroundPlaybackState(enabled)
+    allowBackgroundPlaybackRef.current = enabled
+    setBackgroundPlaybackEnabled(enabled)
   }
 
   return (
@@ -566,6 +643,8 @@ function MusicContent() {
                     if (customAudioRef.current) {
                       customAudioRef.current.pause()
                     }
+                    clearSharedMusicAudio()
+                    clearMusicSession()
                   }}
                   className="w-full text-amber-600 hover:text-amber-700 font-semibold py-2 text-center"
                 >
@@ -592,6 +671,27 @@ function MusicContent() {
               <span>{t.benefit3}</span>
             </li>
           </ul>
+          <div className="pt-3 border-t border-indigo-100">
+            <div className="flex items-center justify-between gap-4 rounded-2xl bg-white/70 p-4">
+              <div className="space-y-1">
+                <p className="font-semibold text-gray-900">
+                  {lang === "en" ? "Allow music to play in background" : lang === "es" ? "Permitir música en segundo plano" : "السماح بتشغيل الموسيقى في الخلفية"}
+                </p>
+                <p className="text-xs text-gray-600">
+                  {lang === "en"
+                    ? "Keeps built-in tracks and direct custom audio playing while you navigate the app."
+                    : lang === "es"
+                      ? "Mantiene las pistas y el audio personalizado directo reproduciéndose mientras navega la app."
+                      : "يبقي المقاطع والصوت المخصص المباشر قيد التشغيل أثناء التنقل في التطبيق."}
+                </p>
+              </div>
+              <Switch
+                checked={allowBackgroundPlayback}
+                onCheckedChange={toggleBackgroundPlayback}
+                aria-label={lang === "en" ? "Allow music to play in background" : lang === "es" ? "Permitir música en segundo plano" : "السماح بتشغيل الموسيقى في الخلفية"}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -613,3 +713,4 @@ export default function MusicPage() {
     </Suspense>
   )
 }
+

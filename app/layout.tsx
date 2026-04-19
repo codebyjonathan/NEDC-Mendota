@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AppThemeProvider } from "@/components/app-theme-provider"
 import { NotificationProvider } from "@/components/notification-provider"
+import { RouteTransitionProvider } from "@/components/route-transition-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
@@ -46,7 +47,10 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <AppThemeProvider>
-            <NotificationProvider>{children}</NotificationProvider>
+            <NotificationProvider>
+              <RouteTransitionProvider />
+              {children}
+            </NotificationProvider>
           </AppThemeProvider>
         </ThemeProvider>
         <Analytics />

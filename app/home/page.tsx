@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import { setIntroAudioLoop, stopIntroAudio } from "@/lib/intro-audio"
+import { navigateWithViewTransition } from "@/lib/view-transition"
 
 export default function HomePage() {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("")
@@ -18,7 +19,9 @@ export default function HomePage() {
   const handleLanguageSelect = (language: string) => {
     setSelectedLanguage(language)
     stopIntroAudio(true)
-    router.push(`/main?lang=${language}`)
+    navigateWithViewTransition(() => {
+      router.push(`/main?lang=${language}`)
+    })
   }
 
   // Link button click handler
