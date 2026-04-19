@@ -330,8 +330,10 @@ export default function RocketLogoAnimation({
     const now = computePoint(elapsed);
     const next = computePoint(elapsed + 16);
     const pathAngle = (Math.atan2(next.y - now.y, next.x - now.x) * 180) / Math.PI;
+    const startFacingP = easeInOutCubic(segmentProgress(elapsed, T.travelStart + 220, 820));
+    const travelFacingAngle = blendAngleDeg(0, pathAngle, startFacingP);
     const loopEntryLockP = easeInOutCubic(segmentProgress(elapsed, T.loopStart - 320, 260));
-    const preLoopAngle = blendAngleDeg(pathAngle, 0, loopEntryLockP);
+    const preLoopAngle = blendAngleDeg(travelFacingAngle, 0, loopEntryLockP);
     const loopSpinAngle = 360 * easeInOutCubic(loopP);
     const intoLoopSpinP = easeInOutCubic(segmentProgress(elapsed, T.loopStart - 40, 220));
     const spinReadyAngle = blendAngleDeg(preLoopAngle, loopSpinAngle, intoLoopSpinP);
