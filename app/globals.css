@@ -1,4 +1,3 @@
-
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -127,10 +126,12 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--color-border);
+    outline-color: color-mix(in oklab, var(--color-ring) 50%, transparent);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
   }
 }
 
@@ -180,188 +181,347 @@
    ROCKET LOGO ANIMATION STYLES
    ============================================ */
 
-/* Phase 1: Smooth circular orbit with tangent rotation */
-@keyframes rocket-circular-orbit {
+.intro-stage {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at 16% 22%, #152047 0%, #060711 42%, #020307 100%);
+}
+
+.intro-cinematic-camera {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.intro-nebula-layer {
+  position: absolute;
+  inset: -12%;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(66, 110, 195, 0.35) 0%, rgba(66, 110, 195, 0) 54%),
+    radial-gradient(circle at 72% 62%, rgba(208, 102, 163, 0.26) 0%, rgba(208, 102, 163, 0) 58%),
+    radial-gradient(circle at 44% 74%, rgba(100, 162, 194, 0.18) 0%, rgba(100, 162, 194, 0) 50%);
+  filter: blur(8px);
+  animation: intro-nebula-shift 12s ease-in-out infinite alternate;
+}
+
+.intro-nebula-layer-secondary {
+  opacity: 0.65;
+  filter: blur(14px);
+  animation-duration: 17s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes intro-nebula-shift {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.08) translate3d(-1.5vw, -1.2vh, 0);
+  }
+}
+
+.intro-star-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.intro-dust-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.intro-dust {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(219, 237, 255, 0.78);
+  box-shadow: 0 0 12px rgba(196, 226, 255, 0.56);
+  opacity: 0.2;
+  animation: intro-dust-float linear infinite;
+}
+
+@keyframes intro-dust-float {
   0% {
-    transform: translate(-50%, -50%) translate(0px, -280px) rotate(0deg);
-  }
-  3.125% {
-    transform: translate(-50%, -50%) translate(38px, -276px) rotate(11.25deg);
-  }
-  6.25% {
-    transform: translate(-50%, -50%) translate(73px, -271px) rotate(22.5deg);
-  }
-  9.375% {
-    transform: translate(-50%, -50%) translate(135px, -241px) rotate(33.75deg);
-  }
-  12.5% {
-    transform: translate(-50%, -50%) translate(198px, -198px) rotate(45deg);
-  }
-  15.625% {
-    transform: translate(-50%, -50%) translate(241px, -135px) rotate(56.25deg);
-  }
-  18.75% {
-    transform: translate(-50%, -50%) translate(271px, -73px) rotate(67.5deg);
-  }
-  21.875% {
-    transform: translate(-50%, -50%) translate(276px, -38px) rotate(78.75deg);
-  }
-  25% {
-    transform: translate(-50%, -50%) translate(280px, 0px) rotate(90deg);
-  }
-  28.125% {
-    transform: translate(-50%, -50%) translate(276px, 38px) rotate(101.25deg);
-  }
-  31.25% {
-    transform: translate(-50%, -50%) translate(271px, 73px) rotate(112.5deg);
-  }
-  34.375% {
-    transform: translate(-50%, -50%) translate(241px, 135px) rotate(123.75deg);
-  }
-  37.5% {
-    transform: translate(-50%, -50%) translate(198px, 198px) rotate(135deg);
-  }
-  40.625% {
-    transform: translate(-50%, -50%) translate(135px, 241px) rotate(146.25deg);
-  }
-  43.75% {
-    transform: translate(-50%, -50%) translate(73px, 271px) rotate(157.5deg);
-  }
-  46.875% {
-    transform: translate(-50%, -50%) translate(38px, 276px) rotate(168.75deg);
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0.12;
   }
   50% {
-    transform: translate(-50%, -50%) translate(0px, 280px) rotate(180deg);
-  }
-  53.125% {
-    transform: translate(-50%, -50%) translate(-38px, 276px) rotate(191.25deg);
-  }
-  56.25% {
-    transform: translate(-50%, -50%) translate(-73px, 271px) rotate(202.5deg);
-  }
-  59.375% {
-    transform: translate(-50%, -50%) translate(-135px, 241px) rotate(213.75deg);
-  }
-  62.5% {
-    transform: translate(-50%, -50%) translate(-198px, 198px) rotate(225deg);
-  }
-  65.625% {
-    transform: translate(-50%, -50%) translate(-241px, 135px) rotate(236.25deg);
-  }
-  68.75% {
-    transform: translate(-50%, -50%) translate(-271px, 73px) rotate(247.5deg);
-  }
-  71.875% {
-    transform: translate(-50%, -50%) translate(-276px, 38px) rotate(258.75deg);
-  }
-  75% {
-    transform: translate(-50%, -50%) translate(-280px, 0px) rotate(270deg);
-  }
-  78.125% {
-    transform: translate(-50%, -50%) translate(-276px, -38px) rotate(281.25deg);
-  }
-  81.25% {
-    transform: translate(-50%, -50%) translate(-271px, -73px) rotate(292.5deg);
-  }
-  84.375% {
-    transform: translate(-50%, -50%) translate(-241px, -135px) rotate(303.75deg);
-  }
-  87.5% {
-    transform: translate(-50%, -50%) translate(-198px, -198px) rotate(315deg);
-  }
-  90.625% {
-    transform: translate(-50%, -50%) translate(-135px, -241px) rotate(326.25deg);
-  }
-  93.75% {
-    transform: translate(-50%, -50%) translate(-73px, -271px) rotate(337.5deg);
-  }
-  96.875% {
-    transform: translate(-50%, -50%) translate(-38px, -276px) rotate(348.75deg);
+    opacity: 0.32;
   }
   100% {
-    transform: translate(-50%, -50%) translate(0px, -280px) rotate(360deg);
+    transform: translate3d(-22vw, -3vh, 0) scale(1.1);
+    opacity: 0.12;
   }
 }
 
-.rocket-circular-orbit {
-  animation: rocket-circular-orbit 1s linear forwards;
+.intro-planets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.intro-planet {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 28% 26%, var(--planet-color-a) 0%, color-mix(in srgb, var(--planet-color-a), var(--planet-color-b) 52%) 28%, var(--planet-color-b) 82%, color-mix(in srgb, var(--planet-color-b), #05070f 36%) 100%);
+  box-shadow:
+    0 0 50px color-mix(in srgb, var(--planet-color-b), transparent 42%),
+    inset -28px -14px 42px rgba(0, 0, 0, 0.24),
+    inset 10px 8px 24px rgba(255, 255, 255, 0.22);
+  will-change: transform, opacity;
+}
+
+.intro-planet-ringed::after {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  border-radius: 9999px;
+  border: 2px solid rgba(229, 239, 255, 0.3);
+  transform: rotate(-17deg);
+  filter: drop-shadow(0 0 12px rgba(211, 229, 255, 0.3));
+}
+
+.intro-center-anchor {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+}
+
+.intro-star {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  margin-left: -15px;
+  margin-top: -15px;
+  background: radial-gradient(circle, rgba(255, 250, 226, 1) 0%, rgba(255, 214, 132, 0.95) 50%, rgba(255, 183, 98, 0.68) 100%);
+  clip-path: polygon(50% 0%, 63% 36%, 100% 50%, 63% 64%, 50% 100%, 37% 64%, 0% 50%, 37% 36%);
+  box-shadow:
+    0 0 14px rgba(255, 231, 176, 0.9),
+    0 0 35px rgba(255, 194, 106, 0.58);
+}
+
+.intro-star-glow,
+.intro-star-bloom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.intro-star-glow {
+  width: 144px;
+  height: 144px;
+  margin-left: -72px;
+  margin-top: -72px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 218, 140, 0.5) 0%, rgba(255, 166, 108, 0.24) 40%, rgba(255, 166, 108, 0) 72%);
+  filter: blur(4px);
+}
+
+.intro-star-bloom {
+  width: 250px;
+  height: 250px;
+  margin-left: -125px;
+  margin-top: -125px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 200, 122, 0.36) 0%, rgba(255, 142, 95, 0.12) 33%, rgba(255, 142, 95, 0) 65%);
+  filter: blur(14px);
+}
+
+.intro-center-logo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: clamp(124px, 19vw, 220px);
+  height: clamp(124px, 19vw, 220px);
+  will-change: transform, opacity;
+}
+
+.intro-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(255, 220, 158, 0.55)) drop-shadow(0 0 54px rgba(255, 166, 110, 0.4));
+}
+
+.intro-rocket-wrap {
+  position: absolute;
+  left: 0;
+  top: 0;
   transform-origin: center;
-  z-index: 50;
+  will-change: transform, opacity;
+}
+
+.intro-rocket-shell {
+  position: relative;
+  width: clamp(220px, 28vw, 360px);
+  height: clamp(122px, 16vw, 194px);
+  margin-left: calc(clamp(220px, 28vw, 360px) * -0.5);
+  margin-top: calc(clamp(122px, 16vw, 194px) * -0.5);
+  filter: drop-shadow(0 0 16px rgba(255, 180, 108, 0.58)) drop-shadow(0 0 38px rgba(255, 138, 80, 0.3));
+}
+
+.intro-rocket-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: translateZ(0);
+}
+
+.intro-rocket-specular,
+.intro-rocket-shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 9999px;
+}
+
+.intro-rocket-specular {
+  background: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 45%);
+  mix-blend-mode: screen;
+}
+
+.intro-rocket-shadow {
+  background: radial-gradient(circle at 68% 72%, rgba(0, 0, 0, 0.32) 0%, rgba(0, 0, 0, 0) 48%);
+}
+
+.intro-rocket-trail,
+.intro-rocket-flame-main,
+.intro-rocket-flame-core {
   position: absolute;
   top: 50%;
-  left: 50%;
+  right: 50%;
+  transform-origin: right center;
+  border-radius: 9999px;
+  pointer-events: none;
 }
 
-/* Phase 2: Smooth return to center */
-@keyframes rocket-return-center {
-  0% {
-    /* Come from last position (top, 360°) */
-    transform: translate(-50%, -50%) translate(0px, -280px) rotate(360deg);
+.intro-rocket-trail {
+  width: 150px;
+  height: 18px;
+  margin-right: 30px;
+  margin-top: -9px;
+  background: linear-gradient(90deg, rgba(255, 214, 154, 0.75) 0%, rgba(255, 162, 95, 0.32) 34%, rgba(255, 120, 72, 0.05) 70%, rgba(255, 120, 72, 0) 100%);
+  filter: blur(2px);
+}
+
+.intro-rocket-flame-main {
+  width: 62px;
+  height: 12px;
+  margin-right: 10px;
+  margin-top: -6px;
+  background: linear-gradient(90deg, rgba(255, 250, 223, 0.98) 0%, rgba(255, 188, 112, 0.95) 44%, rgba(255, 112, 56, 0.15) 100%);
+  filter: blur(0.9px);
+  box-shadow: 0 0 22px rgba(255, 170, 96, 0.78);
+  animation: intro-thruster-flicker-main 150ms ease-in-out infinite alternate;
+}
+
+.intro-rocket-flame-core {
+  width: 34px;
+  height: 8px;
+  margin-right: 14px;
+  margin-top: -4px;
+  background: linear-gradient(90deg, rgba(210, 244, 255, 0.98) 0%, rgba(164, 226, 255, 0.82) 54%, rgba(164, 226, 255, 0) 100%);
+  filter: blur(0.8px);
+  box-shadow: 0 0 18px rgba(145, 215, 255, 0.85);
+  animation: intro-thruster-flicker-core 110ms ease-in-out infinite alternate-reverse;
+}
+
+@keyframes intro-thruster-flicker-main {
+  from {
+    transform: translateY(0) scaleX(0.95);
   }
-  50% {
-    /* Midway - rotate smoothly toward 0° */
-    transform: translate(-50%, -50%) translate(-140px, -140px) rotate(270deg);
-  }
-  100% {
-    /* Back at center, rotation 0° */
-    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg);
+  to {
+    transform: translateY(0) scaleX(1.08);
   }
 }
 
-.rocket-return-center {
-  animation: rocket-return-center 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  transform-origin: center;
-  z-index: 50;
+@keyframes intro-thruster-flicker-core {
+  from {
+    transform: translateY(0) scaleX(0.92);
+  }
+  to {
+    transform: translateY(0) scaleX(1.1);
+  }
+}
+
+.intro-merge-flash {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  left: 0;
+  top: 0;
+  width: 420px;
+  height: 420px;
+  margin-left: -210px;
+  margin-top: -210px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 226, 173, 0.54) 0%, rgba(255, 176, 118, 0.2) 30%, rgba(255, 176, 118, 0) 62%);
+  filter: blur(9px);
 }
 
-/* Phase 3: Glow pulse effect during merge */
-@keyframes rocket-glow-pulse {
-  0% {
-    filter: drop-shadow(0 0 10px #ff6f61) drop-shadow(0 0 20px #ff6f61);
-    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(1);
-  }
-  50% {
-    filter: drop-shadow(0 0 30px #ff6f61) drop-shadow(0 0 50px #ff6f61) drop-shadow(0 0 70px #ff6f61);
-    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(1.05);
-  }
-  100% {
-    filter: drop-shadow(0 0 40px #ff6f61) drop-shadow(0 0 60px #ff6f61);
-    transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(1);
-  }
-}
-
-.rocket-glow-pulse {
-  animation: rocket-glow-pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  transform-origin: center;
-  z-index: 50;
+.intro-vignette {
   position: absolute;
-  top: 50%;
-  left: 50%;
-}
-
-/* Phase 4: Final centered state */
-.rocket-final-center {
-  transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg);
-  filter: drop-shadow(0 0 20px #ff6f61) drop-shadow(0 0 30px #ff6f61);
-  z-index: 50;
-  position: absolute;
-  top: 50%;
-  left: 50%;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.38) 100%);
 }
 
 /* Fade in animation for final logo */
 @keyframes fade-in {
   from {
     opacity: 0;
+    transform: translateY(8px) scale(0.9);
+    filter: blur(1.3px);
   }
   to {
     opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
 .animate-fade-in {
   animation: fade-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
+
+@keyframes fly-in-flash {
+  0% {
+    opacity: 0.78;
+    transform: scale(1);
+    filter: brightness(1);
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+    filter: brightness(1.22);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.65), 0 0 40px rgba(137, 193, 255, 0.45);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+    filter: brightness(1);
+    text-shadow: 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+.fly-in-flash {
+  display: inline-block;
+  animation: fly-in-flash 1.5s ease-in-out infinite;
+}
+
