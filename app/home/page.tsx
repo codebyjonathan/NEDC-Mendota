@@ -19,9 +19,12 @@ export default function HomePage() {
   const handleLanguageSelect = (language: string) => {
     setSelectedLanguage(language)
     stopIntroAudio(true)
-    navigateWithViewTransition(() => {
-      router.push(`/main?lang=${language}`)
-    })
+    navigateWithViewTransition(
+      () => {
+        router.push(`/main?lang=${language}`)
+      },
+      { style: "directional" },
+    )
   }
 
   // Link button click handler

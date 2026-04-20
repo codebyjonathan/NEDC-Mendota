@@ -548,7 +548,7 @@
   --route-exit-duration: 340ms;
   --route-enter-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --route-exit-ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --route-slide-distance: 30px;
+  --route-slide-distance: 72px;
   --route-lift-distance: 20px;
 }
 
@@ -602,6 +602,14 @@ html[data-supports-view-transitions="true"] .route-shell {
   animation-name: route-enter-soft-zoom;
 }
 
+.route-shell.route-shell-tilt-left {
+  animation-name: route-enter-tilt-left;
+}
+
+.route-shell.route-shell-tilt-right {
+  animation-name: route-enter-tilt-right;
+}
+
 html[data-route-transition="lift"] .route-shell {
   animation-name: route-enter-lift;
 }
@@ -613,8 +621,8 @@ html[data-route-transition="slide-left"] .route-shell {
 @keyframes route-enter-slide-left {
   from {
     opacity: 0;
-    transform: translate3d(var(--route-slide-distance), 0, 0) scale(0.995);
-    filter: blur(1px);
+    transform: translate3d(var(--route-slide-distance), 0, 0) scale(0.94) skewX(-2deg);
+    filter: blur(2.4px);
   }
   to {
     opacity: 1;
@@ -626,8 +634,8 @@ html[data-route-transition="slide-left"] .route-shell {
 @keyframes route-enter-slide-right {
   from {
     opacity: 0;
-    transform: translate3d(calc(var(--route-slide-distance) * -1), 0, 0) scale(0.995);
-    filter: blur(1px);
+    transform: translate3d(calc(var(--route-slide-distance) * -1), 0, 0) scale(0.94) skewX(2deg);
+    filter: blur(2.4px);
   }
   to {
     opacity: 1;
@@ -639,8 +647,8 @@ html[data-route-transition="slide-left"] .route-shell {
 @keyframes route-enter-slide-up {
   from {
     opacity: 0;
-    transform: translate3d(0, var(--route-slide-distance), 0) scale(0.995);
-    filter: blur(1px);
+    transform: translate3d(0, var(--route-slide-distance), 0) scale(0.93) rotateX(-6deg);
+    filter: blur(2.2px);
   }
   to {
     opacity: 1;
@@ -652,8 +660,8 @@ html[data-route-transition="slide-left"] .route-shell {
 @keyframes route-enter-slide-down {
   from {
     opacity: 0;
-    transform: translate3d(0, calc(var(--route-slide-distance) * -1), 0) scale(0.995);
-    filter: blur(1px);
+    transform: translate3d(0, calc(var(--route-slide-distance) * -1), 0) scale(0.93) rotateX(6deg);
+    filter: blur(2.2px);
   }
   to {
     opacity: 1;
@@ -677,18 +685,52 @@ html[data-route-transition="slide-down"] .route-shell {
 @keyframes route-enter-soft-zoom {
   from {
     opacity: 0;
-    transform: scale(0.982);
-    filter: blur(1.2px);
+    transform: scale(0.86);
+    filter: blur(3.2px) saturate(0.7);
   }
   to {
     opacity: 1;
     transform: scale(1);
-    filter: blur(0);
+    filter: blur(0) saturate(1);
   }
 }
 
 html[data-route-transition="soft-zoom"] .route-shell {
   animation-name: route-enter-soft-zoom;
+}
+
+@keyframes route-enter-tilt-left {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(14deg) rotateZ(-1.2deg) translate3d(56px, 0, 0) scale(0.9);
+    filter: blur(2.2px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes route-enter-tilt-right {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-14deg) rotateZ(1.2deg) translate3d(-56px, 0, 0) scale(0.9);
+    filter: blur(2.2px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="tilt-left"] .route-shell {
+  animation-name: route-enter-tilt-left;
+}
+
+html[data-route-transition="tilt-right"] .route-shell {
+  animation-name: route-enter-tilt-right;
 }
 
 ::view-transition-old(root) {
@@ -740,17 +782,17 @@ html[data-route-transition="slide-left"] ::view-transition-new(root) {
     filter: blur(0);
   }
   to {
-    opacity: 0.3;
-    transform: translateX(calc(var(--route-slide-distance) * -0.66)) scale(0.995);
-    filter: blur(1.2px);
+    opacity: 0.14;
+    transform: translateX(calc(var(--route-slide-distance) * -1)) scale(0.93) skewX(-2deg);
+    filter: blur(2.2px);
   }
 }
 
 @keyframes new-screen-in-slide-left {
   from {
     opacity: 0;
-    transform: translateX(var(--route-slide-distance)) scale(0.995);
-    filter: blur(1.2px);
+    transform: translateX(var(--route-slide-distance)) scale(0.94) skewX(-2deg);
+    filter: blur(2.4px);
   }
   to {
     opacity: 1;
@@ -774,17 +816,17 @@ html[data-route-transition="slide-right"] ::view-transition-new(root) {
     filter: blur(0);
   }
   to {
-    opacity: 0.3;
-    transform: translateX(calc(var(--route-slide-distance) * 0.66)) scale(0.995);
-    filter: blur(1.2px);
+    opacity: 0.14;
+    transform: translateX(calc(var(--route-slide-distance) * 1)) scale(0.93) skewX(2deg);
+    filter: blur(2.2px);
   }
 }
 
 @keyframes new-screen-in-slide-right {
   from {
     opacity: 0;
-    transform: translateX(calc(var(--route-slide-distance) * -1)) scale(0.995);
-    filter: blur(1.2px);
+    transform: translateX(calc(var(--route-slide-distance) * -1)) scale(0.94) skewX(2deg);
+    filter: blur(2.4px);
   }
   to {
     opacity: 1;
@@ -808,17 +850,17 @@ html[data-route-transition="slide-up"] ::view-transition-new(root) {
     filter: blur(0);
   }
   to {
-    opacity: 0.3;
-    transform: translateY(calc(var(--route-slide-distance) * -0.66)) scale(0.995);
-    filter: blur(1.2px);
+    opacity: 0.14;
+    transform: translateY(calc(var(--route-slide-distance) * -1)) scale(0.92) rotateX(-6deg);
+    filter: blur(2.2px);
   }
 }
 
 @keyframes new-screen-in-slide-up {
   from {
     opacity: 0;
-    transform: translateY(var(--route-slide-distance)) scale(0.995);
-    filter: blur(1.2px);
+    transform: translateY(var(--route-slide-distance)) scale(0.93) rotateX(-6deg);
+    filter: blur(2.2px);
   }
   to {
     opacity: 1;
@@ -842,17 +884,17 @@ html[data-route-transition="slide-down"] ::view-transition-new(root) {
     filter: blur(0);
   }
   to {
-    opacity: 0.3;
-    transform: translateY(calc(var(--route-slide-distance) * 0.66)) scale(0.995);
-    filter: blur(1.2px);
+    opacity: 0.14;
+    transform: translateY(calc(var(--route-slide-distance) * 1)) scale(0.92) rotateX(6deg);
+    filter: blur(2.2px);
   }
 }
 
 @keyframes new-screen-in-slide-down {
   from {
     opacity: 0;
-    transform: translateY(calc(var(--route-slide-distance) * -1)) scale(0.995);
-    filter: blur(1.2px);
+    transform: translateY(calc(var(--route-slide-distance) * -1)) scale(0.93) rotateX(6deg);
+    filter: blur(2.2px);
   }
   to {
     opacity: 1;
@@ -876,23 +918,110 @@ html[data-route-transition="soft-zoom"] ::view-transition-new(root) {
     filter: blur(0);
   }
   to {
-    opacity: 0.28;
-    transform: scale(0.976);
-    filter: blur(2px);
+    opacity: 0.12;
+    transform: scale(1.08);
+    filter: blur(3.6px) saturate(0.68);
   }
 }
 
 @keyframes new-screen-in-soft-zoom {
   from {
     opacity: 0;
-    transform: scale(1.015);
-    filter: blur(1.5px);
+    transform: scale(0.84);
+    filter: blur(3.6px) saturate(0.68);
   }
   to {
     opacity: 1;
     transform: scale(1);
+    filter: blur(0) saturate(1);
+  }
+}
+
+html[data-route-transition="tilt-left"] ::view-transition-old(root) {
+  animation-name: old-screen-out-tilt-left;
+}
+
+html[data-route-transition="tilt-left"] ::view-transition-new(root) {
+  animation-name: new-screen-in-tilt-left;
+}
+
+@keyframes old-screen-out-tilt-left {
+  from {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) scale(1);
     filter: blur(0);
   }
+  to {
+    opacity: 0.14;
+    transform: perspective(900px) rotateY(-14deg) rotateZ(-1.4deg) translateX(-56px) scale(0.9);
+    filter: blur(2.4px);
+  }
+}
+
+@keyframes new-screen-in-tilt-left {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(14deg) rotateZ(-1.4deg) translateX(56px) scale(0.9);
+    filter: blur(2.4px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="tilt-right"] ::view-transition-old(root) {
+  animation-name: old-screen-out-tilt-right;
+}
+
+html[data-route-transition="tilt-right"] ::view-transition-new(root) {
+  animation-name: new-screen-in-tilt-right;
+}
+
+@keyframes old-screen-out-tilt-right {
+  from {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0.14;
+    transform: perspective(900px) rotateY(14deg) rotateZ(1.4deg) translateX(56px) scale(0.9);
+    filter: blur(2.4px);
+  }
+}
+
+@keyframes new-screen-in-tilt-right {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateY(-14deg) rotateZ(1.4deg) translateX(-56px) scale(0.9);
+    filter: blur(2.4px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(900px) rotateY(0deg) translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+html[data-route-transition="slide-left"] ::view-transition-new(root),
+html[data-route-transition="slide-right"] ::view-transition-new(root),
+html[data-route-transition="slide-up"] ::view-transition-new(root),
+html[data-route-transition="slide-down"] ::view-transition-new(root) {
+  animation-duration: 420ms;
+}
+
+html[data-route-transition="soft-zoom"] ::view-transition-old(root),
+html[data-route-transition="soft-zoom"] ::view-transition-new(root) {
+  animation-duration: 620ms;
+}
+
+html[data-route-transition="tilt-left"] ::view-transition-old(root),
+html[data-route-transition="tilt-left"] ::view-transition-new(root),
+html[data-route-transition="tilt-right"] ::view-transition-old(root),
+html[data-route-transition="tilt-right"] ::view-transition-new(root) {
+  animation-duration: 560ms;
 }
 
 @media (prefers-reduced-motion: reduce) {

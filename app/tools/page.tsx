@@ -21,9 +21,12 @@ function ToolsContent() {
   const isRTL = lang === "ar"
 
   const changeLanguage = (newLang: string) => {
-    navigateWithViewTransition(() => {
-      router.push(`/tools?lang=${newLang}`)
-    })
+    navigateWithViewTransition(
+      () => {
+        router.push(`/tools?lang=${newLang}`)
+      },
+      { style: "expressive" },
+    )
   }
 
   const toolCategories = [

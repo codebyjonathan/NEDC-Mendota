@@ -40,11 +40,11 @@ export function BottomNav({ lang }: BottomNavProps) {
   const t = translations[lang as keyof typeof translations] || translations.en
 
   const navItems = [
-    { href: "/main", icon: Home, label: t.home },
-    { href: "/tools", icon: Wrench, label: t.tools },
-    { href: "/emergency", icon: AlertCircle, label: t.emergency },
-    { href: "/wellness", icon: Heart, label: t.wellness },
-    { href: "/resources", icon: CalendarDays, label: t.resources },
+    { href: "/main", icon: Home, label: t.home, transitionStyle: "random" },
+    { href: "/tools", icon: Wrench, label: t.tools, transitionStyle: "random" },
+    { href: "/emergency", icon: AlertCircle, label: t.emergency, transitionStyle: "random" },
+    { href: "/wellness", icon: Heart, label: t.wellness, transitionStyle: "random" },
+    { href: "/resources", icon: CalendarDays, label: t.resources, transitionStyle: "random" },
   ]
 
   return (
@@ -58,6 +58,7 @@ export function BottomNav({ lang }: BottomNavProps) {
           <Link
             key={item.href}
             href={`${item.href}?lang=${currentLang}`}
+            data-transition-style={item.transitionStyle}
             className="flex flex-col items-center gap-1 py-2 px-1 min-w-0 flex-1"
           >
             <Icon

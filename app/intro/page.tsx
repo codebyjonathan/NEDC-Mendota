@@ -75,7 +75,7 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
       } else {
         navigateWithViewTransition(() => {
           router.push("/starters");
-        });
+        }, { style: "expressive" });
       }
     }, 180);
   };

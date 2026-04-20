@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { AppThemeProvider } from "@/components/app-theme-provider"
 import { NotificationProvider } from "@/components/notification-provider"
 import { RouteTransitionProvider } from "@/components/route-transition-provider"
+import { RouteTransitionShell } from "@/components/route-transition-shell"
 import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
@@ -49,7 +50,7 @@ export default function RootLayout({
           <AppThemeProvider>
             <NotificationProvider>
               <RouteTransitionProvider />
-              {children}
+              <RouteTransitionShell>{children}</RouteTransitionShell>
             </NotificationProvider>
           </AppThemeProvider>
         </ThemeProvider>
