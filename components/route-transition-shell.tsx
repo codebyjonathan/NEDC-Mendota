@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { type ReactNode, useLayoutEffect, useState } from "react";
 import { consumePendingRouteTransition } from "@/lib/route-transition-variant";
 
@@ -10,11 +10,8 @@ interface RouteTransitionShellProps {
 
 export function RouteTransitionShell({ children }: RouteTransitionShellProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [shouldAnimate, setShouldAnimate] = useState(false);
-
-  const search = searchParams.toString();
-  const transitionKey = search.length > 0 ? `${pathname}?${search}` : pathname;
+  const transitionKey = pathname;
 
   useLayoutEffect(() => {
     setShouldAnimate(consumePendingRouteTransition());
