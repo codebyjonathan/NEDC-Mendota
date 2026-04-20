@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Phone, MessageCircle, MapPin, Wind, Book, Music, Sparkles } from "lucide-react"
 import Link from "next/link"
@@ -9,6 +9,51 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { SolarSystemJourney } from "@/components/solar-system-journey"
 import { translations } from "@/lib/translations"
+
+function ScrollReveal({
+  children,
+  delay = 0,
+}: {
+  children: ReactNode
+  delay?: number
+}) {
+  const sectionRef = useRef<HTMLDivElement | null>(null)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const node = sectionRef.current
+    if (!node) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      {
+        threshold: 0.15,
+        rootMargin: "0px 0px -8% 0px",
+      },
+    )
+
+    observer.observe(node)
+
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={sectionRef}
+      className={`scroll-reveal ${isVisible ? "is-visible" : ""}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  )
+}
 
 function MainScreenContent() {
   const searchParams = useSearchParams()
@@ -24,99 +69,111 @@ function MainScreenContent() {
       <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-8 space-y-8 pb-24">
-        <h2 className="text-2xl font-bold text-gray-900 text-center px-4">{t.greeting}</h2>
+      <div className="home-scroll-shell flex-1 overflow-y-auto px-5 py-8 space-y-8 pb-24">
+        <ScrollReveal>
+          <h2 className="text-2xl font-bold text-gray-900 text-center px-4">{t.greeting}</h2>
+        </ScrollReveal>
 
-        <Link href={`/support?lang=${lang}`} data-transition-style="random">
-          <Button className="app-cta w-full h-20 text-xl font-semibold rounded-3xl shadow-lg">
-            {t.getSupport}
-          </Button>
-        </Link>
+        <ScrollReveal delay={40}>
+          <Link href={`/support?lang=${lang}`} data-transition-style="random">
+            <Button className="app-cta w-full h-20 text-xl font-semibold rounded-3xl shadow-lg">
+              {t.getSupport}
+            </Button>
+          </Link>
+        </ScrollReveal>
 
-        <div className="grid grid-cols-2 gap-5 mt-6">
+        <ScrollReveal delay={70}>
+          <div className="grid grid-cols-2 gap-5 mt-6">
             <Link
               href={`/call-lifeline?lang=${lang}`}
               data-transition-style="random"
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
-            <Phone className="w-8 h-8 text-gray-700 flex-shrink-0" />
-            <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.callLifeline}</span>
-          </Link>
+              <Phone className="w-8 h-8 text-gray-700 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.callLifeline}</span>
+            </Link>
             <Link
               href={`/text-lifeline?lang=${lang}`}
               data-transition-style="random"
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
-            <MessageCircle className="w-8 h-8 text-gray-700 flex-shrink-0" />
-            <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.textLifeline}</span>
-          </Link>
+              <MessageCircle className="w-8 h-8 text-gray-700 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.textLifeline}</span>
+            </Link>
             <Link
               href={`/chat-support?lang=${lang}`}
               data-transition-style="random"
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
-            <MessageCircle className="w-8 h-8 text-gray-700 flex-shrink-0" />
-            <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.chatSupport}</span>
-          </Link>
+              <MessageCircle className="w-8 h-8 text-gray-700 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.chatSupport}</span>
+            </Link>
             <Link
               href={`/emergency-location?lang=${lang}`}
               data-transition-style="random"
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
-            <MapPin className="w-8 h-8 text-gray-700 flex-shrink-0" />
-            <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.emergencyLocation}</span>
-          </Link>
-        </div>
-
-        <div className="bg-white rounded-3xl p-6 shadow-md">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">{t.copingTools}</h3>
-          <div className="grid grid-cols-4 gap-6">
-            <Link
-              href={`/breathing?lang=${lang}`}
-              data-transition-style="random"
-              className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
-            >
-              <Wind className="w-10 h-10" style={{ color: "#2B7FFF" }}/>
-              <span className="text-xs text-center text-gray-900 leading-tight">{t.breathing}</span>
-            </Link>
-            <Link
-              href={`/grounding?lang=${lang}`}
-              data-transition-style="random"
-              className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
-            >
-              <Sparkles className="w-10 h-10" style={{ color: "#00c950" }}/>
-              <span className="text-xs text-center text-gray-900 leading-tight">{t.grounding}</span>
-            </Link>
-            <Link
-              href={`/journal?lang=${lang}`}
-              data-transition-style="random"
-              className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
-            >
-              <Book className="w-10 h-10" style={{ color: "#fe9a00" }}/>
-              <span className="text-xs text-center text-gray-900 leading-tight">{t.journal}</span>
-            </Link>
-            <Link
-              href={`/music?lang=${lang}`}
-              data-transition-style="random"
-              className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
-            >
-              <Music className="w-10 h-10" style={{ color: "#615fff" }}/>
-              <span className="text-xs text-center text-gray-900 leading-tight">{t.music}</span>
+              <MapPin className="w-8 h-8 text-gray-700 flex-shrink-0" />
+              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.emergencyLocation}</span>
             </Link>
           </div>
-        </div>
+        </ScrollReveal>
 
-        <div className="bg-white rounded-3xl p-6 shadow-md space-y-5">
-          <h3 className="text-xl font-bold text-gray-900">{t.safetyPlan}</h3>
-          <p className="text-base text-gray-600 leading-relaxed">{t.safetyDesc}</p>
-          <Link href={`/safety-plan?lang=${lang}`} data-transition-style="random">
-            <Button className="app-cta w-full h-14 text-lg font-semibold rounded-2xl">
-              {t.openSafety}
-            </Button>
-          </Link>
-        </div>
+        <ScrollReveal delay={90}>
+          <div className="bg-white rounded-3xl p-6 shadow-md">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">{t.copingTools}</h3>
+            <div className="grid grid-cols-4 gap-6">
+              <Link
+                href={`/breathing?lang=${lang}`}
+                data-transition-style="random"
+                className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
+              >
+                <Wind className="w-10 h-10" style={{ color: "#2B7FFF" }} />
+                <span className="text-xs text-center text-gray-900 leading-tight">{t.breathing}</span>
+              </Link>
+              <Link
+                href={`/grounding?lang=${lang}`}
+                data-transition-style="random"
+                className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
+              >
+                <Sparkles className="w-10 h-10" style={{ color: "#00c950" }} />
+                <span className="text-xs text-center text-gray-900 leading-tight">{t.grounding}</span>
+              </Link>
+              <Link
+                href={`/journal?lang=${lang}`}
+                data-transition-style="random"
+                className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
+              >
+                <Book className="w-10 h-10" style={{ color: "#fe9a00" }} />
+                <span className="text-xs text-center text-gray-900 leading-tight">{t.journal}</span>
+              </Link>
+              <Link
+                href={`/music?lang=${lang}`}
+                data-transition-style="random"
+                className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
+              >
+                <Music className="w-10 h-10" style={{ color: "#615fff" }} />
+                <span className="text-xs text-center text-gray-900 leading-tight">{t.music}</span>
+              </Link>
+            </div>
+          </div>
+        </ScrollReveal>
 
-        <SolarSystemJourney />
+        <ScrollReveal delay={110}>
+          <div className="bg-white rounded-3xl p-6 shadow-md space-y-5">
+            <h3 className="text-xl font-bold text-gray-900">{t.safetyPlan}</h3>
+            <p className="text-base text-gray-600 leading-relaxed">{t.safetyDesc}</p>
+            <Link href={`/safety-plan?lang=${lang}`} data-transition-style="random">
+              <Button className="app-cta w-full h-14 text-lg font-semibold rounded-2xl">
+                {t.openSafety}
+              </Button>
+            </Link>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={130}>
+          <SolarSystemJourney />
+        </ScrollReveal>
       </div>
 
       <BottomNav lang={lang} />

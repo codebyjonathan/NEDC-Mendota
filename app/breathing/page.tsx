@@ -91,7 +91,7 @@ function BreathingContent() {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
       <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-20">
+      <div className="home-scroll-shell flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-20">
         <div className="text-center space-y-2">
           <Wind className="w-12 h-12 mx-auto text-blue-600" />
           <h2 className="text-2xl font-bold text-gray-900">{t.breathingTitle}</h2>

@@ -485,7 +485,7 @@ function MusicContent() {
     >
       <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />
 
-      <div className="flex-1 overflow-y-auto px-5 py-8 space-y-8 pb-24">
+      <div className="home-scroll-shell flex-1 overflow-y-auto px-5 py-8 space-y-8 pb-24">
         <div className="text-center space-y-3">
           <Music className="w-16 h-16 mx-auto text-indigo-600" />
           <h2 className="text-3xl font-bold text-gray-900">{t.musicTitle}</h2>

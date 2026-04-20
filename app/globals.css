@@ -144,6 +144,30 @@
   .app-cta:hover {
     filter: brightness(0.96);
   }
+
+  .home-scroll-shell {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-padding-top: 0.75rem;
+  }
+
+  .scroll-reveal {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.976);
+    filter: blur(2.1px);
+    transition:
+      opacity 560ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 680ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 620ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform, filter;
+  }
+
+  .scroll-reveal.is-visible {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
 }
 
 :root[data-app-theme] .bg-white {
@@ -1027,6 +1051,18 @@ html[data-route-transition="tilt-right"] ::view-transition-new(root) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .home-scroll-shell {
+    scroll-behavior: auto;
+  }
+
+  .scroll-reveal,
+  .scroll-reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
   .route-shell {
     animation: none;
   }

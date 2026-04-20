@@ -58,7 +58,7 @@ function EmergencyLocationContent() {
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-orange-50 flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
       <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-20">
+      <div className="home-scroll-shell flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-20">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 bg-red-500 rounded-full mx-auto flex items-center justify-center">
             <MapPin className="w-10 h-10 text-white" />

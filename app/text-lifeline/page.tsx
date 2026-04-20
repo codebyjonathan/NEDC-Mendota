@@ -30,7 +30,7 @@ function TextLifelineContent() {
     <div className="min-h-screen bg-gradient-to-b from-purple-50 to-pink-50 flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
       <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-20">
+      <div className="home-scroll-shell flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-20">
         <div className="text-center space-y-4">
           <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full mx-auto flex items-center justify-center shadow-lg">
             <MessageCircle className="w-12 h-12 text-white" />

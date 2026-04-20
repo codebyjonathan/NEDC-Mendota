@@ -69,7 +69,7 @@ function SupportContent() {
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-blue-50 flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
       <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />
 
-      <div className="flex-1 overflow-y-auto px-5 py-8 space-y-8 pb-24">
+      <div className="home-scroll-shell flex-1 overflow-y-auto px-5 py-8 space-y-8 pb-24">
         <div className="text-center space-y-4">
           <HeartHandshake className="w-20 h-20 mx-auto text-teal-600" />
           <h2 className="text-3xl font-bold text-gray-900">{t.getSupport}</h2>
