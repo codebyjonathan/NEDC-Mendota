@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="cw-bg" cx="50%" cy="48%" r="68%">
+      <stop offset="0%" stop-color="#d6f4ff"/>
+      <stop offset="45%" stop-color="#86d4ff"/>
+      <stop offset="78%" stop-color="#497fd8"/>
+      <stop offset="100%" stop-color="#1d2a64"/>
+    </radialGradient>
+    <radialGradient id="cw-core" cx="50%" cy="50%" r="56%">
+      <stop offset="0%" stop-color="#fff8dc"/>
+      <stop offset="55%" stop-color="#ffd59b"/>
+      <stop offset="100%" stop-color="#ff9a78" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="60" fill="url(#cw-bg)"/>
+  <ellipse cx="64" cy="64" rx="41" ry="14" fill="#e8f8ff" opacity=".88" transform="rotate(-24 64 64)"/>
+  <ellipse cx="64" cy="64" rx="31" ry="10" fill="#b9e8ff" opacity=".65" transform="rotate(20 64 64)"/>
+  <circle cx="64" cy="64" r="12" fill="url(#cw-core)"/>
+  <circle cx="44" cy="49" r="2" fill="#e9fbff"/>
+  <circle cx="87" cy="53" r="1.8" fill="#d7f4ff"/>
+  <circle cx="52" cy="82" r="1.9" fill="#d7f4ff"/>
+  <circle cx="79" cy="84" r="2.1" fill="#ecfbff"/>
+</svg>

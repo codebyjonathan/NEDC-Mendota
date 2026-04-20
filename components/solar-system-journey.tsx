@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import Image from "next/image"
-import { BadgeCheck, Rocket, RotateCcw } from "lucide-react"
+import { BadgeCheck, Rocket } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
@@ -19,7 +19,6 @@ import {
   getUnlockedPlanetCount,
   isNextMissionClaimable,
   subscribeToSolarProgress,
-  resetSolarProgress,
   type JourneyStage,
   type SolarProgressState,
 } from "@/lib/solar-system-goals"
@@ -88,21 +87,6 @@ export function SolarSystemJourney({ className = "" }: { className?: string }) {
       setProgressState(getSolarProgressState())
     }
   }, [showLegendaryCelebration, planetCelebration, unlockedCount, progressState.legendaryShown])
-
-  const handleResetForTesting = () => {
-    if (typeof window !== "undefined") {
-      const confirmed = window.confirm("Reset Solar Journey progress for testing?")
-      if (!confirmed) return
-    }
-    resetSolarProgress()
-    setProgressState(getSolarProgressState())
-    setPlanetCelebration(null)
-    setShowFinalCelebration(false)
-    setShowLegendaryCelebration(false)
-    setPendingFinalCelebration(false)
-    setPendingLegendaryCelebration(false)
-    setClaimAnimating(false)
-  }
 
   const handleClaimMission = () => {
     if (!claimReady || claimAnimating) return
@@ -214,19 +198,9 @@ export function SolarSystemJourney({ className = "" }: { className?: string }) {
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <h3 className="text-lg font-bold">Daily Journey</h3>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleResetForTesting}
-              className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-white/20"
-              title="Reset progress for testing"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Reset
-            </button>
-            <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
-              {completionPercent}% complete
-            </span>
-          </div>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+            {completionPercent}% complete
+          </span>
         </div>
 
         <p className="mb-3 text-sm text-blue-100">
@@ -504,7 +478,7 @@ export function SolarSystemJourney({ className = "" }: { className?: string }) {
           <DialogHeader className="sr-only">
             <DialogTitle>Legendary Cosmic Badge Unlocked</DialogTitle>
             <DialogDescription>
-              Full-screen celebration showing your rocket and all badges merging into the rarest badge.
+              Full-screen celebration with a star-drop intro and all badges merging into the rarest badge.
             </DialogDescription>
           </DialogHeader>
           <div className="legendary-scene">
@@ -517,8 +491,9 @@ export function SolarSystemJourney({ className = "" }: { className?: string }) {
               <span className="legendary-star legendary-star-6" />
             </div>
 
-            <div className="legendary-rocket-wrap" aria-hidden="true">
-              <Image src="/horizontal_rocket.png" alt="Rocket finale" width={150} height={75} className="h-[75px] w-[150px] object-contain" />
+            <div className="legendary-star-drop" aria-hidden="true">
+              <span className="legendary-star-drop-core" />
+              <span className="legendary-star-drop-tail" />
             </div>
 
             <div className="legendary-badges" aria-hidden="true">
@@ -536,7 +511,7 @@ export function SolarSystemJourney({ className = "" }: { className?: string }) {
             <div className="legendary-copy">
               <h2 className="text-3xl font-black tracking-tight">Legendary Cosmic Badge Unlocked</h2>
               <p className="mt-2 text-sm text-fuchsia-100">
-                Your rocket crossed every world and galaxy. All badges merged into the rarest one.
+                You completed every world and galaxy. All badges merged into the rarest one.
               </p>
               <Button onClick={() => setShowLegendaryCelebration(false)} className="mt-5 rounded-2xl bg-white px-6 text-[#3b155f] hover:bg-fuchsia-50">
                 Claim Legendary Badge

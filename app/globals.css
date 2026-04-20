@@ -1269,30 +1269,55 @@ html[data-route-transition="tilt-right"] ::view-transition-new(root) {
   100% { opacity: 0.22; transform: scale(0.7); }
 }
 
-.legendary-rocket-wrap {
+.legendary-star-drop {
   position: absolute;
-  left: 10%;
-  top: 70%;
-  transform-origin: center;
-  animation: legendary-rocket-flight 4s cubic-bezier(0.18, 0.9, 0.24, 1) forwards;
-  filter: drop-shadow(0 0 20px rgba(255, 179, 117, 0.65));
+  left: 14%;
+  top: 6%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  animation: legendary-star-drop-fly 1.25s cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  z-index: 2;
+  pointer-events: none;
 }
 
-@keyframes legendary-rocket-flight {
+.legendary-star-drop-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 252, 233, 1) 0%, rgba(255, 208, 133, 0.92) 55%, rgba(255, 154, 96, 0.8) 100%);
+  box-shadow:
+    0 0 14px rgba(255, 222, 166, 0.9),
+    0 0 36px rgba(255, 174, 110, 0.75),
+    0 0 62px rgba(255, 117, 143, 0.42);
+}
+
+.legendary-star-drop-tail {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  width: 92px;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255, 245, 222, 0.95) 0%, rgba(255, 183, 119, 0.72) 45%, rgba(255, 106, 149, 0.15) 100%);
+  filter: blur(0.9px);
+}
+
+@keyframes legendary-star-drop-fly {
   0% {
-    transform: translate3d(0, 0, 0) rotate(-8deg) scale(0.9);
-    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(0.55);
+    opacity: 0;
   }
-  35% {
-    transform: translate3d(35vw, -25vh, 0) rotate(-3deg) scale(1);
+  18% {
     opacity: 1;
   }
-  70% {
-    transform: translate3d(58vw, -42vh, 0) rotate(5deg) scale(1.08);
+  72% {
+    transform: translate(36vw, 38vh) scale(1);
     opacity: 1;
   }
   100% {
-    transform: translate3d(70vw, -52vh, 0) rotate(10deg) scale(0.85);
+    transform: translate(42vw, 44vh) scale(1.6);
     opacity: 0;
   }
 }

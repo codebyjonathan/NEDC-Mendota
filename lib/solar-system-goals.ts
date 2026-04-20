@@ -27,7 +27,7 @@ export type SolarPlanetId =
   | "uranus"
   | "neptune"
 
-export type GalaxyStageId = "andromeda" | "triangulum" | "whirlpool" | "sombrero"
+export type GalaxyStageId = "andromeda" | "triangulum" | "whirlpool" | "sombrero" | "cartwheel"
 
 export type SolarPlanet = {
   id: SolarPlanetId
@@ -111,6 +111,7 @@ export const GALAXY_STAGES: Array<{ id: GalaxyStageId; name: string; color: stri
   { id: "triangulum", name: "Triangulum", color: "#5fb3ff", image: "/planets/triangulum.svg" },
   { id: "whirlpool", name: "Whirlpool", color: "#9d7bff", image: "/planets/whirlpool.svg" },
   { id: "sombrero", name: "Sombrero", color: "#ffc979", image: "/planets/sombrero.svg" },
+  { id: "cartwheel", name: "Cartwheel", color: "#7ed8ff", image: "/planets/cartwheel.svg" },
 ]
 
 export const JOURNEY_STAGES: JourneyStage[] = [
@@ -170,26 +171,56 @@ export const STAGE_MISSIONS: StageMission[] = [
   {
     stageId: "andromeda",
     title: "Galaxy Tier I",
-    description: "Interaction phase begins: use one core tool.",
-    tasks: [{ goalId: "play_music", label: GOAL_LABELS.play_music, count: 1 }],
+    description: "Start navigation + interaction training with two missions.",
+    tasks: [
+      { goalId: "visit_resources_screen", label: GOAL_LABELS.visit_resources_screen, count: 1 },
+      { goalId: "play_music", label: GOAL_LABELS.play_music, count: 1 },
+    ],
   },
   {
     stageId: "triangulum",
     title: "Galaxy Tier II",
-    description: "Step up with reflective interaction.",
-    tasks: [{ goalId: "save_journal", label: GOAL_LABELS.save_journal, count: 1 }],
+    description: "Three-mission path with more app interaction.",
+    tasks: [
+      { goalId: "visit_chat_support_screen", label: GOAL_LABELS.visit_chat_support_screen, count: 1 },
+      { goalId: "save_journal", label: GOAL_LABELS.save_journal, count: 1 },
+      { goalId: "start_breathing", label: GOAL_LABELS.start_breathing, count: 1 },
+    ],
   },
   {
     stageId: "whirlpool",
     title: "Galaxy Tier III",
-    description: "More specific challenge: complete URL-based audio.",
-    tasks: [{ goalId: "play_music_url", label: GOAL_LABELS.play_music_url, count: 1 }],
+    description: "Four missions with specific tool usage.",
+    tasks: [
+      { goalId: "visit_lifeline_screen", label: GOAL_LABELS.visit_lifeline_screen, count: 1 },
+      { goalId: "play_music_url", label: GOAL_LABELS.play_music_url, count: 1 },
+      { goalId: "open_resource_link", label: GOAL_LABELS.open_resource_link, count: 1 },
+      { goalId: "save_journal", label: GOAL_LABELS.save_journal, count: 1 },
+    ],
   },
   {
     stageId: "sombrero",
-    title: "Galaxy Master Stage",
-    description: "Final specific interaction: save your safety plan.",
-    tasks: [{ goalId: "save_safety_plan", label: GOAL_LABELS.save_safety_plan, count: 1 }],
+    title: "Galaxy Tier IV",
+    description: "Five-mission advanced challenge.",
+    tasks: [
+      { goalId: "visit_safety_plan_screen", label: GOAL_LABELS.visit_safety_plan_screen, count: 1 },
+      { goalId: "save_safety_plan", label: GOAL_LABELS.save_safety_plan, count: 1 },
+      { goalId: "open_chat_support", label: GOAL_LABELS.open_chat_support, count: 1 },
+      { goalId: "browse_lifeline_options", label: GOAL_LABELS.browse_lifeline_options, count: 1 },
+      { goalId: "complete_grounding", label: GOAL_LABELS.complete_grounding, count: 1 },
+    ],
+  },
+  {
+    stageId: "cartwheel",
+    title: "Galaxy Tier V",
+    description: "Final five-mission run before legendary completion.",
+    tasks: [
+      { goalId: "visit_music_screen", label: GOAL_LABELS.visit_music_screen, count: 1 },
+      { goalId: "play_music_url", label: GOAL_LABELS.play_music_url, count: 1 },
+      { goalId: "save_journal", label: GOAL_LABELS.save_journal, count: 1 },
+      { goalId: "open_resource_link", label: GOAL_LABELS.open_resource_link, count: 1 },
+      { goalId: "save_safety_plan", label: GOAL_LABELS.save_safety_plan, count: 1 },
+    ],
   },
 ]
 
@@ -211,7 +242,7 @@ function isBrowser() {
 }
 
 function normalizeState(input: Partial<SolarProgressState> | null | undefined): SolarProgressState {
-  const completedRaw = Array.isArray(input?.completedGoals) ? input!.completedGoals : []
+  const completedRaw = Array.isArray(input?.completedGoals) ? (input!.completedGoals as string[]) : []
   const claimedRaw = Array.isArray(input?.claimedGoals) ? input!.claimedGoals : []
   const legacyClaimedCount =
     typeof (input as { shownUnlockCount?: number } | undefined)?.shownUnlockCount === "number" &&
@@ -219,9 +250,7 @@ function normalizeState(input: Partial<SolarProgressState> | null | undefined): 
       ? Math.max(0, Math.min((input as { shownUnlockCount?: number }).shownUnlockCount ?? 0, SOLAR_PLANETS.length))
       : 0
 
-  const migratedCompleted = completedRaw.map((goal) =>
-    goal === "start_emergency_call" ? "visit_lifeline_screen" : goal,
-  )
+  const migratedCompleted = completedRaw.map((goal) => (goal === "start_emergency_call" ? "visit_lifeline_screen" : goal))
   const completed = migratedCompleted.filter((goal): goal is SolarGoalId => ALL_GOALS.includes(goal as SolarGoalId))
 
   const stageClaimed = claimedRaw.filter((id): id is string => typeof id === "string" && STAGE_IDS.includes(id))
