@@ -17,7 +17,9 @@ import {
   isPushNotificationSubscribed,
   subscribeToPushNotifications,
   unsubscribeFromPushNotifications,
+  sendCustomTestPushNotification,
   sendTestPushNotification,
+  syncPushSubscriptionWithServer,
 } from "@/lib/push-notifications"
 
 const NOTIFICATIONS_STORAGE_KEY = "app_notifications"
@@ -52,6 +54,7 @@ interface NotificationContextValue {
   enablePush: () => Promise<boolean>
   disablePush: () => Promise<boolean>
   sendTestPush: () => Promise<boolean>
+  sendTestDailyMotivation: () => Promise<boolean>
   updateDailyMotivation: (enabled: boolean) => Promise<void>
 }
 
@@ -316,6 +319,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           body: notification.body,
           actionUrl: notification.actionUrl,
           scheduledFor: notification.scheduledFor,
+          recurrence: notification.recurrence,
         })
 
         nextNotification = {
@@ -386,11 +390,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       body: deliveredNotification.body,
     })
 
-    if (!deliveredNotification.pushScheduleId) {
-      showBrowserNotification(deliveredNotification)
-    }
+    // Always attempt a browser/system notification on local delivery as a fallback.
+    // If a push notification also arrives, matching tags help prevent noisy duplicates.
+    showBrowserNotification(deliveredNotification)
 
-    if (deliveredNotification.recurrence === "daily" && settingsRef.current.dailyMotivationEnabled) {
+    if (
+      deliveredNotification.recurrence === "daily" &&
+      settingsRef.current.dailyMotivationEnabled &&
+      !deliveredNotification.pushScheduleId
+    ) {
       await scheduleNextDailyReminderRef.current()
     }
   }, [persistNotifications, showBrowserNotification])
@@ -411,10 +419,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const subscription = await isPushNotificationSubscribed()
       setPushSubscribed(subscription)
 
-      const statusResponse = await fetch("/api/push-notifications")
+      const statusResponse = await fetch("/api/push-notifications/status", {
+        cache: "no-store",
+      })
       if (statusResponse.ok) {
         const status = await statusResponse.json()
-        setPushConfigured(Boolean(status.configured))
+        const configured = Boolean(status.configured)
+        setPushConfigured(configured)
+
+        if (configured && subscription) {
+          await syncPushSubscriptionWithServer()
+        }
       } else {
         setPushConfigured(false)
       }
@@ -592,6 +607,52 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const sendTestDailyMotivation = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      if (hasBrowserNotificationSupport()) {
+        const nextPermission = await requestPermission()
+        if (nextPermission !== "granted") {
+          throw new Error("Notification permission is required to test daily reminders")
+        }
+      }
+
+      const quote = getRandomMotivationalQuote(lastQuoteRef.current)
+      lastQuoteRef.current = quote
+
+      if (pushSubscribed && pushConfigured) {
+        const pushed = await sendCustomTestPushNotification({
+          title: "Daily motivational reminder",
+          body: quote,
+          actionUrl: "/main",
+          tag: "daily-motivation-test",
+        })
+
+        if (!pushed) {
+          throw new Error("Unable to send daily reminder push test")
+        }
+      } else {
+        await scheduleNotificationInternal({
+          title: "Daily motivational reminder",
+          body: quote,
+          scheduledFor: Date.now() + 3000,
+          interval: 3000,
+          type: "motivation",
+          actionUrl: "/main",
+        })
+      }
+
+      return true
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to test daily reminder")
+      return false
+    } finally {
+      setLoading(false)
+    }
+  }, [pushConfigured, pushSubscribed, requestPermission, scheduleNotificationInternal])
+
   const schedule = useCallback(async (
     intervalMs: number,
     title = "Time to check in!",
@@ -731,6 +792,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     enablePush,
     disablePush,
     sendTestPush,
+    sendTestDailyMotivation,
     updateDailyMotivation,
   }), [
     clear,
@@ -750,6 +812,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     requestPermission,
     schedule,
     sendTestPush,
+    sendTestDailyMotivation,
     settings,
     unreadCount,
     updateDailyMotivation,

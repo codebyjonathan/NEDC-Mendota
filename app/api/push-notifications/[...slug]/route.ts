@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { PushSubscription } from "web-push"
 import {
   cancelScheduledPush,
+  getPushStatus,
   getOrCreateDeviceId,
   isPushConfigured,
   listDeviceSubscriptions,
@@ -49,12 +50,18 @@ export async function POST(
     }
 
     if (action === "send-test") {
+      const title = typeof body.title === "string" ? body.title : "Safe Space test notification"
+      const message =
+        typeof body.body === "string" ? body.body : "Push notifications are enabled on this device."
+      const actionUrl = typeof body.actionUrl === "string" ? body.actionUrl : "/main"
+      const tag = typeof body.tag === "string" ? body.tag : "safe-space-test"
+
       await sendPushToDevice(deviceId, {
-        title: "Safe Space test notification",
-        body: "Push notifications are enabled on this device.",
-        actionUrl: "/main",
+        title,
+        body: message,
+        actionUrl,
         notificationId: `test_${Date.now()}`,
-        tag: "safe-space-test",
+        tag,
       })
 
       return NextResponse.json({ success: true })
@@ -73,6 +80,7 @@ export async function POST(
             : "Open Safe Space to continue your check-in.",
         actionUrl: typeof body.actionUrl === "string" ? body.actionUrl : "/grounding",
         scheduledFor: typeof body.scheduledFor === "number" ? body.scheduledFor : Date.now(),
+        recurrence: body.recurrence === "daily" ? "daily" : undefined,
       })
 
       return NextResponse.json({ success: true, scheduleId })
@@ -81,7 +89,9 @@ export async function POST(
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error"
-    return NextResponse.json({ error: message }, { status: 500 })
+    const status =
+      message === "No active push subscription found for this device" ? 409 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }
 
@@ -119,4 +129,19 @@ export async function DELETE(
     const message = error instanceof Error ? error.message : "Internal server error"
     return NextResponse.json({ error: message }, { status: 500 })
   }
+}
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ slug?: string[] }> }
+) {
+  const { slug = [] } = await context.params
+  const action = slug[0]
+  const deviceId = getOrCreateDeviceId(request)
+
+  if (!action || action === "status") {
+    return withDeviceCookie(NextResponse.json(getPushStatus(deviceId)), deviceId)
+  }
+
+  return NextResponse.json({ error: "Not found" }, { status: 404 })
 }

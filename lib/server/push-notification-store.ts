@@ -16,6 +16,7 @@ interface ScheduledPush {
   body: string
   actionUrl: string
   scheduledFor: number
+  recurrence?: "daily"
 }
 
 const subscriptions = new Map<string, StoredSubscription>()
@@ -88,6 +89,7 @@ export function schedulePushForDevice(input: {
   body: string
   actionUrl: string
   scheduledFor: number
+  recurrence?: "daily"
 }) {
   const scheduleId = `push_${Date.now()}_${Math.random().toString(36).slice(2)}`
 
@@ -99,7 +101,44 @@ export function schedulePushForDevice(input: {
     body: input.body,
     actionUrl: input.actionUrl,
     scheduledFor: input.scheduledFor,
+    recurrence: input.recurrence,
   })
+
+  const scheduleNextRun = (nextTimestamp: number) => {
+    scheduledPushes.set(scheduleId, {
+      id: scheduleId,
+      deviceId: input.deviceId,
+      notificationId: input.notificationId,
+      title: input.title,
+      body: input.body,
+      actionUrl: input.actionUrl,
+      scheduledFor: nextTimestamp,
+      recurrence: input.recurrence,
+    })
+
+    const nextTimer = setTimeout(async () => {
+      try {
+        await sendPushToDevice(input.deviceId, {
+          title: input.title,
+          body: input.body,
+          actionUrl: input.actionUrl,
+          notificationId: input.notificationId,
+          tag: input.notificationId,
+        })
+      } catch (error) {
+        console.error("[Push] Failed to send recurring push notification:", error)
+      } finally {
+        if (input.recurrence === "daily") {
+          scheduleNextRun(nextTimestamp + 24 * 60 * 60 * 1000)
+        } else {
+          scheduledPushes.delete(scheduleId)
+          timers.delete(scheduleId)
+        }
+      }
+    }, Math.max(0, nextTimestamp - Date.now()))
+
+    timers.set(scheduleId, nextTimer)
+  }
 
   const timer = setTimeout(async () => {
     try {
@@ -110,9 +149,15 @@ export function schedulePushForDevice(input: {
         notificationId: input.notificationId,
         tag: input.notificationId,
       })
+    } catch (error) {
+      console.error("[Push] Failed to send scheduled push notification:", error)
     } finally {
-      scheduledPushes.delete(scheduleId)
-      timers.delete(scheduleId)
+      if (input.recurrence === "daily") {
+        scheduleNextRun(input.scheduledFor + 24 * 60 * 60 * 1000)
+      } else {
+        scheduledPushes.delete(scheduleId)
+        timers.delete(scheduleId)
+      }
     }
   }, Math.max(0, input.scheduledFor - Date.now()))
 

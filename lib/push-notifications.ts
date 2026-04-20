@@ -111,6 +111,25 @@ export async function sendTestPushNotification(): Promise<boolean> {
   return response.ok
 }
 
+export async function sendCustomTestPushNotification(options: {
+  title: string
+  body: string
+  actionUrl?: string
+  tag?: string
+}): Promise<boolean> {
+  const response = await fetch(`${API_BASE}/send-test`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title: options.title,
+      body: options.body,
+      actionUrl: options.actionUrl,
+      tag: options.tag,
+    }),
+  })
+  return response.ok
+}
+
 export async function schedulePushNotification(
   intervalMs: number,
   title: string,
@@ -134,4 +153,25 @@ export async function schedulePushNotification(
 
   const payload = await response.json()
   return payload.scheduleId || null
+}
+
+export async function syncPushSubscriptionWithServer(): Promise<boolean> {
+  if (!isPushNotificationSupported()) {
+    return false
+  }
+
+  const registration = await getServiceWorkerRegistration()
+  const subscription = await registration.pushManager.getSubscription()
+
+  if (!subscription) {
+    return false
+  }
+
+  const response = await fetch(`${API_BASE}/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subscription: subscription.toJSON() }),
+  })
+
+  return response.ok
 }

@@ -26,9 +26,11 @@ export function NotificationSettingsButton() {
     enablePush,
     disablePush,
     sendTestPush,
+    sendTestDailyMotivation,
     updateDailyMotivation,
   } = useNotifications()
   const [testMessage, setTestMessage] = useState<string | null>(null)
+  const [dailyTestMessage, setDailyTestMessage] = useState<string | null>(null)
 
   const handlePushToggle = async (checked: boolean) => {
     if (checked) {
@@ -51,6 +53,16 @@ export function NotificationSettingsButton() {
     const success = await sendTestPush()
     setTestMessage(success ? "Test push sent to this device." : "Unable to send a test push.")
     window.setTimeout(() => setTestMessage(null), 4000)
+  }
+
+  const handleDailyTest = async () => {
+    const success = await sendTestDailyMotivation()
+    setDailyTestMessage(
+      success
+        ? "Daily motivation test scheduled. You should see it in about 3 seconds."
+        : "Unable to send daily motivation test."
+    )
+    window.setTimeout(() => setDailyTestMessage(null), 5000)
   }
 
   return (
@@ -86,7 +98,7 @@ export function NotificationSettingsButton() {
               </div>
               <Switch
                 checked={pushSubscribed}
-                disabled={!pushSupported || !pushConfigured || loading}
+                disabled={!pushSupported || loading}
                 onCheckedChange={handlePushToggle}
                 aria-label="Enable background browser notifications"
               />
@@ -97,7 +109,7 @@ export function NotificationSettingsButton() {
                   ? pushSubscribed
                     ? "Background push is enabled on this device."
                     : "Enable this to receive browser push notifications."
-                  : "Server push keys are missing, so background push is not fully configured yet."
+                  : "Push server status has not been confirmed yet. Try enabling push to verify this device."
                 : "This browser does not support push notifications."}
             </p>
             <p className="mt-1 text-xs text-gray-500">Browser permission: {permission}</p>
@@ -133,6 +145,16 @@ export function NotificationSettingsButton() {
             <div className="mt-3 rounded-2xl bg-emerald-50 p-3 text-xs text-emerald-800">
               Each day uses a different quote when possible, and the preference stays saved after reload.
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={handleDailyTest}
+              disabled={loading}
+            >
+              Test daily reminder now
+            </Button>
+            {dailyTestMessage && <p className="mt-2 text-xs text-emerald-700">{dailyTestMessage}</p>}
           </div>
 
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
