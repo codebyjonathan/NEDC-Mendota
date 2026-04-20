@@ -29,6 +29,7 @@ function JournalContent() {
   const [listening, setListening] = useState(false);
 
   useEffect(() => {
+    markSolarGoalCompleted("visit_journal_screen");
     const saved = localStorage.getItem("journalEntries");
     if (saved) setEntries(JSON.parse(saved));
   }, []);

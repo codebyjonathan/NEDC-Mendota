@@ -14,6 +14,10 @@ function ResourcesContent() {
   const t = translations[lang]
   const isRTL = lang === "ar"
 
+  useEffect(() => {
+    markSolarGoalCompleted("visit_resources_screen")
+  }, [])
+
   const openUrl = (e: any, url?: string) => {
     if (!url) return
     e?.preventDefault()

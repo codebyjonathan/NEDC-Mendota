@@ -18,6 +18,7 @@ function CallLifelineContent() {
   const isRTL = lang === "ar"
 
   useEffect(() => {
+    markSolarGoalCompleted("visit_lifeline_screen")
     markSolarGoalCompleted("browse_lifeline_options")
   }, [])
 

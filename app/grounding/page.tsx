@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sparkles, CheckCircle2, Play, ExternalLink } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
@@ -17,6 +17,10 @@ function GroundingContent() {
 
   const [currentStep, setCurrentStep] = useState(0)
   const [completed, setCompleted] = useState<number[]>([])
+
+  useEffect(() => {
+    markSolarGoalCompleted("visit_grounding_screen")
+  }, [])
 
   const techniques = [
     {

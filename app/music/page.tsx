@@ -54,6 +54,8 @@ function MusicContent() {
   const allowBackgroundPlaybackRef = useRef(false)
 
   useEffect(() => {
+    markSolarGoalCompleted("visit_music_screen")
+
     const backgroundEnabled = getBackgroundPlaybackEnabled()
     setAllowBackgroundPlaybackState(backgroundEnabled)
     allowBackgroundPlaybackRef.current = backgroundEnabled
@@ -335,6 +337,7 @@ function MusicContent() {
         setCustomMusicType("youtube")
         setCustomMusicPlaying(true)
         markSolarGoalCompleted("play_music")
+        markSolarGoalCompleted("play_music_url")
         return
       }
     }
@@ -360,6 +363,7 @@ function MusicContent() {
         setCustomMusicType("spotify")
         setCustomMusicPlaying(true)
         markSolarGoalCompleted("play_music")
+        markSolarGoalCompleted("play_music_url")
         return
       }
     }
@@ -408,6 +412,7 @@ function MusicContent() {
       setCustomMusicType("audio")
       setCustomMusicPlaying(true)
       markSolarGoalCompleted("play_music")
+      markSolarGoalCompleted("play_music_url")
       setMusicSession({
         kind: "custom-audio",
         customUrl: customMusicUrl,

@@ -63,6 +63,10 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    markSolarGoalCompleted("visit_safety_plan_screen")
+  }, [])
+
+  useEffect(() => {
     const savedRobot = localStorage.getItem(SELECTED_ROBOT_STORAGE_KEY)
     if (savedRobot === "default" || savedRobot === "heart" || savedRobot === "custom") {
       setSelectedRobot(savedRobot)

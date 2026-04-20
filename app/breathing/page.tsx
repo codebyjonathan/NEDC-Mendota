@@ -21,6 +21,10 @@ function BreathingContent() {
   const [cycles, setCycles] = useState(0)
 
   useEffect(() => {
+    markSolarGoalCompleted("visit_breathing_screen")
+  }, [])
+
+  useEffect(() => {
     if (!isActive) return
 
     const timer = setInterval(() => {

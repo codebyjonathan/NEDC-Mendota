@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { MessageCircle, ExternalLink } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
@@ -17,6 +17,10 @@ function ChatSupportContent() {
   const t = translations[lang]
   const isRTL = lang === "ar"
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    markSolarGoalCompleted("visit_chat_support_screen")
+  }, [])
 
   const chatServices = [
     {
