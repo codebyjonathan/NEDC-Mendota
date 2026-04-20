@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 
 const REVEAL_DELAY_STEP_MS = 45
@@ -27,8 +27,6 @@ function uniqueTargets(elements: HTMLElement[]) {
 
 export function ScrollSmoothnessEnhancer() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const searchKey = searchParams.toString()
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -108,7 +106,7 @@ export function ScrollSmoothnessEnhancer() {
       window.cancelAnimationFrame(rafId)
       observers.forEach((observer) => observer.disconnect())
     }
-  }, [pathname, searchKey])
+  }, [pathname])
 
   return null
 }
