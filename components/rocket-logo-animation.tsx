@@ -19,13 +19,15 @@ type Point = {
   y: number;
 };
 
+const ANIMATION_SPEED_MULTIPLIER = 0.58;
+
 const TIMING = {
-  starDrop: 1800,
-  starGlow: 1000,
-  travel: 4600,
-  loop: 3200,
-  merge: 1400,
-  hold: 600,
+  starDrop: 1450 * ANIMATION_SPEED_MULTIPLIER,
+  starGlow: 1000 * ANIMATION_SPEED_MULTIPLIER,
+  travel: 4600 * ANIMATION_SPEED_MULTIPLIER,
+  loop: 3200 * ANIMATION_SPEED_MULTIPLIER,
+  merge: 1400 * ANIMATION_SPEED_MULTIPLIER,
+  hold: 600 * ANIMATION_SPEED_MULTIPLIER,
 };
 
 const T = {
@@ -82,12 +84,12 @@ const HEART_ROCKET_ANGLE_CONTINUOUS = 360 + HEART_ROCKET_ANGLE;
 
 // Fine-tune how the flying sprite center lands into the heart rocket center.
 const HEART_MERGE_OFFSET = {
-  x: 4,
-  y: -34,
+  x: 12,
+  y: -42,
 };
 
 // Final scale of the flying rocket when it overlays the logo rocket.
-const HEART_MERGE_SCALE = 0.94;
+const HEART_MERGE_SCALE = 0.9;
 
 function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
@@ -135,7 +137,7 @@ export default function RocketLogoAnimation({
 
   useEffect(() => {
     if (!autoStart) return;
-    const timer = setTimeout(() => setStarted(true), 140);
+    const timer = setTimeout(() => setStarted(true), 90);
     return () => clearTimeout(timer);
   }, [autoStart]);
 
@@ -193,7 +195,7 @@ export default function RocketLogoAnimation({
     if (!started) return;
     if (hasPlayedMergeSwooshRef.current) return;
 
-    const swooshTriggerAt = Math.max(0, T.mergeStart + TIMING.merge * 0.78 - 2100);
+    const swooshTriggerAt = Math.max(0, T.mergeStart + TIMING.merge * 0.78 - 1500);
     if (elapsed >= swooshTriggerAt) {
       hasPlayedMergeSwooshRef.current = true;
       onMergeSwoosh?.();

@@ -77,7 +77,7 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
           router.push("/starters");
         });
       }
-    }, 380);
+    }, 180);
   };
 
   const handleStart = () => {
@@ -124,7 +124,7 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
   return (
     <div className="w-full h-screen bg-black relative overflow-hidden">
       <div
-        className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${animationStarted ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${animationStarted ? "opacity-100" : "opacity-0"}`}
       >
         {animationStarted && (
           <RocketLogoAnimation
@@ -136,7 +136,7 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
       </div>
 
       <div
-        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ease-in-out ${gateVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ease-in-out ${gateVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       >
         <canvas id="stars-intro" className="absolute inset-0 w-full h-full" />
         <div className="relative z-10 flex flex-col items-center justify-center gap-3">
