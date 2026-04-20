@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Sparkles, CheckCircle2, Play, ExternalLink } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 import { translations } from "@/lib/translations"
 
 function GroundingContent() {
@@ -89,6 +90,7 @@ function GroundingContent() {
       setCurrentStep(currentStep + 1)
     } else {
       setCompleted([...completed, currentStep])
+      markSolarGoalCompleted("complete_grounding")
     }
   }
 

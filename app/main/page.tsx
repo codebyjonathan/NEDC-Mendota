@@ -7,6 +7,7 @@ import { Phone, MessageCircle, MapPin, Wind, Book, Music, Sparkles } from "lucid
 import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
+import { SolarSystemJourney } from "@/components/solar-system-journey"
 import { translations } from "@/lib/translations"
 
 function MainScreenContent() {
@@ -114,6 +115,8 @@ function MainScreenContent() {
             </Button>
           </Link>
         </div>
+
+        <SolarSystemJourney />
       </div>
 
       <BottomNav lang={lang} />

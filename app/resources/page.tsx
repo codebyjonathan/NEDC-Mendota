@@ -5,6 +5,7 @@ import { Suspense, useState, useEffect } from "react"
 import { CalendarDays, BookOpen, Video, FileText, ExternalLink, Heart } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 import { translations } from "@/lib/translations"
 
 function ResourcesContent() {
@@ -17,6 +18,7 @@ function ResourcesContent() {
     if (!url) return
     e?.preventDefault()
     e?.stopPropagation()
+    markSolarGoalCompleted("open_resource_link")
     try {
       window.open(url, "_blank", "noopener")
     } catch (err) {
@@ -181,7 +183,13 @@ function ResourcesContent() {
               const Icon = resource.icon
               const isLink = !!resource.url && resource.url.length > 0
               return (
-                <a key={resource.title} href={resource.url} target="_blank" rel="noopener noreferrer">
+                <a
+                  key={resource.title}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => markSolarGoalCompleted("open_resource_link")}
+                >
                   <div
                     className={`bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4 ${
                       resource.featured ? `border-2 ${resource.borderColor || "border-green-300"}` : ""
@@ -242,7 +250,13 @@ function ResourcesContent() {
               )
 
               return isLink ? (
-                <a key={resource.title} href={resource.url} target="_blank" rel="noopener noreferrer">
+                <a
+                  key={resource.title}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => markSolarGoalCompleted("open_resource_link")}
+                >
                   {card}
                 </a>
               ) : (

@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { AlertCircle, Phone, MessageSquare, MapPin, ExternalLink } from "lucide-react"
 import Link from "next/link"
@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { translations, type Language } from "@/lib/translations"
 import { CONFIG } from "@/lib/config"
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 
 function EmergencyContent() {
   const searchParams = useSearchParams()
@@ -16,6 +17,10 @@ function EmergencyContent() {
   const lang: Language = langParam === "en" || langParam === "es" || langParam === "ar" ? langParam : "en"
   const t = translations[lang]
   const isRTL = lang === "ar"
+
+  useEffect(() => {
+    markSolarGoalCompleted("browse_lifeline_options")
+  }, [])
 
   const handleCall = (number: string) => {
     window.location.href = `tel:${number}`

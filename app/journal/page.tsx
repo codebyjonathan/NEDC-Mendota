@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Save, Trash2, Plus } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
 import { BottomNav } from "@/components/bottom-nav";
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals";
 import { translations } from "@/lib/translations";
 
 interface JournalEntry {
@@ -46,6 +47,7 @@ function JournalContent() {
     setCurrentEntry("");
     setSelectedMood("");
     setViewMode("read");
+    markSolarGoalCompleted("save_journal");
   };
 
   const deleteEntry = (id: string) => {

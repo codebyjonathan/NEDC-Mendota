@@ -17,6 +17,7 @@ import {
   setSharedMusicAudio,
   stopSharedMusicAudio,
 } from "@/lib/music-audio"
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 import { translations } from "@/lib/translations"
 
 interface MusicTrack {
@@ -333,6 +334,7 @@ function MusicContent() {
         setSpotifyTrackId("")
         setCustomMusicType("youtube")
         setCustomMusicPlaying(true)
+        markSolarGoalCompleted("play_music")
         return
       }
     }
@@ -357,6 +359,7 @@ function MusicContent() {
         setSpotifyTrackId(trackId)
         setCustomMusicType("spotify")
         setCustomMusicPlaying(true)
+        markSolarGoalCompleted("play_music")
         return
       }
     }
@@ -404,6 +407,7 @@ function MusicContent() {
       setCustomArtistName(info.artist)
       setCustomMusicType("audio")
       setCustomMusicPlaying(true)
+      markSolarGoalCompleted("play_music")
       setMusicSession({
         kind: "custom-audio",
         customUrl: customMusicUrl,
@@ -459,6 +463,7 @@ function MusicContent() {
       setSharedMusicAudio(audio)
       setMusicSession({ kind: "track", trackId: track.id })
       setPlaying(track.id)
+      markSolarGoalCompleted("play_music")
     }
   }
 

@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { translations, type Language } from "@/lib/translations"
 import { CONFIG } from "@/lib/config"
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 
 function ChatSupportContent() {
   const searchParams = useSearchParams()
@@ -58,6 +59,7 @@ function ChatSupportContent() {
 
   const handleOpenChat = (url: string) => {
     setLoading(true)
+    markSolarGoalCompleted("open_chat_support")
     window.open(url, "_blank")
     setTimeout(() => setLoading(false), 2000)
   }

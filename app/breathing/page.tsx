@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Wind, Play, Pause, RotateCcw } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 import { translations } from "@/lib/translations"
 
 function BreathingContent() {
@@ -113,7 +114,10 @@ function BreathingContent() {
             </div>
             <div className="flex gap-3 justify-center">
               <Button
-                onClick={() => setIsActive(!isActive)}
+                onClick={() => {
+                  if (!isActive) markSolarGoalCompleted("start_breathing")
+                  setIsActive(!isActive)
+                }}
                 className="h-12 px-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl flex items-center gap-2"
               >
                 {isActive ? (

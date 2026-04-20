@@ -8,6 +8,7 @@ import jsPDF from "jspdf"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 import { translations, type Language } from "@/lib/translations"
 
 type ChatRole = "user" | "assistant"
@@ -156,7 +157,9 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   }
 
   const handleSavePlan = () => {
-    if (myPlan.trim()) setActiveTab("saved")
+    if (!myPlan.trim()) return
+    setActiveTab("saved")
+    markSolarGoalCompleted("save_safety_plan")
   }
 
   const header = useMemo(() => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />, [t])
