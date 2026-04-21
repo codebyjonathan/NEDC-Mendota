@@ -10,6 +10,7 @@ import { BottomNav } from "@/components/bottom-nav"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
 import { translations, type Language } from "@/lib/translations"
+import { isLikelyOffensiveText } from "@/lib/chat-safety"
 
 type ChatRole = "user" | "assistant"
 type ChatMessage = { role: ChatRole; content: string }
@@ -54,6 +55,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const [input, setInput] = useState("")
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([{ role: "assistant", content: t.greeting }])
   const [loading, setLoading] = useState(false)
+  const [reportedAssistantMessages, setReportedAssistantMessages] = useState<number[]>([])
   const [selectedRobot, setSelectedRobot] = useState<RobotStyleId>("default")
   const [isRobotMenuOpen, setIsRobotMenuOpen] = useState(false)
   const [customRobot, setCustomRobot] = useState<CustomRobotConfig>(DEFAULT_CUSTOM_ROBOT)
@@ -120,9 +122,14 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   }
 
   const sendMessage = async () => {
-    if (!input.trim()) return
-    const newMessages = [...chatMessages, { role: "user", content: input.trim() } as ChatMessage]
-    setChatMessages(newMessages)
+    const userText = input.trim()
+    if (!userText) return
+    if (isLikelyOffensiveText(userText)) {
+      alert("Unable to send this message because it appears offensive or unsafe.")
+      return
+    }
+
+    const newMessages = [...chatMessages, { role: "user", content: userText } as ChatMessage]
     setInput("")
     setLoading(true)
 
@@ -137,9 +144,14 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
           body: JSON.stringify({ messages: newMessages }),
         })
 
+        const data = await res.json()
+        if (res.status === 400 && data?.blocked) {
+          alert(data?.text || "Unable to send this message because it appears offensive or unsafe.")
+          setLoading(false)
+          return
+        }
         if (!res.ok) continue
 
-        const data = await res.json()
         responseText = data?.text || "No response from Safe AI."
         break
       }
@@ -157,6 +169,24 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
       setChatMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong. Please try again." }])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const reportAssistantMessage = async (messageIndex: number, content: string) => {
+    if (reportedAssistantMessages.includes(messageIndex)) return
+
+    try {
+      await fetch("/api/safety-chat/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason: "offensive_or_unsafe",
+          message: content,
+        }),
+      })
+      setReportedAssistantMessages((prev) => [...prev, messageIndex])
+    } catch {
+      alert("Unable to submit report right now. Please try again.")
     }
   }
 
@@ -273,7 +303,15 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
             <div ref={scrollRef} className="flex-1 overflow-y-auto bg-white p-4">
               {chatMessages.map((message, index) => (
-                <ChatBubble key={index} role={message.role} content={message.content} selectedRobot={selectedRobot} customRobot={customRobot} />
+                <ChatBubble
+                  key={index}
+                  role={message.role}
+                  content={message.content}
+                  selectedRobot={selectedRobot}
+                  customRobot={customRobot}
+                  onReport={message.role === "assistant" ? () => reportAssistantMessage(index, message.content) : undefined}
+                  isReported={reportedAssistantMessages.includes(index)}
+                />
               ))}
               {loading && <div className="mt-2 text-sm italic text-gray-500">Typing...</div>}
             </div>
@@ -510,7 +548,14 @@ function ChatBubble({
   content,
   selectedRobot,
   customRobot,
-}: ChatMessage & { selectedRobot: RobotStyleId; customRobot: CustomRobotConfig }) {
+  onReport,
+  isReported,
+}: ChatMessage & {
+  selectedRobot: RobotStyleId
+  customRobot: CustomRobotConfig
+  onReport?: () => void
+  isReported?: boolean
+}) {
   if (role === "assistant") {
     return (
       <div className="mb-3 flex items-start gap-2">
@@ -520,6 +565,17 @@ function ChatBubble({
         </div>
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">
           <p className="text-sm leading-relaxed" style={{ color: "var(--app-text)" }}>{content}</p>
+          {onReport && (
+            <div className="mt-2 flex justify-end">
+              <button
+                onClick={onReport}
+                disabled={isReported}
+                className="rounded-full border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isReported ? "Reported" : "Report"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     )

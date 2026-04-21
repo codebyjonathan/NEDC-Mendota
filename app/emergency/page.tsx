@@ -7,6 +7,7 @@ import { AlertCircle, Phone, MessageSquare, MapPin, ExternalLink } from "lucide-
 import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
+import { MedicalDisclaimerCard } from "@/components/medical-disclaimer-card"
 import { translations, type Language } from "@/lib/translations"
 import { CONFIG } from "@/lib/config"
 import { markSolarGoalCompleted } from "@/lib/solar-system-goals"
@@ -159,6 +160,8 @@ function EmergencyContent() {
                 : "حياتك لها قيمة ومعنى. هذه المشاعر مؤقتة. المساعدة متاحة، والناس يهتمون بك. يرجى التواصل."}
           </p>
         </div>
+
+        <MedicalDisclaimerCard lang={lang} />
       </div>
 
       <BottomNav lang={lang} />

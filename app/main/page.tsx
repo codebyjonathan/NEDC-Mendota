@@ -174,6 +174,7 @@ function MainScreenContent() {
         <ScrollReveal delay={130}>
           <SolarSystemJourney />
         </ScrollReveal>
+
       </div>
 
       <BottomNav lang={lang} />

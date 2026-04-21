@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { MapPin, AlertTriangle, CheckCircle } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
@@ -18,6 +18,16 @@ function EmergencyLocationContent() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [shared, setShared] = useState(false)
+  const [trustedContact, setTrustedContact] = useState(CONFIG.TRUSTED_CONTACT_NUMBER)
+  const [shareStatus, setShareStatus] = useState<"idle" | "sms-draft" | "share-sheet" | "copied">("idle")
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const savedContact = window.localStorage.getItem("trusted_contact_number")
+    if (savedContact) {
+      setTrustedContact(savedContact)
+    }
+  }, [])
 
   const getLocation = () => {
     setLoading(true)
@@ -30,27 +40,55 @@ function EmergencyLocationContent() {
           })
           setLoading(false)
         },
-        (error) => {
-          console.error("Error getting location:", error)
+        () => {
           setLoading(false)
-          alert(
-            lang === "en"
-              ? "Unable to access location. Please enable location services."
-              : lang === "es"
-                ? "No se puede acceder a la ubicación. Habilita los servicios de ubicación."
-                : "تعذر الوصول إلى الموقع. يرجى تمكين خدمات الموقع.",
-          )
+          alert("Unable to access location. Please enable location services.")
         },
       )
     }
   }
 
-  const shareLocation = () => {
-    if (location) {
+  const saveTrustedContact = () => {
+    if (typeof window === "undefined") return
+    window.localStorage.setItem("trusted_contact_number", trustedContact.trim())
+  }
+
+  const shareLocation = async () => {
+    if (!location) return
+
+    const mapsUrl = `https://maps.google.com/?q=${location.lat},${location.lng}`
+    const message = `I need help. My live location link: ${mapsUrl}`
+
+    if (trustedContact.trim()) {
+      const encodedMessage = encodeURIComponent(message)
+      window.location.href = `sms:${trustedContact.trim()}?&body=${encodedMessage}`
       setShared(true)
-      // In a real app, this would send the location to emergency services
-      const message = `Emergency location: https://maps.google.com/?q=${location.lat},${location.lng}`
-      console.log(message)
+      setShareStatus("sms-draft")
+      return
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Emergency location",
+          text: message,
+          url: mapsUrl,
+        })
+        setShared(true)
+        setShareStatus("share-sheet")
+        return
+      } catch {
+        // fall through to clipboard fallback
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(message)
+      setShared(true)
+      setShareStatus("copied")
+      alert("Location message copied. Paste it into a text or call emergency services now.")
+    } catch {
+      alert("Unable to share automatically. Please call 911 or 988 now.")
     }
   }
 
@@ -64,31 +102,15 @@ function EmergencyLocationContent() {
             <MapPin className="w-10 h-10 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900">{t.emergencyLocation}</h2>
-          <p className="text-gray-600">
-            {lang === "en"
-              ? "Share your location to help emergency services find you"
-              : lang === "es"
-                ? "Comparte tu ubicación para ayudar a los servicios de emergencia a encontrarte"
-                : "شارك موقعك لمساعدة خدمات الطوارئ في العثور عليك"}
-          </p>
+          <p className="text-gray-600">Share your location link with a trusted contact or emergency responder.</p>
         </div>
 
         <div className="bg-red-100 border-2 border-red-300 rounded-2xl p-4 flex items-start gap-3">
           <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-bold text-red-900 mb-1">
-              {lang === "en"
-                ? "Emergency Use Only"
-                : lang === "es"
-                  ? "Solo para Emergencias"
-                  : "للاستخدام في حالات الطوارئ فقط"}
-            </h3>
+            <h3 className="font-bold text-red-900 mb-1">Emergency Use Only</h3>
             <p className="text-sm text-red-800">
-              {lang === "en"
-                ? "Use this feature if you're in crisis and need immediate help. Your location will be shared with emergency services."
-                : lang === "es"
-                  ? "Usa esta función si estás en crisis y necesitas ayuda inmediata. Tu ubicación se compartirá con los servicios de emergencia."
-                  : "استخدم هذه الميزة إذا كنت في أزمة وتحتاج إلى مساعدة فورية. سيتم مشاركة موقعك مع خدمات الطوارئ."}
+              This opens an SMS draft or share sheet with your location link. This app does not directly dispatch emergency services.
             </p>
           </div>
         </div>
@@ -99,44 +121,38 @@ function EmergencyLocationContent() {
             disabled={loading}
             className="w-full h-14 bg-red-500 hover:bg-red-600 text-white text-lg font-semibold rounded-xl"
           >
-            {loading
-              ? lang === "en"
-                ? "Getting Location..."
-                : lang === "es"
-                  ? "Obteniendo Ubicación..."
-                  : "جارٍ الحصول على الموقع..."
-              : lang === "en"
-                ? "Get My Location"
-                : lang === "es"
-                  ? "Obtener Mi Ubicación"
-                  : "احصل على موقعي"}
+            {loading ? "Getting Location..." : "Get My Location"}
           </Button>
         )}
 
         {location && !shared && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl p-5 shadow-md">
-              <h3 className="font-bold text-gray-900 mb-3">
-                {lang === "en" ? "Your Location" : lang === "es" ? "Tu Ubicación" : "موقعك"}
-              </h3>
+              <h3 className="font-bold text-gray-900 mb-3">Your Location</h3>
               <div className="bg-gray-50 rounded-xl p-3 font-mono text-sm text-gray-700">
-                <div>
-                  {lang === "en" ? "Latitude" : lang === "es" ? "Latitud" : "خط العرض"}: {location.lat.toFixed(6)}
-                </div>
-                <div>
-                  {lang === "en" ? "Longitude" : lang === "es" ? "Longitud" : "خط الطول"}: {location.lng.toFixed(6)}
-                </div>
+                <div>Latitude: {location.lat.toFixed(6)}</div>
+                <div>Longitude: {location.lng.toFixed(6)}</div>
               </div>
             </div>
+
+            <div className="bg-white rounded-2xl p-5 shadow-md space-y-3">
+              <h3 className="font-bold text-gray-900">Trusted Contact (Optional)</h3>
+              <p className="text-sm text-gray-600">Add a phone number to open a pre-filled SMS draft with your location link.</p>
+              <input
+                type="tel"
+                value={trustedContact}
+                onChange={(event) => setTrustedContact(event.target.value)}
+                onBlur={saveTrustedContact}
+                placeholder="e.g. 15551234567"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-red-300"
+              />
+            </div>
+
             <Button
               onClick={shareLocation}
               className="w-full h-14 bg-red-500 hover:bg-red-600 text-white text-lg font-semibold rounded-xl"
             >
-              {lang === "en"
-                ? "Share with Emergency Services"
-                : lang === "es"
-                  ? "Compartir con Servicios de Emergencia"
-                  : "شارك مع خدمات الطوارئ"}
+              Share Location Link
             </Button>
           </div>
         )}
@@ -144,42 +160,30 @@ function EmergencyLocationContent() {
         {shared && (
           <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-6 text-center space-y-3">
             <CheckCircle className="w-16 h-16 text-green-600 mx-auto" />
-            <h3 className="text-xl font-bold text-green-900">
-              {lang === "en" ? "Location Shared" : lang === "es" ? "Ubicación Compartida" : "تم مشاركة الموقع"}
-            </h3>
+            <h3 className="text-xl font-bold text-green-900">Location Ready</h3>
             <p className="text-green-800">
-              {lang === "en"
-                ? "Your location has been sent to emergency services. Help is on the way."
-                : lang === "es"
-                  ? "Tu ubicación ha sido enviada a los servicios de emergencia. La ayuda está en camino."
-                  : "تم إرسال موقعك إلى خدمات الطوارئ. المساعدة في الطريق."}
+              {shareStatus === "sms-draft"
+                ? "SMS draft opened with your location link. Send it now and call 911 if needed."
+                : shareStatus === "share-sheet"
+                  ? "Share sheet opened and your location link was shared."
+                  : "Location message copied. Paste it into a message and call 911 if needed."}
             </p>
           </div>
         )}
 
         <div className="bg-white rounded-2xl p-5 shadow-md space-y-3">
-          <h3 className="font-bold text-gray-900">
-            {lang === "en"
-              ? "Other Emergency Options"
-              : lang === "es"
-                ? "Otras Opciones de Emergencia"
-                : "خيارات طوارئ أخرى"}
-          </h3>
+          <h3 className="font-bold text-gray-900">Other Emergency Options</h3>
           <Button
             onClick={() => (window.location.href = "tel:911")}
             className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl"
           >
-            {lang === "en" ? "Call 911" : lang === "es" ? "Llamar al 911" : "اتصل بـ 911"}
+            Call 911
           </Button>
           <Button
             onClick={() => (window.location.href = `tel:${CONFIG.CRISIS_HOTLINE}`)}
             className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
           >
-            {lang === "en"
-              ? `Call ${CONFIG.CRISIS_HOTLINE} (Crisis Line)`
-              : lang === "es"
-                ? `Llamar al ${CONFIG.CRISIS_HOTLINE} (Línea de Crisis)`
-                : `اتصل بـ ${CONFIG.CRISIS_HOTLINE} (خط الأزمات)`}
+            {`Call ${CONFIG.CRISIS_HOTLINE} (Crisis Line)`}
           </Button>
         </div>
       </div>

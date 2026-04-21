@@ -112,6 +112,13 @@ function SupportContent() {
                 : "إذا كنت في خطر فوري، اتصل بالرقم 911 أو رقم الطوارئ المحلي"}
           </p>
         </div>
+
+        <Link href={`/privacy-policy?lang=${lang}`} className="block">
+          <div className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 text-center hover:bg-slate-50 transition-colors">
+            Privacy Policy
+          </div>
+        </Link>
+
       </div>
 
       <BottomNav lang={lang} />
