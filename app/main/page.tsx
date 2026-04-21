@@ -71,12 +71,12 @@ function MainScreenContent() {
       {/* Main Content */}
       <div className="home-scroll-shell flex-1 overflow-y-auto px-5 py-8 space-y-8 pb-24">
         <ScrollReveal>
-          <h2 className="text-2xl font-bold text-gray-900 text-center px-4">{t.greeting}</h2>
+          <h2 className="font-display text-3xl font-extrabold text-gray-900 text-center px-4 tracking-tight">{t.greeting}</h2>
         </ScrollReveal>
 
         <ScrollReveal delay={40}>
           <Link href={`/support?lang=${lang}`} data-transition-style="random">
-            <Button className="app-cta w-full h-20 text-xl font-semibold rounded-3xl shadow-lg">
+            <Button className="app-cta font-display w-full h-20 text-xl font-bold tracking-[0.01em] rounded-3xl shadow-lg">
               {t.getSupport}
             </Button>
           </Link>
@@ -90,7 +90,7 @@ function MainScreenContent() {
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
               <Phone className="w-8 h-8 text-gray-700 flex-shrink-0" />
-              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.callLifeline}</span>
+              <span className="font-display text-base font-semibold text-gray-900 text-center leading-tight">{t.callLifeline}</span>
             </Link>
             <Link
               href={`/text-lifeline?lang=${lang}`}
@@ -98,7 +98,7 @@ function MainScreenContent() {
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
               <MessageCircle className="w-8 h-8 text-gray-700 flex-shrink-0" />
-              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.textLifeline}</span>
+              <span className="font-display text-base font-semibold text-gray-900 text-center leading-tight">{t.textLifeline}</span>
             </Link>
             <Link
               href={`/chat-support?lang=${lang}`}
@@ -106,7 +106,7 @@ function MainScreenContent() {
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
               <MessageCircle className="w-8 h-8 text-gray-700 flex-shrink-0" />
-              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.chatSupport}</span>
+              <span className="font-display text-base font-semibold text-gray-900 text-center leading-tight">{t.chatSupport}</span>
             </Link>
             <Link
               href={`/emergency-location?lang=${lang}`}
@@ -114,14 +114,14 @@ function MainScreenContent() {
               className="bg-white rounded-3xl p-6 shadow-md flex flex-col items-center justify-center gap-4 hover:shadow-lg transition-shadow min-h-[120px]"
             >
               <MapPin className="w-8 h-8 text-gray-700 flex-shrink-0" />
-              <span className="text-sm font-medium text-gray-900 text-center leading-tight">{t.emergencyLocation}</span>
+              <span className="font-display text-base font-semibold text-gray-900 text-center leading-tight">{t.emergencyLocation}</span>
             </Link>
           </div>
         </ScrollReveal>
 
         <ScrollReveal delay={90}>
           <div className="bg-white rounded-3xl p-6 shadow-md">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">{t.copingTools}</h3>
+            <h3 className="font-display text-xl font-bold text-gray-900 mb-6 tracking-tight">{t.copingTools}</h3>
             <div className="grid grid-cols-4 gap-6">
               <Link
                 href={`/breathing?lang=${lang}`}
@@ -129,7 +129,7 @@ function MainScreenContent() {
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Wind className="w-10 h-10" style={{ color: "#2B7FFF" }} />
-                <span className="text-xs text-center text-gray-900 leading-tight">{t.breathing}</span>
+                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.breathing}</span>
               </Link>
               <Link
                 href={`/grounding?lang=${lang}`}
@@ -137,7 +137,7 @@ function MainScreenContent() {
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Sparkles className="w-10 h-10" style={{ color: "#00c950" }} />
-                <span className="text-xs text-center text-gray-900 leading-tight">{t.grounding}</span>
+                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.grounding}</span>
               </Link>
               <Link
                 href={`/journal?lang=${lang}`}
@@ -145,7 +145,7 @@ function MainScreenContent() {
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Book className="w-10 h-10" style={{ color: "#fe9a00" }} />
-                <span className="text-xs text-center text-gray-900 leading-tight">{t.journal}</span>
+                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.journal}</span>
               </Link>
               <Link
                 href={`/music?lang=${lang}`}
@@ -153,7 +153,7 @@ function MainScreenContent() {
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Music className="w-10 h-10" style={{ color: "#615fff" }} />
-                <span className="text-xs text-center text-gray-900 leading-tight">{t.music}</span>
+                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.music}</span>
               </Link>
             </div>
           </div>
@@ -161,10 +161,10 @@ function MainScreenContent() {
 
         <ScrollReveal delay={110}>
           <div className="bg-white rounded-3xl p-6 shadow-md space-y-5">
-            <h3 className="text-xl font-bold text-gray-900">{t.safetyPlan}</h3>
+            <h3 className="font-display text-xl font-bold text-gray-900 tracking-tight">{t.safetyPlan}</h3>
             <p className="text-base text-gray-600 leading-relaxed">{t.safetyDesc}</p>
             <Link href={`/safety-plan?lang=${lang}`} data-transition-style="random">
-              <Button className="app-cta w-full h-14 text-lg font-semibold rounded-2xl">
+              <Button className="app-cta font-display w-full h-14 text-lg font-bold rounded-2xl">
                 {t.openSafety}
               </Button>
             </Link>

@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { JetBrains_Mono, Manrope, Space_Grotesk } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { AppThemeProvider } from "@/components/app-theme-provider"
 import { NotificationProvider } from "@/components/notification-provider"
@@ -10,8 +10,9 @@ import { ScrollSmoothnessEnhancer } from "@/components/scroll-smoothness-enhance
 import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" })
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
+const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" })
 
 export const metadata: Metadata = {
   title: "Safe Space",
@@ -46,7 +47,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Safe Space" />
         <meta name="theme-color" content="#10b981" />
       </head>
-      <body className={`font-sans antialiased`}>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <AppThemeProvider>
             <NotificationProvider>

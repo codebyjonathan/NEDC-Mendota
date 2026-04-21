@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import RocketLogoAnimation from "@/components/rocket-logo-animation";
+import { Chakra_Petch } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { playIntroAudio } from "@/lib/intro-audio";
 import { navigateWithViewTransition } from "@/lib/view-transition";
+
+const chakraPetch = Chakra_Petch({ subsets: ["latin"], weight: ["500", "600", "700"] });
 
 interface IntroPageProps {
   onFinish?: () => void;
@@ -142,11 +145,11 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
         <div className="relative z-10 flex flex-col items-center justify-center gap-3">
           <button
             onClick={handleStart}
-            className="fly-in-flash text-6xl font-extrabold text-white transition-all duration-300 hover:text-gray-300 hover:scale-110 cursor-pointer"
+            className={`${chakraPetch.className} fly-in-flash text-6xl font-bold leading-none tracking-[0.1em] text-cyan-50 drop-shadow-[0_2px_14px_rgba(56,189,248,0.38)] transition-all duration-300 hover:scale-110 hover:brightness-110 cursor-pointer`}
           >
             <span>FLY IN!</span>
           </button>
-          <p className="text-sm text-gray-400 tracking-wider">Click Fly In to start</p>
+          <p className="font-display text-xs uppercase tracking-[0.24em] text-sky-200/70">Tap Fly In to start</p>
         </div>
       </div>
     </div>

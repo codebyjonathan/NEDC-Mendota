@@ -84,8 +84,9 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --font-sans: var(--font-manrope), 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-display: var(--font-space-grotesk), 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'SFMono-Regular', 'Menlo', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -136,6 +137,10 @@
 }
 
 @layer components {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
   .app-cta {
     background: linear-gradient(135deg, var(--app-accent), var(--app-accent-strong));
     color: white;
@@ -167,6 +172,189 @@
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
     filter: blur(0);
+  }
+
+  .starter-star {
+    position: absolute;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 0 14px rgba(186, 230, 253, 0.95), 0 0 28px rgba(191, 219, 254, 0.55);
+    animation: starter-star-twinkle 1.75s ease-in-out infinite;
+    z-index: 10;
+  }
+
+  .starter-star-sm {
+    width: 3px;
+    height: 3px;
+  }
+
+  .starter-star-md {
+    width: 4px;
+    height: 4px;
+  }
+
+  .starter-star-lg {
+    width: 6px;
+    height: 6px;
+  }
+
+  .starter-asteroid {
+    --asteroid-size: 14px;
+    position: absolute;
+    width: var(--asteroid-size);
+    height: calc(var(--asteroid-size) * 0.72);
+    border-radius: 62% 38% 57% 43%;
+    background: linear-gradient(130deg, rgba(226, 232, 240, 0.9) 0%, rgba(148, 163, 184, 0.92) 55%, rgba(100, 116, 139, 0.95) 100%);
+    box-shadow:
+      0 0 18px rgba(148, 163, 184, 0.7),
+      inset -2px -2px 4px rgba(15, 23, 42, 0.35);
+    will-change: transform, opacity;
+    z-index: 11;
+  }
+
+  .starter-asteroid::before {
+    content: "";
+    position: absolute;
+    right: calc(var(--asteroid-size) * 0.8);
+    top: 50%;
+    width: calc(var(--asteroid-size) * 3);
+    height: 2px;
+    transform: translateY(-50%);
+    border-radius: 9999px;
+    background: linear-gradient(90deg, rgba(225, 241, 255, 0.85) 0%, rgba(191, 219, 254, 0.34) 42%, rgba(191, 219, 254, 0) 100%);
+    filter: blur(0.7px);
+  }
+
+  .starter-asteroid-a {
+    --asteroid-size: 18px;
+    animation: starter-asteroid-fly-a 15s linear infinite;
+  }
+
+  .starter-asteroid-b {
+    --asteroid-size: 12px;
+    animation: starter-asteroid-fly-b 13.5s linear infinite;
+    animation-delay: 4.8s;
+  }
+
+  .starter-asteroid-c {
+    --asteroid-size: 15px;
+    animation: starter-asteroid-fly-c 17s linear infinite;
+    animation-delay: 9.2s;
+  }
+
+  .starter-meteor {
+    position: absolute;
+    width: 120px;
+    height: 2px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(147, 197, 253, 0.75) 42%, rgba(56, 189, 248, 0) 100%);
+    box-shadow: 0 0 14px rgba(191, 219, 254, 0.9);
+    transform-origin: left center;
+    pointer-events: none;
+    z-index: 12;
+  }
+
+  .starter-meteor-a {
+    top: 18%;
+    right: -16%;
+    animation: starter-meteor-fly 18s linear infinite;
+  }
+
+  .starter-meteor-b {
+    top: 45%;
+    right: -20%;
+    animation: starter-meteor-fly 20s linear infinite;
+    animation-delay: 7s;
+  }
+
+  .starter-meteor-c {
+    top: 71%;
+    right: -18%;
+    animation: starter-meteor-fly 22s linear infinite;
+    animation-delay: 13s;
+  }
+}
+
+@keyframes starter-star-twinkle {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.26);
+  }
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes starter-asteroid-fly-a {
+  0% {
+    transform: translate3d(112vw, 18vh, 0) rotate(14deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  92% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(-30vw, 72vh, 0) rotate(14deg);
+    opacity: 0;
+  }
+}
+
+@keyframes starter-asteroid-fly-b {
+  0% {
+    transform: translate3d(108vw, 70vh, 0) rotate(-11deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate3d(-28vw, 36vh, 0) rotate(-11deg);
+    opacity: 0;
+  }
+}
+
+@keyframes starter-asteroid-fly-c {
+  0% {
+    transform: translate3d(106vw, 46vh, 0) rotate(8deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.82;
+  }
+  88% {
+    opacity: 0.82;
+  }
+  100% {
+    transform: translate3d(-26vw, 14vh, 0) rotate(8deg);
+    opacity: 0;
+  }
+}
+
+@keyframes starter-meteor-fly {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-18deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-132vw, 44vh, 0) rotate(-18deg);
+    opacity: 0;
   }
 }
 
