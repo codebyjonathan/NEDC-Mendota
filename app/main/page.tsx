@@ -122,14 +122,14 @@ function MainScreenContent() {
         <ScrollReveal delay={90}>
           <div className="bg-white rounded-3xl p-6 shadow-md">
             <h3 className="font-display text-xl font-bold text-gray-900 mb-6 tracking-tight">{t.copingTools}</h3>
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-6">
               <Link
                 href={`/breathing?lang=${lang}`}
                 data-transition-style="random"
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Wind className="w-10 h-10" style={{ color: "#2B7FFF" }} />
-                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.breathing}</span>
+                <span className="max-w-[92px] font-display text-xs font-medium text-center text-gray-900 leading-tight break-words sm:text-sm">{t.breathing}</span>
               </Link>
               <Link
                 href={`/grounding?lang=${lang}`}
@@ -137,7 +137,7 @@ function MainScreenContent() {
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Sparkles className="w-10 h-10" style={{ color: "#00c950" }} />
-                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.grounding}</span>
+                <span className="max-w-[92px] font-display text-xs font-medium text-center text-gray-900 leading-tight break-words sm:text-sm">{t.grounding}</span>
               </Link>
               <Link
                 href={`/journal?lang=${lang}`}
@@ -145,7 +145,7 @@ function MainScreenContent() {
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Book className="w-10 h-10" style={{ color: "#fe9a00" }} />
-                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.journal}</span>
+                <span className="max-w-[92px] font-display text-xs font-medium text-center text-gray-900 leading-tight break-words sm:text-sm">{t.journal}</span>
               </Link>
               <Link
                 href={`/music?lang=${lang}`}
@@ -153,7 +153,7 @@ function MainScreenContent() {
                 className="flex flex-col items-center gap-3 hover:opacity-70 transition-opacity"
               >
                 <Music className="w-10 h-10" style={{ color: "#615fff" }} />
-                <span className="font-display text-sm font-medium text-center text-gray-900 leading-tight">{t.music}</span>
+                <span className="max-w-[92px] font-display text-xs font-medium text-center text-gray-900 leading-tight break-words sm:text-sm">{t.music}</span>
               </Link>
             </div>
           </div>
