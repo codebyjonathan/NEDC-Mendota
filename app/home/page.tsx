@@ -100,7 +100,7 @@ export default function HomePage() {
 
         <div className="flex w-64 flex-col items-center space-y-4">
           <Select value={selectedLanguage} onValueChange={handleLanguageSelect}>
-            <SelectTrigger className="h-14 w-full rounded-full border border-cyan-200/20 bg-slate-950/55 text-base font-semibold text-sky-50 data-[placeholder]:text-white shadow-[0_12px_28px_rgba(2,6,23,0.55)] backdrop-blur-md transition hover:bg-slate-900/70">
+            <SelectTrigger className="h-14 w-full rounded-full border border-cyan-200/20 bg-slate-950/55 text-base font-semibold text-white data-[placeholder]:text-white [&_[data-slot=select-value]]:text-white [&_[data-slot=select-value]]:opacity-100 shadow-[0_12px_28px_rgba(2,6,23,0.55)] backdrop-blur-md transition hover:bg-slate-900/70">
               <SelectValue placeholder="Languages" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-cyan-200/20 bg-slate-950/95 text-sky-50">
