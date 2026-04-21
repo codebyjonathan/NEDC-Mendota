@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 const REVEAL_DELAY_STEP_MS = 45
 const REVEAL_DELAY_MAX_MS = 220
@@ -27,14 +27,24 @@ function uniqueTargets(elements: HTMLElement[]) {
 
 export function ScrollSmoothnessEnhancer() {
   const pathname = usePathname()
+  const hasMountedRef = useRef(false)
 
   useEffect(() => {
+    // Avoid mutating DOM during initial hydration. We only enhance after
+    // the app has fully mounted and route changes happen client-side.
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true
+      return
+    }
+
     if (typeof window === "undefined") {
       return
     }
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const scrollShells = Array.from(document.querySelectorAll<HTMLElement>(".home-scroll-shell"))
+    const scrollShells = Array.from(document.querySelectorAll<HTMLElement>(".home-scroll-shell")).filter(
+      (shell) => shell.dataset.disableScrollReveal !== "true",
+    )
 
     if (scrollShells.length === 0) {
       return
