@@ -9,6 +9,13 @@ import { BottomNav } from "@/components/bottom-nav"
 import { translations, type Language } from "@/lib/translations"
 import { CONFIG } from "@/lib/config"
 
+type LocationDetails = {
+  nearestStreet: string
+  city: string
+  state: string
+  country: string
+}
+
 function EmergencyLocationContent() {
   const searchParams = useSearchParams()
   const langParam = searchParams.get("lang") || "en"
@@ -20,6 +27,42 @@ function EmergencyLocationContent() {
   const [shared, setShared] = useState(false)
   const [trustedContact, setTrustedContact] = useState(CONFIG.TRUSTED_CONTACT_NUMBER)
   const [shareStatus, setShareStatus] = useState<"idle" | "sms-draft" | "share-sheet" | "copied">("idle")
+  const [locationDetails, setLocationDetails] = useState<LocationDetails | null>(null)
+  const [detailsLoading, setDetailsLoading] = useState(false)
+
+  const lookupLocationDetails = async (lat: number, lng: number) => {
+    setDetailsLoading(true)
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`,
+      )
+      if (!response.ok) {
+        throw new Error("Reverse geocoding failed")
+      }
+
+      const data = await response.json()
+      const address = data?.address ?? {}
+      const city = address.city || address.town || address.village || address.hamlet || ""
+      const state = address.state || ""
+      const country = address.country || ""
+      const nearestStreet = address.road || address.pedestrian || address.cycleway || address.footway || ""
+
+      if (city || state || country || nearestStreet) {
+        setLocationDetails({
+          nearestStreet,
+          city,
+          state,
+          country,
+        })
+      } else {
+        setLocationDetails(null)
+      }
+    } catch {
+      setLocationDetails(null)
+    } finally {
+      setDetailsLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -34,10 +77,10 @@ function EmergencyLocationContent() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          })
+          const lat = position.coords.latitude
+          const lng = position.coords.longitude
+          setLocation({ lat, lng })
+          void lookupLocationDetails(lat, lng)
           setLoading(false)
         },
         () => {
@@ -57,7 +100,16 @@ function EmergencyLocationContent() {
     if (!location) return
 
     const mapsUrl = `https://maps.google.com/?q=${location.lat},${location.lng}`
-    const message = `I need help. My live location link: ${mapsUrl}`
+    const lines = [
+      "I need help.",
+      `Precise coordinates: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`,
+      locationDetails?.city ? `City: ${locationDetails.city}` : "",
+      locationDetails?.state ? `State/Province: ${locationDetails.state}` : "",
+      locationDetails?.country ? `Country: ${locationDetails.country}` : "",
+      locationDetails?.nearestStreet ? `Nearest street: ${locationDetails.nearestStreet}` : "",
+      `Live location link: ${mapsUrl}`,
+    ].filter(Boolean)
+    const message = lines.join("\n")
 
     if (trustedContact.trim()) {
       const encodedMessage = encodeURIComponent(message)
@@ -132,6 +184,19 @@ function EmergencyLocationContent() {
               <div className="bg-gray-50 rounded-xl p-3 font-mono text-sm text-gray-700">
                 <div>Latitude: {location.lat.toFixed(6)}</div>
                 <div>Longitude: {location.lng.toFixed(6)}</div>
+                {detailsLoading && <div className="mt-2 font-sans text-gray-500">Looking up nearby address details...</div>}
+                {!detailsLoading && locationDetails?.city && (
+                  <div className="mt-2 font-sans">City: {locationDetails.city}</div>
+                )}
+                {!detailsLoading && locationDetails?.state && (
+                  <div className="font-sans">State/Province: {locationDetails.state}</div>
+                )}
+                {!detailsLoading && locationDetails?.country && (
+                  <div className="font-sans">Country: {locationDetails.country}</div>
+                )}
+                {!detailsLoading && locationDetails?.nearestStreet && (
+                  <div className="font-sans">Nearest street: {locationDetails.nearestStreet}</div>
+                )}
               </div>
             </div>
 
@@ -153,6 +218,15 @@ function EmergencyLocationContent() {
               className="w-full h-14 bg-red-500 hover:bg-red-600 text-white text-lg font-semibold rounded-xl"
             >
               Share Location Link
+            </Button>
+            <Button
+              onClick={() => {
+                if (!location) return
+                window.open(`https://maps.google.com/?q=${location.lat},${location.lng}`, "_blank", "noopener,noreferrer")
+              }}
+              className="w-full h-12 bg-white hover:bg-gray-100 text-gray-900 border border-gray-300 font-semibold rounded-xl"
+            >
+              Open In Google Maps
             </Button>
           </div>
         )}
