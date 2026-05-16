@@ -129,7 +129,9 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
       return
     }
 
-    const newMessages = [...chatMessages, { role: "user", content: userText } as ChatMessage]
+    const userMessage = { role: "user", content: userText } as ChatMessage
+    const newMessages = [...chatMessages, userMessage]
+    setChatMessages(newMessages)
     setInput("")
     setLoading(true)
 
@@ -156,8 +158,8 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
         break
       }
 
-      setChatMessages([
-        ...newMessages,
+      setChatMessages((prev) => [
+        ...prev,
         {
           role: "assistant",
           content:
