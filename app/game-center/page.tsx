@@ -79,7 +79,7 @@ const GC_TRANSLATIONS = {
     firstTo10Wins: "First to 10 wins",
     pongControls: "Mobile buttons Move Up/Move Down. Desktop Arrow Up/Down or W/S.",
     invaderControls: "Mobile Left/Fire/Right buttons. Desktop Arrow Left/Right and Space/K. Clear all aliens to advance.",
-    flappyControls: "Tap canvas or Flap button on mobile. Desktop Space/W/Arrow Up. Passing an obstacle gives +1.",
+    flappyControls: "Tap canvas on mobile. Desktop Space/W/Arrow Up. Passing an obstacle gives +1.",
     fell: "You fell!",
     tapToReplay: "Tap to play again",
     difficulties: { easy: "Easy", medium: "Medium", hard: "Hard", impossible: "Impossible" },
@@ -504,7 +504,17 @@ function NebulaPaddleDuel({ onWin, t }: { onWin: () => void; t: (typeof GC_TRANS
   const [running, setRunning] = useState(false)
   const [touchUp, setTouchUp] = useState(false)
   const [touchDown, setTouchDown] = useState(false)
+  const touchUpRef = useRef(false)
+  const touchDownRef = useRef(false)
   const [victoryOpen, setVictoryOpen] = useState(false)
+
+  useEffect(() => {
+    touchUpRef.current = touchUp
+  }, [touchUp])
+
+  useEffect(() => {
+    touchDownRef.current = touchDown
+  }, [touchDown])
 
   useEffect(() => {
     if (!running) return
@@ -570,8 +580,8 @@ function NebulaPaddleDuel({ onWin, t }: { onWin: () => void; t: (typeof GC_TRANS
     }
 
     const step = () => {
-      if (state.up || touchUp) state.playerY -= 4
-      if (state.down || touchDown) state.playerY += 4
+      if (state.up || touchUpRef.current) state.playerY -= 4
+      if (state.down || touchDownRef.current) state.playerY += 4
       state.playerY = Math.max(8, Math.min(192, state.playerY))
       const aiTargetDelta = (state.ballY - (state.aiY + aiConfig.paddle / 2)) * aiConfig.reaction
       const aiStep = Math.max(-aiConfig.maxStep, Math.min(aiConfig.maxStep, aiTargetDelta))
@@ -639,7 +649,7 @@ function NebulaPaddleDuel({ onWin, t }: { onWin: () => void; t: (typeof GC_TRANS
       window.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("keyup", onKeyUp)
     }
-  }, [running, touchUp, touchDown, difficulty])
+  }, [running, difficulty])
 
   return (
     <div className="relative rounded-2xl bg-slate-900/70 p-4">
@@ -670,8 +680,9 @@ function NebulaPaddleDuel({ onWin, t }: { onWin: () => void; t: (typeof GC_TRANS
           onMouseUp={() => setTouchUp(false)}
           onMouseLeave={() => setTouchUp(false)}
           variant="secondary"
+          aria-label={t.moveUp}
         >
-          {t.moveUp}
+          ^
         </Button>
         <Button
           onTouchStart={() => setTouchDown(true)}
@@ -681,8 +692,9 @@ function NebulaPaddleDuel({ onWin, t }: { onWin: () => void; t: (typeof GC_TRANS
           onMouseUp={() => setTouchDown(false)}
           onMouseLeave={() => setTouchDown(false)}
           variant="secondary"
+          aria-label={t.moveDown}
         >
-          {t.moveDown}
+          v
         </Button>
       </div>
       <p className="mt-2 text-xs text-slate-300">{t.controls}: {t.pongControls}</p>
@@ -961,8 +973,9 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
           onMouseUp={() => setTouchLeft(false)}
           onMouseLeave={() => setTouchLeft(false)}
           variant="secondary"
+          aria-label={t.left}
         >
-          {t.left}
+          <
         </Button>
         <Button
           onTouchStart={() => setTouchFire(true)}
@@ -972,8 +985,9 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
           onMouseUp={() => setTouchFire(false)}
           onMouseLeave={() => setTouchFire(false)}
           className="bg-fuchsia-500 text-white hover:bg-fuchsia-400"
+          aria-label={t.fire}
         >
-          {t.fire}
+          ^
         </Button>
         <Button
           onTouchStart={() => setTouchRight(true)}
@@ -983,8 +997,9 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
           onMouseUp={() => setTouchRight(false)}
           onMouseLeave={() => setTouchRight(false)}
           variant="secondary"
+          aria-label={t.right}
         >
-          {t.right}
+          >
         </Button>
       </div>
       <p className="mt-2 text-xs text-slate-300">{t.controls}: {t.invaderControls}</p>
@@ -1015,7 +1030,6 @@ function AstroFlapRunner({
   const [score, setScore] = useState(0)
   const [running, setRunning] = useState(false)
   const [gameOver, setGameOver] = useState(false)
-  const [touchFlap, setTouchFlap] = useState(false)
   const [milestonePop, setMilestonePop] = useState<{ score: number; name: string; rarity: string } | null>(null)
   const pausedForMilestoneRef = useRef(false)
 
@@ -1077,7 +1091,6 @@ function AstroFlapRunner({
         return
       }
 
-      if (touchFlap) flap()
       tick += 1
       if (tick % 72 === 0) {
         const gapY = 60 + Math.random() * 100
@@ -1158,7 +1171,7 @@ function AstroFlapRunner({
       window.removeEventListener("keydown", onKey)
       canvas.removeEventListener("pointerdown", flap)
     }
-  }, [running, touchFlap, profile, onMilestone])
+  }, [running, profile, onMilestone])
 
   return (
     <div className="relative rounded-2xl bg-slate-900/70 p-4">
@@ -1176,19 +1189,6 @@ function AstroFlapRunner({
         </Button>
         <Button onClick={() => setScore(0)} variant="secondary">{t.resetScore}</Button>
       </div>
-      <div className="mt-3 sm:hidden">
-        <Button
-          onTouchStart={() => setTouchFlap(true)}
-          onTouchEnd={() => setTouchFlap(false)}
-          onTouchCancel={() => setTouchFlap(false)}
-          onMouseDown={() => setTouchFlap(true)}
-          onMouseUp={() => setTouchFlap(false)}
-          onMouseLeave={() => setTouchFlap(false)}
-          className="w-full bg-emerald-500 text-white hover:bg-emerald-400"
-        >
-          {t.flap}
-        </Button>
-      </div>
       <p className="mt-2 text-xs text-slate-300">{t.controls}: {t.flappyControls}</p>
       {gameOver && !running && (
         <button
@@ -1196,7 +1196,6 @@ function AstroFlapRunner({
           onClick={() => {
             pausedForMilestoneRef.current = false
             setMilestonePop(null)
-            setTouchFlap(false)
             setGameOver(false)
             setRunning(true)
           }}
