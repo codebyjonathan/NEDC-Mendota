@@ -99,7 +99,7 @@ export const translations = {
     calmMusicCollections: "Calming Music Collections",
     recommendedTracks: "Recommended Tracks",
     addCustomTrack: "Add Your Own Track",
-    teamDescription: "We are Safe Space! The NEDC Team at Mendota High School (MHS), Mendota CA. Composed of our Team Advisors - Eloy Peña & Rudy Torres; Chief Computer Engineer - Jonathan Alfaro (11th); Lead UI/UX Designer - Manuel Reyes (11th); Data & Research Analyst - Christopher Torres (11th). As active members of our school club: MHS NAMI; we collaborated with them to showcase commitment towards raising awareness and providing support on Suicide Prevention, striving to make an impact towards our Student Body of approximately 1,000 students.\n\nRemember that with Safe Space, you are Never Alone!",
+    teamDescription: "We are Safe Space! The NEDC Team at Mendota High School (MHS), Mendota CA. Composed of our Team Advisor - Eloy Peña; Chief Computer Engineer - Jonathan Alfaro (11th); Lead UI/UX Designer - Manuel Reyes (11th); Data & Research Analyst - Christopher Torres (11th). As active members of our school club: MHS NAMI; we collaborated with them to showcase commitment towards raising awareness and providing support on Suicide Prevention, striving to make an impact towards our Student Body of approximately 1,000 students.\n\nRemember that with Safe Space, you are Never Alone!\n\nThank you to all of our users, supporters, and mentors, like C. Tamayo, for the creation of Safe Space!",
   },
   es: {
     appTitle: "Safe Space",
@@ -202,7 +202,7 @@ export const translations = {
     calmMusicCollections: "Colecciones de Música Calmante",
     recommendedTracks: "Pistas Recomendadas",
     addCustomTrack: "Añade Tu Propia Pista",
-    teamDescription: "¡Somos Safe Space! El Equipo NEDC en la Escuela Secundaria Mendota (MHS), Mendota, CA. Compuesto por nuestro Asesors del Equipo - Eloy Peña & Rudy Torres; Ingeniero Informático Jefe - Jonathan Alfaro (11º); Diseñador Principal de UI/UX - Manuel Reyes (11º); Analista de Datos e Investigación - Christopher Torres (11º). Como miembros activos de nuestro club escolar: MHS NAMI; colaboramos con ellos para demostrar nuestro compromiso en sensibilizar y brindar apoyo sobre la Prevención del Suicidio, esforzándonos por impactar a nuestro Cuerpo Estudiantil de aproximadamente 1,000 estudiantes.\n\nRecuerda que con Safe Space, ¡nunca estás solo!",
+    teamDescription: "¡Somos Safe Space! El Equipo NEDC en la Escuela Secundaria Mendota (MHS), Mendota, CA. Compuesto por nuestro Asesor del Equipo - Eloy Peña; Ingeniero Informático Jefe - Jonathan Alfaro (11º); Diseñador Principal de UI/UX - Manuel Reyes (11º); Analista de Datos e Investigación - Christopher Torres (11º). Como miembros activos de nuestro club escolar: MHS NAMI; colaboramos con ellos para demostrar nuestro compromiso en sensibilizar y brindar apoyo sobre la Prevención del Suicidio, esforzándonos por impactar a nuestro Cuerpo Estudiantil de aproximadamente 1,000 estudiantes.\n\nRecuerda que con Safe Space, ¡nunca estás solo!\n\n¡Gracias a todos nuestros usuarios, seguidores y mentores, como C. Tamayo, por la creación de Safe Space!",
   },
   ar: {
     appTitle: "Safe Space",
@@ -304,7 +304,7 @@ export const translations = {
     calmMusicCollections: "مجموعات الموسيقى المهدئة",
     recommendedTracks: "المسارات الموصى بها",
     addCustomTrack: "أضف مسارك الخاص",
-    teamDescription: "نحن Safe Space! فريق NEDC في مدرسة Mendota الثانوية (MHS)، Mendota، كاليفورنيا. يتكون من مستشارنا - Rudy Torres؛ كبير مهندسي الحاسوب - Jonathan Alfaro (الصف 11)؛ مصمم واجهة المستخدم الرئيسي - Manuel Reyes (الصف 11)؛ محلل البيانات والأبحاث - Christopher Torres (الصف 11). كأعضاء نشطين في نادينا المدرسي: MHS NAMI؛ تعاونا معهم لإظهار التزامنا برفع الوعي وتقديم الدعم بشأن الوقاية من الانتحار، ونسعى لإحداث تأثير تجاه جسم الطالب الذي يضم حوالي 1000 طالب.\n\nتذكر أنه مع Safe Space، أنت لست وحدك أبدًا!",
+    teamDescription: "نحن Safe Space! فريق NEDC في مدرسة Mendota الثانوية (MHS)، Mendota، كاليفورنيا. يتكون من مستشار فريقنا - Eloy Peña؛ كبير مهندسي الحاسوب - Jonathan Alfaro (الصف 11)؛ مصمم واجهة المستخدم الرئيسي - Manuel Reyes (الصف 11)؛ محلل البيانات والأبحاث - Christopher Torres (الصف 11). كأعضاء نشطين في نادينا المدرسي: MHS NAMI؛ تعاونا معهم لإظهار التزامنا برفع الوعي وتقديم الدعم بشأن الوقاية من الانتحار، ونسعى لإحداث تأثير تجاه جسم الطالب الذي يضم حوالي 1000 طالب.\n\nتذكر أنه مع Safe Space، أنت لست وحدك أبدًا!\n\nشكرًا لجميع مستخدمينا وداعمينا ومرشدينا، مثل C. Tamayo، على إنشاء Safe Space!",
   },
 }
 
