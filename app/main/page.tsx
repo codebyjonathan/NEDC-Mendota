@@ -174,7 +174,19 @@ function MainScreenContent() {
         </ScrollReveal>
 
         <ScrollReveal delay={130}>
-          <SolarSystemJourney />
+          <div className="rounded-3xl border border-fuchsia-200/40 bg-gradient-to-br from-fuchsia-50 via-rose-50 to-amber-50 p-6 shadow-md space-y-5">
+            <h3 className="font-display text-xl font-bold text-fuchsia-950 tracking-tight">{t.gameCenterTitle}</h3>
+            <p className="text-base text-fuchsia-900/80 leading-relaxed">{t.gameCenterDesc}</p>
+            <Link href={`/game-center/customize?lang=${lang}`} data-transition-style="random">
+              <Button className="font-display w-full h-14 text-lg font-bold rounded-2xl bg-fuchsia-600 text-white hover:bg-fuchsia-500">
+                {t.openGameCenter}
+              </Button>
+            </Link>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={150}>
+          <SolarSystemJourney lang={lang} />
         </ScrollReveal>
 
       </div>
