@@ -975,7 +975,7 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
           variant="secondary"
           aria-label={t.left}
         >
-          <
+          {"<"}
         </Button>
         <Button
           onTouchStart={() => setTouchFire(true)}
@@ -999,7 +999,7 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
           variant="secondary"
           aria-label={t.right}
         >
-          >
+          {">"}
         </Button>
       </div>
       <p className="mt-2 text-xs text-slate-300">{t.controls}: {t.invaderControls}</p>
