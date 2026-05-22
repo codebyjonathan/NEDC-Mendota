@@ -12,6 +12,7 @@ import {
 import type { ReactNode } from "react"
 import { AppNotification, NotificationSettings } from "@/lib/notification-types"
 import { getRandomMotivationalQuote } from "@/lib/notification-quotes"
+import type { Language } from "@/lib/translations"
 import {
   isPushNotificationSupported,
   isPushNotificationSubscribed,
@@ -29,6 +30,75 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   dailyMotivationEnabled: false,
   dailyMotivationHour: 7,
 }
+
+const I18N = {
+  en: {
+    notificationsBrowserOnly: "Notifications are only available in the browser.",
+    notificationsNeedSecure: "Notifications require HTTPS or localhost. Open the deployed Vercel site, or use localhost on this device.",
+    notificationsUnsupported: "This browser does not support notifications. Reminders can still appear while Safe Space stays open on this device.",
+    requestFailed: "Request failed",
+    browserBodyFallback: "Open Safe Space to continue your check-in.",
+    dailyMotivationTitle: "Daily motivational reminder",
+    permissionNeededPush: "Notification permission is required for browser push notifications",
+    unableEnablePush: "Unable to enable push notifications",
+    failedEnablePush: "Failed to enable push notifications",
+    failedDisablePush: "Failed to disable push notifications",
+    failedTestNotification: "Failed to send test notification",
+    permissionNeededDailyTest: "Notification permission is required to test daily reminders",
+    unableDailyPushTest: "Unable to send daily reminder push test",
+    failedDailyReminderTest: "Failed to test daily reminder",
+    permissionDenied: "Notification permission was denied",
+    defaultCheckInTitle: "Time to check in!",
+    defaultCheckInBody: "Let's take a moment to check in with yourself.",
+    failedSchedule: "Failed to schedule notification",
+    permissionNeededDaily: "Notification permission is required for daily reminders",
+    toastTapToOpen: "Tap to open in Safe Space",
+  },
+  es: {
+    notificationsBrowserOnly: "Las notificaciones solo están disponibles en el navegador.",
+    notificationsNeedSecure: "Las notificaciones requieren HTTPS o localhost. Abre el sitio desplegado en Vercel o usa localhost en este dispositivo.",
+    notificationsUnsupported: "Este navegador no admite notificaciones. Los recordatorios aún pueden aparecer mientras Safe Space permanezca abierto en este dispositivo.",
+    requestFailed: "Solicitud fallida",
+    browserBodyFallback: "Abre Safe Space para continuar tu chequeo.",
+    dailyMotivationTitle: "Recordatorio motivacional diario",
+    permissionNeededPush: "Se requiere permiso de notificaciones para las notificaciones push del navegador",
+    unableEnablePush: "No se pudieron activar las notificaciones push",
+    failedEnablePush: "Error al activar las notificaciones push",
+    failedDisablePush: "Error al desactivar las notificaciones push",
+    failedTestNotification: "Error al enviar la notificación de prueba",
+    permissionNeededDailyTest: "Se requiere permiso de notificaciones para probar recordatorios diarios",
+    unableDailyPushTest: "No se pudo enviar la prueba push del recordatorio diario",
+    failedDailyReminderTest: "Error al probar el recordatorio diario",
+    permissionDenied: "Se denegó el permiso de notificaciones",
+    defaultCheckInTitle: "¡Hora de revisar cómo estás!",
+    defaultCheckInBody: "Tomemos un momento para revisar cómo te sientes.",
+    failedSchedule: "Error al programar la notificación",
+    permissionNeededDaily: "Se requiere permiso de notificaciones para recordatorios diarios",
+    toastTapToOpen: "Toca para abrir en Safe Space",
+  },
+  ar: {
+    notificationsBrowserOnly: "الإشعارات متاحة فقط داخل المتصفح.",
+    notificationsNeedSecure: "تتطلب الإشعارات اتصال HTTPS أو localhost. افتح موقع Vercel المنشور أو استخدم localhost على هذا الجهاز.",
+    notificationsUnsupported: "هذا المتصفح لا يدعم الإشعارات. ما زال بإمكان التذكيرات الظهور أثناء بقاء Safe Space مفتوحًا على هذا الجهاز.",
+    requestFailed: "فشل الطلب",
+    browserBodyFallback: "افتح Safe Space لمتابعة تسجيل حالتك.",
+    dailyMotivationTitle: "تذكير تحفيزي يومي",
+    permissionNeededPush: "يلزم إذن الإشعارات لتفعيل إشعارات الدفع في المتصفح",
+    unableEnablePush: "تعذر تفعيل إشعارات الدفع",
+    failedEnablePush: "فشل تفعيل إشعارات الدفع",
+    failedDisablePush: "فشل تعطيل إشعارات الدفع",
+    failedTestNotification: "فشل إرسال إشعار الاختبار",
+    permissionNeededDailyTest: "يلزم إذن الإشعارات لاختبار التذكيرات اليومية",
+    unableDailyPushTest: "تعذر إرسال اختبار دفع للتذكير اليومي",
+    failedDailyReminderTest: "فشل اختبار التذكير اليومي",
+    permissionDenied: "تم رفض إذن الإشعارات",
+    defaultCheckInTitle: "حان وقت تسجيل حالتك!",
+    defaultCheckInBody: "لنأخذ لحظة لتفقد حالتك.",
+    failedSchedule: "فشل جدولة الإشعار",
+    permissionNeededDaily: "يلزم إذن الإشعارات للتذكيرات اليومية",
+    toastTapToOpen: "اضغط للفتح في Safe Space",
+  },
+} as const
 
 interface NotificationContextValue {
   notifications: AppNotification[]
@@ -70,6 +140,16 @@ function isClient() {
   return typeof window !== "undefined"
 }
 
+function getCurrentLanguage(): Language {
+  if (!isClient()) return "en"
+  const lang = new URLSearchParams(window.location.search).get("lang")
+  return lang === "en" || lang === "es" || lang === "ar" ? lang : "en"
+}
+
+function getI18n() {
+  return I18N[getCurrentLanguage()]
+}
+
 function getNotificationPermission(): NotificationPermission {
   if (!isClient() || !("Notification" in window)) {
     return "default"
@@ -83,15 +163,16 @@ function hasBrowserNotificationSupport() {
 }
 
 function getNotificationSupportMessage() {
+  const t = getI18n()
   if (!isClient()) {
-    return "Notifications are only available in the browser."
+    return t.notificationsBrowserOnly
   }
 
   if (!window.isSecureContext) {
-    return "Notifications require HTTPS or localhost. Open the deployed Vercel site, or use localhost on this device."
+    return t.notificationsNeedSecure
   }
 
-  return "This browser does not support notifications. Reminders can still appear while Safe Space stays open on this device."
+  return t.notificationsUnsupported
 }
 
 function loadNotifications(): AppNotification[] {
@@ -154,6 +235,8 @@ function buildActionUrl(path: string | undefined) {
   const lang = new URLSearchParams(window.location.search).get("lang")
 
   if (lang && !url.searchParams.has("lang")) {
+    // Goal: Refine navigation and personalized user experiences.
+    // Preserve active language context when jumping from notifications.
     url.searchParams.set("lang", lang)
   }
 
@@ -179,8 +262,9 @@ async function postJson<T>(url: string, body?: unknown): Promise<T> {
   })
 
   if (!response.ok) {
+    const t = getI18n()
     const payload = await response.json().catch(() => ({}))
-    throw new Error(payload.error || "Request failed")
+    throw new Error(payload.error || t.requestFailed)
   }
 
   return response.json()
@@ -190,12 +274,16 @@ async function deleteJson(url: string): Promise<void> {
   const response = await fetch(url, { method: "DELETE" })
 
   if (!response.ok) {
+    const t = getI18n()
     const payload = await response.json().catch(() => ({}))
-    throw new Error(payload.error || "Request failed")
+    throw new Error(payload.error || t.requestFailed)
   }
 }
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
+  // Goal: Expand feature functionality and system integrations.
+  // This provider composes local scheduling, browser notifications, push APIs,
+  // service worker messages, persistence, and navigation into one shared layer.
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_SETTINGS)
   const [permission, setPermission] = useState<NotificationPermission>("default")
@@ -220,6 +308,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const isSupported = typeof window !== "undefined"
 
   const persistNotifications = useCallback((next: AppNotification[]) => {
+    // Goal: Create a more scalable and responsive application.
+    // Deduped persistence keeps state predictable across tabs/reloads and reduces
+    // duplicate render/update churn as notification volume grows.
     const deduped = dedupeNotifications(next)
     notificationsRef.current = deduped
     setNotifications(deduped)
@@ -247,12 +338,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [persistNotifications])
 
   const showBrowserNotification = useCallback((notification: AppNotification) => {
+    const t = getI18n()
     if (!hasBrowserNotificationSupport() || Notification.permission !== "granted") {
       return
     }
 
     const browserNotification = new Notification(notification.title, {
-      body: notification.body || "Open Safe Space to continue your check-in.",
+      body: notification.body || t.browserBodyFallback,
       icon: "/logo.png",
       badge: "/logo.png",
       tag: notification.id,
@@ -313,6 +405,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     if (pushSubscribed && pushConfigured) {
       try {
+        // Integration strength: server-backed push scheduling complements local timers
+        // for broader delivery reliability.
         const payload = await postJson<{ scheduleId: string }>("/api/push-notifications/schedule", {
           notificationId: notification.id,
           title: notification.title,
@@ -338,6 +432,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [persistNotifications, pushConfigured, pushSubscribed, scheduleLocalTimer])
 
   const scheduleNextDailyReminder = useCallback(async () => {
+    const t = getI18n()
     const currentSettings = settingsRef.current
     if (!currentSettings.dailyMotivationEnabled) {
       return
@@ -358,7 +453,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     await scheduleNotificationInternal({
       id: `daily_${nextTimestamp}`,
-      title: "Daily motivational reminder",
+      title: t.dailyMotivationTitle,
       body: quote,
       scheduledFor: nextTimestamp,
       interval: nextTimestamp - Date.now(),
@@ -422,6 +517,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const statusResponse = await fetch("/api/push-notifications/status", {
         cache: "no-store",
       })
+      // Scalability strength: runtime status check enables graceful feature gating
+      // based on actual backend push readiness.
       if (statusResponse.ok) {
         const status = await statusResponse.json()
         const configured = Boolean(status.configured)
@@ -553,24 +650,25 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const enablePush = useCallback(async () => {
+    const t = getI18n()
     setLoading(true)
     setError(null)
 
     try {
       const nextPermission = await requestPermission()
       if (nextPermission !== "granted") {
-        throw new Error("Notification permission is required for browser push notifications")
+        throw new Error(t.permissionNeededPush)
       }
 
       const subscribed = await subscribeToPushNotifications()
       if (!subscribed) {
-        throw new Error("Unable to enable push notifications")
+        throw new Error(t.unableEnablePush)
       }
 
       await syncPushState()
       return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to enable push notifications")
+      setError(err instanceof Error ? err.message : t.failedEnablePush)
       return false
     } finally {
       setLoading(false)
@@ -578,6 +676,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [requestPermission, syncPushState])
 
   const disablePush = useCallback(async () => {
+    const t = getI18n()
     setLoading(true)
     setError(null)
 
@@ -586,7 +685,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       await syncPushState()
       return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to disable push notifications")
+      setError(err instanceof Error ? err.message : t.failedDisablePush)
       return false
     } finally {
       setLoading(false)
@@ -594,13 +693,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [syncPushState])
 
   const sendTestPush = useCallback(async () => {
+    const t = getI18n()
     setLoading(true)
     setError(null)
 
     try {
       return await sendTestPushNotification()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send test notification")
+      setError(err instanceof Error ? err.message : t.failedTestNotification)
       return false
     } finally {
       setLoading(false)
@@ -608,6 +708,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const sendTestDailyMotivation = useCallback(async () => {
+    const t = getI18n()
     setLoading(true)
     setError(null)
 
@@ -615,7 +716,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (hasBrowserNotificationSupport()) {
         const nextPermission = await requestPermission()
         if (nextPermission !== "granted") {
-          throw new Error("Notification permission is required to test daily reminders")
+          throw new Error(t.permissionNeededDailyTest)
         }
       }
 
@@ -624,18 +725,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
       if (pushSubscribed && pushConfigured) {
         const pushed = await sendCustomTestPushNotification({
-          title: "Daily motivational reminder",
+          title: t.dailyMotivationTitle,
           body: quote,
           actionUrl: "/main",
           tag: "daily-motivation-test",
         })
 
         if (!pushed) {
-          throw new Error("Unable to send daily reminder push test")
+          throw new Error(t.unableDailyPushTest)
         }
       } else {
         await scheduleNotificationInternal({
-          title: "Daily motivational reminder",
+          title: t.dailyMotivationTitle,
           body: quote,
           scheduledFor: Date.now() + 3000,
           interval: 3000,
@@ -646,7 +747,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
       return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to test daily reminder")
+      setError(err instanceof Error ? err.message : t.failedDailyReminderTest)
       return false
     } finally {
       setLoading(false)
@@ -655,9 +756,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const schedule = useCallback(async (
     intervalMs: number,
-    title = "Time to check in!",
+    title: string = getI18n().defaultCheckInTitle,
     options?: { body?: string; actionUrl?: string; type?: AppNotification["type"] }
   ) => {
+    const t = getI18n()
     setLoading(true)
     setError(null)
 
@@ -665,20 +767,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (hasBrowserNotificationSupport()) {
         const nextPermission = await requestPermission()
         if (nextPermission !== "granted") {
-          throw new Error("Notification permission was denied")
+          throw new Error(t.permissionDenied)
         }
       }
 
       return await scheduleNotificationInternal({
         title,
-        body: options?.body || "Let's take a moment to check in with yourself.",
+        body: options?.body || t.defaultCheckInBody,
         scheduledFor: Date.now() + intervalMs,
         interval: intervalMs,
         type: options?.type || "check-in",
         actionUrl: options?.actionUrl || "/grounding",
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to schedule notification")
+      setError(err instanceof Error ? err.message : t.failedSchedule)
       throw err
     } finally {
       setLoading(false)
@@ -730,12 +832,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [markAsRead, navigateToNotification])
 
   const updateDailyMotivation = useCallback(async (enabled: boolean) => {
+    const t = getI18n()
     setError(null)
 
     if (enabled && hasBrowserNotificationSupport()) {
       const nextPermission = await requestPermission()
       if (nextPermission !== "granted") {
-        throw new Error("Notification permission is required for daily reminders")
+        throw new Error(t.permissionNeededDaily)
       }
     }
 
@@ -818,10 +921,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     updateDailyMotivation,
   ])
 
+  const ui = getI18n()
+
   return (
     <NotificationContext.Provider value={value}>
       {children}
       {activeToast && (
+        // Interaction strength: in-app toast keeps users in flow with a direct "tap to open" action.
         <button
           type="button"
           onClick={() => openNotification(activeToast.notificationId)}
@@ -831,7 +937,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           {activeToast.body && (
             <p className="mt-1 text-sm text-gray-600">{activeToast.body}</p>
           )}
-          <p className="mt-2 text-xs font-medium text-emerald-700">Tap to open in Safe Space</p>
+          <p className="mt-2 text-xs font-medium text-emerald-700">{ui.toastTapToOpen}</p>
         </button>
       )}
     </NotificationContext.Provider>

@@ -68,8 +68,8 @@ const GC_TRANSLATIONS = {
     noneYet: "None yet",
     pongTitle: "Nebula Paddle Duel",
     invadersTitle: "Orbit Invaders",
-    flappyTitle: "Astro Flap Runner",
-    dinoTitle: "Astro Dino Runner",
+    flappyTitle: "Astro Jumper",
+    dinoTitle: "Astro Runner",
     memoryTitle: "Cosmic Memory Flip",
     play: "Play",
     pause: "Pause",
@@ -121,7 +121,7 @@ const GC_TRANSLATIONS = {
     youWon: "You Won!",
     congratsMessage: "Great job astronaut, you completed every stage!",
     rotateToPlayTitle: "Flip Horizontal To Play",
-    rotateToPlayBody: "Rotate your phone to landscape to play Astro Dino Runner.",
+    rotateToPlayBody: "Rotate your phone to landscape to play Astro Runner.",
     difficulties: { easy: "Easy", medium: "Medium", hard: "Hard", impossible: "Impossible" },
     planets: PLANETS,
     rocks: {
@@ -152,14 +152,14 @@ const GC_TRANSLATIONS = {
     achievements: "Logros del Juego",
     pongWins: "Victorias en Pong",
     orbitCleared: "Planetas de órbita completados",
-    flappyMilestones: "Hitos de rocas en Flappy",
-    dinoBest: "Mejor Dino Runner",
+    flappyMilestones: "Hitos de Astro Jumper",
+    dinoBest: "Mejor Astro Runner",
     memoryWins: "Victorias en Memoria",
     noneYet: "Aún ninguno",
     pongTitle: "Duelo de Paleta Nebulosa",
     invadersTitle: "Invasores Orbitales",
-    flappyTitle: "Corredor Flap Astral",
-    dinoTitle: "Astro Dino Runner",
+    flappyTitle: "Astro Jumper",
+    dinoTitle: "Astro Runner",
     memoryTitle: "Memoria Cósmica",
     play: "Jugar",
     pause: "Pausar",
@@ -211,7 +211,7 @@ const GC_TRANSLATIONS = {
     youWon: "Ganaste!",
     congratsMessage: "Gran trabajo astronauta, completaste todas las etapas!",
     rotateToPlayTitle: "Gira Horizontal Para Jugar",
-    rotateToPlayBody: "Gira tu telefono en horizontal para jugar Astro Dino Runner.",
+    rotateToPlayBody: "Gira tu telefono en horizontal para jugar Astro Runner.",
     difficulties: { easy: "Fácil", medium: "Medio", hard: "Difícil", impossible: "Imposible" },
     planets: ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"],
     rocks: {
@@ -242,14 +242,14 @@ const GC_TRANSLATIONS = {
     achievements: "إنجازات الألعاب",
     pongWins: "انتصارات بونغ",
     orbitCleared: "الكواكب التي تم تجاوزها",
-    flappyMilestones: "مراحل صخور فلابي",
-    dinoBest: "أفضل Astro Dino Runner",
+    flappyMilestones: "إنجازات Astro Jumper",
+    dinoBest: "أفضل Astro Runner",
     memoryWins: "فوز لعبة الذاكرة",
     noneYet: "لا يوجد بعد",
     pongTitle: "مبارزة المضرب السديمية",
     invadersTitle: "غزاة المدار",
-    flappyTitle: "عداء الفلاب الفضائي",
-    dinoTitle: "عداء Astro Dino الفضائي",
+    flappyTitle: "Astro Jumper",
+    dinoTitle: "Astro Runner",
     memoryTitle: "لعبة ذاكرة فضائية",
     play: "تشغيل",
     pause: "إيقاف مؤقت",
@@ -301,7 +301,7 @@ const GC_TRANSLATIONS = {
     youWon: "لقد فزت!",
     congratsMessage: "عمل رائع يا رائد الفضاء، أنهيت كل المراحل!",
     rotateToPlayTitle: "اقلب الهاتف أفقيا للعب",
-    rotateToPlayBody: "اقلب هاتفك للوضع الأفقي للعب Astro Dino Runner.",
+    rotateToPlayBody: "اقلب هاتفك للوضع الأفقي للعب Astro Runner.",
     difficulties: { easy: "سهل", medium: "متوسط", hard: "صعب", impossible: "مستحيل" },
     planets: ["عطارد", "الزهرة", "الأرض", "المريخ", "المشتري", "زحل", "أورانوس", "نبتون"],
     rocks: {
@@ -632,6 +632,14 @@ function NebulaPaddleDuel({ onWin, t }: { onWin: () => void; t: (typeof GC_TRANS
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
+    const LOGICAL_WIDTH = 380
+    const LOGICAL_HEIGHT = 240
+    const dpr = Math.max(1, window.devicePixelRatio || 1)
+    canvas.width = Math.floor(LOGICAL_WIDTH * dpr)
+    canvas.height = Math.floor(LOGICAL_HEIGHT * dpr)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = "high"
 
     let raf = 0
     let meScore = 0
@@ -861,10 +869,18 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
     if (!canvas) return
     const ctx = canvas.getContext("2d")
     if (!ctx) return
+    const LOGICAL_WIDTH = 380
+    const LOGICAL_HEIGHT = 240
+    const dpr = Math.max(1, window.devicePixelRatio || 1)
+    canvas.width = Math.floor(LOGICAL_WIDTH * dpr)
+    canvas.height = Math.floor(LOGICAL_HEIGHT * dpr)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = "high"
 
     if (!rocketImageRef.current) {
       const img = new window.Image()
-      img.src = "/rocket.png"
+      img.src = "/vertical_rocket.png"
       rocketImageRef.current = img
     }
 
@@ -894,6 +910,9 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
       dir: 1,
       speed: 1.05,
     }
+    const ROCKET_W = 32
+    const ROCKET_H = 36
+    const ROCKET_BASELINE_Y = 230
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft" || e.key.toLowerCase() === "a") state.left = true
@@ -919,10 +938,10 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
 
     const step = () => {
       if (pausedForOverlayRef.current) {
-        drawStarfield(ctx, 380, 240)
+        drawStarfield(ctx, LOGICAL_WIDTH, LOGICAL_HEIGHT)
         const rocketImage = rocketImageRef.current
         if (rocketImage && rocketImage.complete) {
-          ctx.drawImage(rocketImage, state.shipX - 3, 202, 26, 28)
+          ctx.drawImage(rocketImage, state.shipX + 10 - ROCKET_W / 2, ROCKET_BASELINE_Y - ROCKET_H, ROCKET_W, ROCKET_H)
         }
         for (const inv of state.invaders) {
           if (!inv.alive) continue
@@ -1012,13 +1031,13 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
         return
       }
 
-      drawStarfield(ctx, 380, 240)
+      drawStarfield(ctx, LOGICAL_WIDTH, LOGICAL_HEIGHT)
       ctx.fillStyle = "#ffffff1a"
-      ctx.fillRect(0, 216, 380, 2)
+      ctx.fillRect(0, 216, LOGICAL_WIDTH, 2)
 
       const rocketImage = rocketImageRef.current
       if (rocketImage && rocketImage.complete) {
-        ctx.drawImage(rocketImage, state.shipX - 3, 202, 26, 28)
+        ctx.drawImage(rocketImage, state.shipX + 10 - ROCKET_W / 2, ROCKET_BASELINE_Y - ROCKET_H, ROCKET_W, ROCKET_H)
       } else {
         ctx.fillStyle = "#34d399"
         ctx.beginPath()
