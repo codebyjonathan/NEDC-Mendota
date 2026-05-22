@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react"
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import type { Language } from "@/lib/translations"
 
-type GameKey = "pong" | "invaders" | "flappy"
+type GameKey = "pong" | "invaders" | "flappy" | "dino" | "memory"
 
 type GameCenterProfile = {
   nickname: string
@@ -22,6 +22,8 @@ type GameProgress = {
   pongVictories: number
   orbitCompletedPlanets: string[]
   flappyMilestones: number[]
+  dinoBestScore: number
+  memoryWins: number
 }
 
 const PLANETS = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
@@ -49,10 +51,14 @@ const GC_TRANSLATIONS = {
     pongWins: "Pong wins",
     orbitCleared: "Orbit planets cleared",
     flappyMilestones: "Flappy rock milestones",
+    dinoBest: "Dino runner best",
+    memoryWins: "Memory game wins",
     noneYet: "None yet",
     pongTitle: "Nebula Paddle Duel",
     invadersTitle: "Orbit Invaders",
     flappyTitle: "Astro Flap Runner",
+    dinoTitle: "Astro Dino Runner",
+    memoryTitle: "Cosmic Memory Flip",
     play: "Play",
     pause: "Pause",
     resetScore: "Reset Score",
@@ -82,6 +88,26 @@ const GC_TRANSLATIONS = {
     flappyControls: "Tap canvas on mobile. Desktop Space/W/Arrow Up. Passing an obstacle gives +1.",
     fell: "You fell!",
     tapToReplay: "Tap to play again",
+    stage: "Stage",
+    timeLeft: "Time Left",
+    moves: "Moves",
+    category: "Category",
+    timer: "Timer",
+    chooseCategory: "Choose Category",
+    chooseTimer: "Choose Timer",
+    startGame: "Start Game",
+    oneMinute: "1 minute",
+    threeMinutes: "3 minutes",
+    fiveMinutes: "5 minutes",
+    fruits: "Random Fruits",
+    planetsCategory: "Random Planets",
+    asteroidsCategory: "Random Asteroids",
+    dinoControls: "Jump with Space/W/Arrow Up and crouch with Arrow Down/S. On mobile, use the ↑ and ↓ arrows.",
+    memoryControls: "Flip two matching cards. Clear all pairs in each stage before time runs out.",
+    allStagesClear: "All stages cleared!",
+    timesUp: "Time's up!",
+    youWon: "You Won!",
+    congratsMessage: "Great job astronaut, you completed every stage!",
     difficulties: { easy: "Easy", medium: "Medium", hard: "Hard", impossible: "Impossible" },
     planets: PLANETS,
     rocks: {
@@ -113,10 +139,14 @@ const GC_TRANSLATIONS = {
     pongWins: "Victorias en Pong",
     orbitCleared: "Planetas de órbita completados",
     flappyMilestones: "Hitos de rocas en Flappy",
+    dinoBest: "Mejor Dino Runner",
+    memoryWins: "Victorias en Memoria",
     noneYet: "Aún ninguno",
     pongTitle: "Duelo de Paleta Nebulosa",
     invadersTitle: "Invasores Orbitales",
     flappyTitle: "Corredor Flap Astral",
+    dinoTitle: "Astro Dino Runner",
+    memoryTitle: "Memoria Cósmica",
     play: "Jugar",
     pause: "Pausar",
     resetScore: "Reiniciar Puntuación",
@@ -146,6 +176,26 @@ const GC_TRANSLATIONS = {
     flappyControls: "Toca el canvas o Aletear en móvil. En escritorio Espacio/W/Flecha Arriba. Pasar un obstáculo da +1.",
     fell: "¡Te caíste!",
     tapToReplay: "Toca para jugar de nuevo",
+    stage: "Etapa",
+    timeLeft: "Tiempo",
+    moves: "Movimientos",
+    category: "Categoria",
+    timer: "Temporizador",
+    chooseCategory: "Elegir Categoría",
+    chooseTimer: "Elegir Tiempo",
+    startGame: "Comenzar Juego",
+    oneMinute: "1 minuto",
+    threeMinutes: "3 minutos",
+    fiveMinutes: "5 minutos",
+    fruits: "Frutas Aleatorias",
+    planetsCategory: "Planetas Aleatorios",
+    asteroidsCategory: "Asteroides Aleatorios",
+    dinoControls: "Salta con Espacio/W/Flecha Arriba y agáchate con Flecha Abajo/S. En móvil usa las flechas ↑ y ↓.",
+    memoryControls: "Voltea dos cartas iguales. Limpia todas las parejas antes de que se acabe el tiempo.",
+    allStagesClear: "Todas las etapas completadas!",
+    timesUp: "¡Se acabó el tiempo!",
+    youWon: "Ganaste!",
+    congratsMessage: "Gran trabajo astronauta, completaste todas las etapas!",
     difficulties: { easy: "Fácil", medium: "Medio", hard: "Difícil", impossible: "Imposible" },
     planets: ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"],
     rocks: {
@@ -177,10 +227,14 @@ const GC_TRANSLATIONS = {
     pongWins: "انتصارات بونغ",
     orbitCleared: "الكواكب التي تم تجاوزها",
     flappyMilestones: "مراحل صخور فلابي",
+    dinoBest: "أفضل Astro Dino Runner",
+    memoryWins: "فوز لعبة الذاكرة",
     noneYet: "لا يوجد بعد",
     pongTitle: "مبارزة المضرب السديمية",
     invadersTitle: "غزاة المدار",
     flappyTitle: "عداء الفلاب الفضائي",
+    dinoTitle: "عداء Astro Dino الفضائي",
+    memoryTitle: "لعبة ذاكرة فضائية",
     play: "تشغيل",
     pause: "إيقاف مؤقت",
     resetScore: "إعادة النقاط",
@@ -210,6 +264,26 @@ const GC_TRANSLATIONS = {
     flappyControls: "اضغط على اللوحة أو زر الرفرفة في الجوال. على الكمبيوتر Space/W/سهم أعلى. تجاوز عائق يعطي +1.",
     fell: "لقد سقطت!",
     tapToReplay: "اضغط للعب مرة أخرى",
+    stage: "المرحلة",
+    timeLeft: "الوقت",
+    moves: "الحركات",
+    category: "الفئة",
+    timer: "المؤقت",
+    chooseCategory: "اختر الفئة",
+    chooseTimer: "اختر الوقت",
+    startGame: "ابدأ اللعب",
+    oneMinute: "1 دقيقة",
+    threeMinutes: "3 دقائق",
+    fiveMinutes: "5 دقائق",
+    fruits: "فواكه عشوائية",
+    planetsCategory: "كواكب عشوائية",
+    asteroidsCategory: "كويكبات عشوائية",
+    dinoControls: "اقفز بـ Space/W/سهم أعلى وانخفض بـ سهم أسفل/S. في الجوال استخدم سهام ↑ و ↓.",
+    memoryControls: "اقلب بطاقتين متطابقتين. أكمل كل الأزواج قبل نفاد الوقت.",
+    allStagesClear: "تم إنهاء كل المراحل!",
+    timesUp: "انتهى الوقت!",
+    youWon: "لقد فزت!",
+    congratsMessage: "عمل رائع يا رائد الفضاء، أنهيت كل المراحل!",
     difficulties: { easy: "سهل", medium: "متوسط", hard: "صعب", impossible: "مستحيل" },
     planets: ["عطارد", "الزهرة", "الأرض", "المريخ", "المشتري", "زحل", "أورانوس", "نبتون"],
     rocks: {
@@ -1230,6 +1304,567 @@ function AstroFlapRunner({
   )
 }
 
+function DinoAstroRunner({
+  profile,
+  t,
+  onBestScore,
+}: {
+  profile: GameCenterProfile | null
+  t: (typeof GC_TRANSLATIONS)[Language]
+  onBestScore: (score: number) => void
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [running, setRunning] = useState(false)
+  const [gameOver, setGameOver] = useState(false)
+  const [score, setScore] = useState(0)
+  const [crouchHeld, setCrouchHeld] = useState(false)
+  const crouchRef = useRef(false)
+  const milestoneRef = useRef(0)
+  const bestThisRunRef = useRef(0)
+  const jumpHeldRef = useRef(false)
+  const jumpBoostUntilRef = useRef(0)
+  const jumpRequestRef = useRef(false)
+
+  useEffect(() => {
+    crouchRef.current = crouchHeld
+  }, [crouchHeld])
+
+  useEffect(() => {
+    if (!running || !profile) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    let raf = 0
+    let scoreLocal = 0
+    let displayedScore = 0
+    let speed = 5.0
+    const width = 900
+    const height = 260
+    const groundY = 210
+    let groundOffset = 0
+    const state = {
+      y: groundY - 52,
+      vy: 0,
+      obstacles: [] as Array<{ x: number; w: number; h: number; y: number; flying: boolean; scored?: boolean }>,
+    }
+    let spawnTick = 36
+    let elapsedFrames = 0
+    let crouching = false
+    let runTick = 0
+
+    const jump = () => {
+      if (state.y >= groundY - 52 - 0.5) {
+        const minJump = 9.8
+        state.vy = -minJump
+        jumpBoostUntilRef.current = performance.now() + 170
+        playTone(420, 0.06, "triangle", 0.045)
+        playTone(620, 0.05, "sine", 0.03)
+      }
+    }
+
+    const loseRound = () => {
+      playLose()
+      onBestScore(bestThisRunRef.current)
+      setRunning(false)
+      setGameOver(true)
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === " " || event.key.toLowerCase() === "w" || event.key === "ArrowUp") {
+        event.preventDefault()
+        if (!jumpHeldRef.current) {
+          jumpHeldRef.current = true
+          jump()
+        }
+      }
+      if (event.key === "ArrowDown" || event.key.toLowerCase() === "s") {
+        crouching = true
+      }
+    }
+
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === " " || event.key.toLowerCase() === "w" || event.key === "ArrowUp") {
+        jumpHeldRef.current = false
+      }
+      if (event.key === "ArrowDown" || event.key.toLowerCase() === "s") {
+        crouching = false
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    window.addEventListener("keyup", onKeyUp)
+    const onPointerDown = () => {
+      if (!jumpHeldRef.current) {
+        jumpHeldRef.current = true
+        jump()
+      }
+    }
+    const onPointerUp = () => {
+      jumpHeldRef.current = false
+    }
+    canvas.addEventListener("pointerdown", onPointerDown)
+    canvas.addEventListener("pointerup", onPointerUp)
+    canvas.addEventListener("pointercancel", onPointerUp)
+
+    const drawRunnerAstronaut = (x: number, y: number, crouch: boolean) => {
+      const h = crouch ? 30 : 42
+      const w = crouch ? 26 : 32
+      const headR = crouch ? 8 : 10
+      const bodyTop = y + (crouch ? 8 : 11)
+
+      ctx.fillStyle = profile.suitColor
+      ctx.fillRect(x - w / 2, bodyTop, w, h - 16)
+      ctx.fillStyle = "#e2e8f0"
+      ctx.beginPath()
+      ctx.roundRect(x - w / 2, bodyTop, w, h - 16, 8)
+      ctx.stroke()
+
+      ctx.fillStyle = "#f8fafc"
+      ctx.beginPath()
+      ctx.arc(x, y + headR, headR, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = "#e2e8f0"
+      ctx.lineWidth = 2
+      ctx.stroke()
+
+      const visor = profile.helmetStyle === "gold" ? "#f59e0b" : profile.helmetStyle === "midnight" ? "#6366f1" : profile.helmetStyle === "visor" ? "#22d3ee" : "#94a3b8"
+      ctx.fillStyle = visor
+      ctx.beginPath()
+      ctx.ellipse(x, y + headR + 1, headR - 4, headR - 6, 0, 0, Math.PI * 2)
+      ctx.fill()
+
+      ctx.fillStyle = "#0f172a"
+      ctx.fillRect(x - 7, bodyTop + 8, 14, 10)
+    }
+
+    const drawAsteroid = (x: number, y: number, w: number, h: number) => {
+      const cx = x + w / 2
+      const cy = y + h / 2
+      ctx.fillStyle = "#7c3aed"
+      ctx.beginPath()
+      ctx.moveTo(x + 3, y + h - 1)
+      ctx.quadraticCurveTo(x + w * 0.15, y + 2, cx, y + 4)
+      ctx.quadraticCurveTo(x + w * 0.88, y + 1, x + w - 2, y + h - 4)
+      ctx.quadraticCurveTo(cx, y + h + 2, x + 3, y + h - 1)
+      ctx.fill()
+      ctx.fillStyle = "#8b5cf6"
+      ctx.beginPath()
+      ctx.arc(cx - 4, cy - 2, 3, 0, Math.PI * 2)
+      ctx.arc(cx + 6, cy + 1, 2.6, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    const drawSatellite = (x: number, y: number, w: number, h: number) => {
+      ctx.fillStyle = "#cbd5e1"
+      ctx.fillRect(x + w * 0.32, y + h * 0.2, w * 0.36, h * 0.6)
+      ctx.fillStyle = "#93c5fd"
+      ctx.fillRect(x, y + h * 0.3, w * 0.26, h * 0.42)
+      ctx.fillRect(x + w * 0.74, y + h * 0.3, w * 0.26, h * 0.42)
+      ctx.strokeStyle = "#e2e8f0"
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(x + w * 0.26, y + h * 0.5)
+      ctx.lineTo(x + w * 0.32, y + h * 0.5)
+      ctx.moveTo(x + w * 0.68, y + h * 0.5)
+      ctx.lineTo(x + w * 0.74, y + h * 0.5)
+      ctx.stroke()
+    }
+
+    const drawScene = () => {
+      ctx.fillStyle = "#0b1120"
+      ctx.fillRect(0, 0, width, height)
+      for (let i = 0; i < 36; i += 1) {
+        const x = ((i * 77 - Math.floor(scoreLocal * 0.9)) % width + width) % width
+        const y = 20 + ((i * 43) % 120)
+        ctx.fillStyle = i % 2 === 0 ? "#cbd5e1" : "#93c5fd"
+        ctx.fillRect(x, y, 2, 2)
+      }
+      ctx.fillStyle = "#334155"
+      ctx.fillRect(0, groundY, width, 3)
+      for (let i = 0; i < 50; i += 1) {
+        const x = ((i * 36 + groundOffset) % width + width) % width
+        ctx.fillStyle = i % 2 === 0 ? "#475569" : "#64748b"
+        ctx.fillRect(x, groundY + 10, 18, 3)
+      }
+
+      for (const obstacle of state.obstacles) {
+        if (obstacle.flying) {
+          drawSatellite(obstacle.x, obstacle.y, obstacle.w, obstacle.h)
+        } else {
+          drawAsteroid(obstacle.x, obstacle.y, obstacle.w, obstacle.h)
+        }
+      }
+
+      const playerHeight = crouching || crouchRef.current ? 30 : 42
+      const playerY = state.y + (42 - playerHeight)
+      drawRunnerAstronaut(132, playerY + Math.sin(runTick * 0.25) * 1.2, crouching || crouchRef.current)
+
+      ctx.fillStyle = "#f8fafc"
+      ctx.font = "bold 16px monospace"
+      const scoreLabel = `HI ${Math.max(milestoneRef.current, displayedScore)}   ${t.score}: ${Math.floor(scoreLocal)}`
+      ctx.fillText(scoreLabel, width - ctx.measureText(scoreLabel).width - 14, 24)
+    }
+
+    const step = () => {
+      elapsedFrames += 1
+      spawnTick += 1
+      runTick += 1
+      groundOffset -= speed
+      speed = Math.min(9.2, speed + 0.0017)
+      if (jumpRequestRef.current) {
+        jump()
+        jumpRequestRef.current = false
+      }
+      const canBoost = jumpHeldRef.current && performance.now() < jumpBoostUntilRef.current && state.vy < 0
+      if (canBoost) {
+        state.vy = Math.max(-13.8, state.vy - 0.22)
+      }
+      if (spawnTick > 74 - Math.min(24, Math.floor(speed * 2))) {
+        spawnTick = 0
+        const allowSatellites = elapsedFrames > 520
+        const useSatellites = allowSatellites && Math.random() > 0.66
+
+        if (useSatellites) {
+          const satelliteX = width + 20
+          const satelliteW = 64
+          state.obstacles.push({
+            x: satelliteX,
+            w: satelliteW,
+            h: 26,
+            y: groundY - 142 - Math.random() * 36,
+            flying: true,
+          })
+          const supportChance = Math.min(0.2 + elapsedFrames / 2600, 0.68)
+          if (Math.random() < supportChance) {
+            const leftLaneX = satelliteX - (24 + Math.random() * 6) - (72 + Math.random() * 26)
+            const rightLaneX = satelliteX + satelliteW + 70 + Math.random() * 30
+            const useRightLane = Math.random() > 0.5
+            const baseX = useRightLane ? rightLaneX : leftLaneX
+            const supportCount = Math.random() < 0.35 ? 2 : 1
+            for (let i = 0; i < supportCount; i += 1) {
+              state.obstacles.push({
+                x: baseX + i * 38,
+                w: 24 + Math.random() * 6,
+                h: 28 + Math.random() * 8,
+                y: groundY - 34,
+                flying: false,
+              })
+            }
+          }
+        } else {
+          const stackCount = Math.random() > 0.74 ? 3 : Math.random() > 0.52 ? 2 : 1
+          for (let i = 0; i < stackCount; i += 1) {
+            state.obstacles.push({
+              x: width + 20 + i * 30,
+              w: 26 + Math.random() * 8,
+              h: 34 + Math.random() * 8,
+              y: groundY - 40,
+              flying: false,
+            })
+          }
+        }
+      }
+
+      state.vy += 0.62
+      state.y += state.vy
+      if (state.y >= groundY - 52) {
+        state.y = groundY - 52
+        state.vy = 0
+        jumpBoostUntilRef.current = 0
+      }
+
+      const playerHeight = crouching || crouchRef.current ? 30 : 42
+      const playerTop = state.y + (42 - playerHeight)
+      const playerBox = { x: 116, y: playerTop + 3, w: 32, h: playerHeight - 3 }
+
+      for (const obstacle of state.obstacles) {
+        obstacle.x -= speed
+        if (!obstacle.scored && obstacle.x + obstacle.w < playerBox.x) obstacle.scored = true
+        const hit =
+          playerBox.x < obstacle.x + obstacle.w &&
+          playerBox.x + playerBox.w > obstacle.x &&
+          playerBox.y < obstacle.y + obstacle.h &&
+          playerBox.y + playerBox.h > obstacle.y
+        if (hit) {
+          loseRound()
+          return
+        }
+      }
+      state.obstacles = state.obstacles.filter((obstacle) => obstacle.x > -50)
+
+      scoreLocal += speed * 0.34
+      const parsedScore = Math.floor(scoreLocal)
+      if (parsedScore !== displayedScore && elapsedFrames % 8 === 0) {
+        displayedScore = parsedScore
+        setScore(displayedScore)
+      }
+      if (parsedScore > bestThisRunRef.current) bestThisRunRef.current = parsedScore
+      if (parsedScore > 0 && parsedScore % 500 === 0 && milestoneRef.current !== parsedScore) {
+        milestoneRef.current = parsedScore
+        playDing()
+      }
+
+      drawScene()
+      raf = requestAnimationFrame(step)
+    }
+
+    raf = requestAnimationFrame(step)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener("keydown", onKeyDown)
+      window.removeEventListener("keyup", onKeyUp)
+      canvas.removeEventListener("pointerdown", onPointerDown)
+      canvas.removeEventListener("pointerup", onPointerUp)
+      canvas.removeEventListener("pointercancel", onPointerUp)
+      jumpHeldRef.current = false
+      jumpBoostUntilRef.current = 0
+      jumpRequestRef.current = false
+    }
+  }, [running, profile, onBestScore, t])
+
+  return (
+    <div className="relative rounded-2xl bg-slate-900/70 p-4">
+      <p className="mb-2 text-sm text-slate-200">{t.dinoTitle} | {t.score}: {score}</p>
+      <canvas ref={canvasRef} width={900} height={260} className="h-[260px] w-full rounded-xl border border-indigo-200/40" />
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          onClick={() => {
+            setGameOver(false)
+            setScore(0)
+            milestoneRef.current = 0
+            bestThisRunRef.current = 0
+            jumpHeldRef.current = false
+            jumpBoostUntilRef.current = 0
+            jumpRequestRef.current = false
+            setRunning((prev) => !prev)
+          }}
+          className="bg-indigo-400 text-slate-950 hover:bg-indigo-300"
+        >
+          {running ? t.pause : t.play}
+        </Button>
+      </div>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:hidden">
+        <Button
+          onTouchStart={() => {
+            if (!jumpHeldRef.current) {
+              jumpHeldRef.current = true
+              jumpRequestRef.current = true
+            }
+          }}
+          onTouchEnd={() => {
+            jumpHeldRef.current = false
+          }}
+          onTouchCancel={() => {
+            jumpHeldRef.current = false
+          }}
+          aria-label={t.flap}
+        >
+          ↑
+        </Button>
+        <Button
+          onTouchStart={() => setCrouchHeld(true)}
+          onTouchEnd={() => setCrouchHeld(false)}
+          onTouchCancel={() => setCrouchHeld(false)}
+          aria-label={t.moveDown}
+        >
+          ↓
+        </Button>
+      </div>
+      <p className="mt-2 text-xs text-slate-300">{t.controls}: {t.dinoControls}</p>
+      {gameOver && !running && (
+        <button
+          type="button"
+          onClick={() => {
+            setGameOver(false)
+            setScore(0)
+            milestoneRef.current = 0
+            bestThisRunRef.current = 0
+            jumpHeldRef.current = false
+            jumpBoostUntilRef.current = 0
+            jumpRequestRef.current = false
+            setRunning(true)
+          }}
+          className="absolute inset-0 z-20 grid place-items-center rounded-2xl bg-rose-900/55 text-center"
+        >
+          <div className="rounded-2xl border border-rose-200/60 bg-rose-100/15 px-6 py-4">
+            <p className="text-xl font-black text-rose-100">{t.fell}</p>
+            <p className="mt-1 text-sm text-rose-50">{t.tapToReplay}</p>
+          </div>
+        </button>
+      )}
+    </div>
+  )
+}
+
+type MemoryCategory = "fruits" | "planets" | "asteroids"
+const MEMORY_CARD_SETS: Record<MemoryCategory, string[]> = {
+  fruits: ["🍎", "🍌", "🍓", "🍇", "🍉", "🍒", "🍍", "🥝", "🍑", "🍐"],
+  planets: ["🪐", "🌍", "🌕", "☀️", "🌎", "🌗", "🌙", "🌑", "🌟", "☄️"],
+  asteroids: ["☄️", "🛰️", "🛸", "🚀", "🌠", "💫", "✨", "🛰", "🌌", "🧨"],
+}
+
+function shuffleCards<T>(items: T[]): T[] {
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
+function CosmicMemoryFlip({ t, onWin }: { t: (typeof GC_TRANSLATIONS)[Language]; onWin: () => void }) {
+  const [category, setCategory] = useState<MemoryCategory>("fruits")
+  const [timerChoice, setTimerChoice] = useState(300)
+  const [stage, setStage] = useState(1)
+  const [cards, setCards] = useState<Array<{ id: string; value: string; matched: boolean }>>([])
+  const [flipped, setFlipped] = useState<number[]>([])
+  const [moves, setMoves] = useState(0)
+  const [secondsLeft, setSecondsLeft] = useState(300)
+  const [started, setStarted] = useState(false)
+  const [won, setWon] = useState(false)
+  const [lost, setLost] = useState(false)
+
+  const buildStageCards = (nextStage: number, nextCategory: MemoryCategory) => {
+    const totalCards = nextStage === 1 ? 4 : nextStage === 2 ? 8 : 16
+    const pairCount = totalCards / 2
+    const selected = shuffleCards(MEMORY_CARD_SETS[nextCategory]).slice(0, pairCount)
+    const pairs = shuffleCards(selected.flatMap((value, idx) => [{ id: `${value}-${idx}-a`, value, matched: false }, { id: `${value}-${idx}-b`, value, matched: false }]))
+    setCards(pairs)
+    setFlipped([])
+  }
+
+  useEffect(() => {
+    if (!started || won || lost) return
+    const id = window.setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          window.clearInterval(id)
+          setLost(true)
+          setStarted(false)
+          playLose()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => window.clearInterval(id)
+  }, [started, won, lost])
+
+  useEffect(() => {
+    if (flipped.length !== 2) return
+    const [a, b] = flipped
+    const first = cards[a]
+    const second = cards[b]
+    if (!first || !second) return
+    const timeout = window.setTimeout(() => {
+      if (first.value === second.value) {
+        setCards((prev) => prev.map((card, idx) => (idx === a || idx === b ? { ...card, matched: true } : card)))
+        playDing()
+      }
+      setFlipped([])
+      setMoves((prev) => prev + 1)
+    }, 380)
+    return () => window.clearTimeout(timeout)
+  }, [flipped, cards])
+
+  useEffect(() => {
+    if (!started || cards.length === 0) return
+    const allMatched = cards.every((card) => card.matched)
+    if (!allMatched) return
+    if (stage < 3) {
+      playAchievement()
+      const nextStage = stage + 1
+      setStage(nextStage)
+      buildStageCards(nextStage, category)
+      return
+    }
+    setWon(true)
+    setStarted(false)
+    playWin()
+    onWin()
+  }, [cards, stage, category, started, onWin])
+
+  const startGame = () => {
+    setWon(false)
+    setLost(false)
+    setMoves(0)
+    setStage(1)
+    setSecondsLeft(timerChoice)
+    buildStageCards(1, category)
+    setStarted(true)
+  }
+
+  return (
+    <div className="rounded-2xl bg-slate-900/70 p-4">
+      <p className="mb-2 text-sm text-slate-200">{t.memoryTitle}</p>
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-2 text-xs text-slate-200">{t.stage}: {stage}/3</div>
+        <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-2 text-xs text-slate-200">{t.timeLeft}: {secondsLeft}s</div>
+        <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-2 text-xs text-slate-200">{t.moves}: {moves}</div>
+      </div>
+
+      {!started && cards.length === 0 && !won && !lost && (
+        <div className="space-y-3 rounded-xl border border-cyan-200/25 bg-slate-950/55 p-3">
+          <p className="text-xs text-slate-300">{t.chooseCategory}</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Button variant={category === "fruits" ? "default" : "secondary"} onClick={() => setCategory("fruits")}>{t.fruits}</Button>
+            <Button variant={category === "planets" ? "default" : "secondary"} onClick={() => setCategory("planets")}>{t.planetsCategory}</Button>
+            <Button variant={category === "asteroids" ? "default" : "secondary"} onClick={() => setCategory("asteroids")}>{t.asteroidsCategory}</Button>
+          </div>
+          <p className="text-xs text-slate-300">{t.chooseTimer}</p>
+          <div className="grid grid-cols-3 gap-2">
+            <Button variant={timerChoice === 60 ? "default" : "secondary"} onClick={() => setTimerChoice(60)}>{t.oneMinute}</Button>
+            <Button variant={timerChoice === 180 ? "default" : "secondary"} onClick={() => setTimerChoice(180)}>{t.threeMinutes}</Button>
+            <Button variant={timerChoice === 300 ? "default" : "secondary"} onClick={() => setTimerChoice(300)}>{t.fiveMinutes}</Button>
+          </div>
+          <Button onClick={startGame} className="w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300">{t.startGame}</Button>
+        </div>
+      )}
+
+      {cards.length > 0 && (
+        <div className={`grid gap-2 ${cards.length >= 16 ? "grid-cols-4" : "grid-cols-4"}`}>
+          {cards.map((card, idx) => {
+            const isFaceUp = card.matched || flipped.includes(idx)
+            return (
+              <button
+                key={card.id}
+                type="button"
+                disabled={card.matched || flipped.includes(idx) || flipped.length === 2 || won || lost}
+                onClick={() => setFlipped((prev) => (prev.includes(idx) ? prev : [...prev, idx]))}
+                className={`aspect-square rounded-xl border text-2xl transition ${
+                  isFaceUp ? "border-cyan-300 bg-cyan-200/20" : "border-slate-700 bg-slate-800 hover:border-cyan-300"
+                }`}
+              >
+                {isFaceUp ? card.value : "?"}
+              </button>
+            )
+          })}
+        </div>
+      )}
+      <p className="mt-2 text-xs text-slate-300">{t.controls}: {t.memoryControls}</p>
+      {(won || lost) && (
+        <div className="mt-3 rounded-xl border border-fuchsia-200/40 bg-fuchsia-900/20 p-3 text-center">
+          <p className="font-bold text-fuchsia-100">{won ? t.allStagesClear : t.timesUp}</p>
+          {won && <p className="mt-1 text-sm font-semibold text-fuchsia-50">{t.youWon} {t.congratsMessage}</p>}
+          <Button
+            onClick={() => {
+              setCards([])
+              setFlipped([])
+              setWon(false)
+              setLost(false)
+            }}
+            className="mt-2 bg-white text-fuchsia-900 hover:bg-fuchsia-100"
+          >
+            {t.play}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function GameCenterContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1245,10 +1880,21 @@ function GameCenterContent() {
     pongVictories: 0,
     orbitCompletedPlanets: [],
     flappyMilestones: [],
+    dinoBestScore: 0,
+    memoryWins: 0,
   })
 
   const title = useMemo(
-    () => (game === "pong" ? t.pongTitle : game === "invaders" ? t.invadersTitle : t.flappyTitle),
+    () =>
+      game === "pong"
+        ? t.pongTitle
+        : game === "invaders"
+          ? t.invadersTitle
+          : game === "flappy"
+            ? t.flappyTitle
+            : game === "dino"
+              ? t.dinoTitle
+              : t.memoryTitle,
     [game, t],
   )
 
@@ -1293,6 +1939,8 @@ function GameCenterContent() {
         pongVictories: parsed.pongVictories ?? 0,
         orbitCompletedPlanets: parsed.orbitCompletedPlanets ?? [],
         flappyMilestones: parsed.flappyMilestones ?? [],
+        dinoBestScore: parsed.dinoBestScore ?? 0,
+        memoryWins: parsed.memoryWins ?? 0,
       })
     } catch {
       // no-op
@@ -1326,6 +1974,23 @@ function GameCenterContent() {
         ...prev,
         flappyMilestones: [...prev.flappyMilestones, milestone].sort((a, b) => a - b),
       }
+      localStorage.setItem("game_center_progress_v1", JSON.stringify(next))
+      return next
+    })
+  }
+
+  const handleDinoBest = useCallback((scoreValue: number) => {
+    setProgress((prev) => {
+      if (scoreValue <= prev.dinoBestScore) return prev
+      const next = { ...prev, dinoBestScore: scoreValue }
+      localStorage.setItem("game_center_progress_v1", JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const handleMemoryWin = () => {
+    setProgress((prev) => {
+      const next = { ...prev, memoryWins: prev.memoryWins + 1 }
       localStorage.setItem("game_center_progress_v1", JSON.stringify(next))
       return next
     })
@@ -1366,6 +2031,8 @@ function GameCenterContent() {
             <Button onClick={() => setGame("pong")} variant={game === "pong" ? "default" : "secondary"}>{t.pongTitle}</Button>
             <Button onClick={() => setGame("invaders")} variant={game === "invaders" ? "default" : "secondary"}>{t.invadersTitle}</Button>
             <Button onClick={() => setGame("flappy")} variant={game === "flappy" ? "default" : "secondary"}>{t.flappyTitle}</Button>
+            <Button onClick={() => setGame("dino")} variant={game === "dino" ? "default" : "secondary"}>{t.dinoTitle}</Button>
+            <Button onClick={() => setGame("memory")} variant={game === "memory" ? "default" : "secondary"}>{t.memoryTitle}</Button>
           </div>
           <p className="mt-3 text-xs text-slate-300">{t.nowPlaying}: {title}</p>
           <Link href={`/main?lang=${currentLang}`} data-transition-style="random" className="mt-3 inline-block text-xs text-cyan-300 hover:text-cyan-200">
@@ -1375,18 +2042,22 @@ function GameCenterContent() {
 
         <div className="rounded-3xl border border-fuchsia-200/30 bg-gradient-to-br from-slate-900 to-slate-800 p-4">
           <p className="text-sm font-bold text-fuchsia-100">{t.achievements}</p>
-          <p className="mt-2 text-xs text-slate-300">{t.pongWins}: {progress.pongVictories}</p>
+          <p className="mt-2 text-xs text-slate-300"><span className="font-bold text-fuchsia-200">{t.pongTitle}</span>: {progress.pongVictories}</p>
           <p className="mt-2 text-xs text-slate-300">
-            {t.orbitCleared}: {progress.orbitCompletedPlanets.length === 0 ? t.noneYet : progress.orbitCompletedPlanets.map((planetName) => localizePlanetName(planetName, t)).join(", ")}
+            <span className="font-bold text-fuchsia-200">{t.invadersTitle}</span>: {progress.orbitCompletedPlanets.length === 0 ? t.noneYet : progress.orbitCompletedPlanets.map((planetName) => localizePlanetName(planetName, t)).join(", ")}
           </p>
           <p className="mt-2 text-xs text-slate-300">
-            {t.flappyMilestones}: {progress.flappyMilestones.length === 0 ? t.noneYet : progress.flappyMilestones.map((s) => `${s}`).join(", ")}
+            <span className="font-bold text-fuchsia-200">{t.flappyTitle}</span>: {progress.flappyMilestones.length === 0 ? t.noneYet : progress.flappyMilestones.map((s) => `${s}`).join(", ")}
           </p>
+          <p className="mt-2 text-xs text-slate-300"><span className="font-bold text-fuchsia-200">{t.dinoTitle}</span>: {progress.dinoBestScore}</p>
+          <p className="mt-2 text-xs text-slate-300"><span className="font-bold text-fuchsia-200">{t.memoryTitle}</span>: {progress.memoryWins}</p>
         </div>
 
         {game === "pong" && <NebulaPaddleDuel onWin={handlePongWin} t={t} />}
         {game === "invaders" && <OrbitInvaders onPlanetClear={handleOrbitPlanetClear} t={t} />}
         {game === "flappy" && <AstroFlapRunner profile={profile} onMilestone={handleFlappyMilestone} t={t} />}
+        {game === "dino" && <DinoAstroRunner profile={profile} t={t} onBestScore={handleDinoBest} />}
+        {game === "memory" && <CosmicMemoryFlip t={t} onWin={handleMemoryWin} />}
       </div>
       <BottomNav lang={currentLang} />
     </div>

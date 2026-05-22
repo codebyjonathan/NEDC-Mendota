@@ -101,7 +101,12 @@ export default function IntroPage({ onFinish }: IntroPageProps) {
       }
       swoosh.currentTime = 0;
       swoosh.volume = 0.62;
-      void swoosh.play();
+      const playPromise = swoosh.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {
+          // Ignore interrupted-playback and autoplay-policy errors.
+        });
+      }
     } catch {
       // Ignore playback errors from browser policies.
     }
