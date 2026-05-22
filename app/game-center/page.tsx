@@ -28,6 +28,18 @@ type GameProgress = {
 
 const PLANETS = ["Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune"]
 let GC_MUTED = false
+const GC_SFX = {
+  shortJump: "/game-center/short_jump_sfx.mp4",
+  longJump: "/game-center/long_jump_sfx.mp4",
+  bubbleAchievement: "/game-center/bubble-achievement_sfx.mp4",
+  invaderHit: "/game-center/invader_hit_sfx.mp4",
+  pairSolved: "/game-center/pair_solved_sfx.mp4",
+} as const
+const GC_AMBIENT_TRACKS = [
+  "/game-center/ambient_sound_1.mp4",
+  "/game-center/ambient_sound_2.mp4",
+  "/game-center/ambient_sound_3.mp4",
+] as const
 
 function localizePlanetName(planet: string, t: (typeof GC_TRANSLATIONS)[Language]) {
   const idx = PLANETS.indexOf(planet)
@@ -358,6 +370,24 @@ function playAchievement() {
   playTone(740, 0.08, "triangle", 0.045)
   setTimeout(() => playTone(988, 0.08, "triangle", 0.045), 70)
   setTimeout(() => playTone(1318, 0.11, "sine", 0.05), 150)
+}
+
+function playSfx(src: string, volume = 0.5) {
+  if (GC_MUTED) return
+  const audio = new Audio(src)
+  audio.volume = Math.max(0, Math.min(1, volume))
+  audio.play().catch(() => {
+    // Ignore autoplay/user-gesture restrictions.
+  })
+}
+
+function shuffled<T>(items: readonly T[]) {
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
 }
 
 function drawStarfield(ctx: CanvasRenderingContext2D, w: number, h: number) {
@@ -947,7 +977,7 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
             shot.y = -100
             scoreLocal += 10
             setScore(scoreLocal)
-            playDing()
+            playSfx(GC_SFX.invaderHit, 0.6)
           }
         }
       }
@@ -1379,14 +1409,23 @@ function DinoAstroRunner({
     let elapsedFrames = 0
     let crouching = false
     let runTick = 0
+    let jumpEventToken = 0
 
     const jump = () => {
       if (state.y >= groundY - 52 - 0.5) {
         const minJump = 9.8
         state.vy = -minJump
         jumpBoostUntilRef.current = performance.now() + 170
-        playTone(420, 0.06, "triangle", 0.045)
-        playTone(620, 0.05, "sine", 0.03)
+        jumpEventToken += 1
+        const token = jumpEventToken
+        window.setTimeout(() => {
+          if (token !== jumpEventToken) return
+          if (jumpHeldRef.current && performance.now() < jumpBoostUntilRef.current) {
+            playSfx(GC_SFX.longJump, 0.65)
+          } else {
+            playSfx(GC_SFX.shortJump, 0.6)
+          }
+        }, 90)
       }
     }
 
@@ -1629,7 +1668,7 @@ function DinoAstroRunner({
       if (parsedScore > bestThisRunRef.current) bestThisRunRef.current = parsedScore
       if (parsedScore > 0 && parsedScore % 500 === 0 && milestoneRef.current !== parsedScore) {
         milestoneRef.current = parsedScore
-        playDing()
+        playSfx(GC_SFX.bubbleAchievement, 0.65)
       }
 
       drawScene()
@@ -1799,7 +1838,7 @@ function CosmicMemoryFlip({ t, onWin }: { t: (typeof GC_TRANSLATIONS)[Language];
     const timeout = window.setTimeout(() => {
       if (first.value === second.value) {
         setCards((prev) => prev.map((card, idx) => (idx === a || idx === b ? { ...card, matched: true } : card)))
-        playDing()
+        playSfx(GC_SFX.pairSolved, 0.65)
       }
       setFlipped([])
       setMoves((prev) => prev + 1)
@@ -1960,12 +1999,38 @@ function GameCenterContent() {
 
   useEffect(() => {
     if (soundMuted || !ambientOn) return
-    const id = window.setInterval(() => {
-      const base = 220 + Math.random() * 110
-      playTone(base, 0.18, "sine", 0.012)
-      playTone(base * 1.5, 0.14, "triangle", 0.009)
-    }, 2500)
-    return () => window.clearInterval(id)
+
+    let disposed = false
+    let order = shuffled(GC_AMBIENT_TRACKS)
+    let trackIndex = 0
+    const audio = new Audio()
+    audio.volume = 0.35
+    audio.preload = "auto"
+
+    const playNext = () => {
+      if (disposed || soundMuted || !ambientOn) return
+      if (trackIndex >= order.length) {
+        order = shuffled(GC_AMBIENT_TRACKS)
+        trackIndex = 0
+      }
+      audio.src = order[trackIndex]
+      trackIndex += 1
+      audio.currentTime = 0
+      audio.play().catch(() => {
+        // Ignore autoplay/user-gesture restrictions.
+      })
+    }
+
+    const onEnded = () => playNext()
+    audio.addEventListener("ended", onEnded)
+    playNext()
+
+    return () => {
+      disposed = true
+      audio.pause()
+      audio.removeEventListener("ended", onEnded)
+      audio.src = ""
+    }
   }, [soundMuted, ambientOn])
 
   useEffect(() => {
