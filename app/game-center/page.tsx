@@ -1130,10 +1130,12 @@ function OrbitInvaders({ onPlanetClear, t }: { onPlanetClear: (planet: string) =
 function AstroFlapRunner({
   profile,
   onMilestone,
+  unlockedMilestones,
   t,
 }: {
   profile: GameCenterProfile | null
   onMilestone: (score: number) => void
+  unlockedMilestones: number[]
   t: (typeof GC_TRANSLATIONS)[Language]
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -1160,7 +1162,7 @@ function AstroFlapRunner({
       75: { name: t.rocks.epic, rarity: t.rocks.epicLabel },
       100: { name: t.rocks.legendary, rarity: t.rocks.legendaryLabel },
     }
-    const unlocked = new Set<number>()
+    const unlocked = new Set<number>(unlockedMilestones)
     const state = {
       y: 120,
       vy: 0,
@@ -1281,7 +1283,7 @@ function AstroFlapRunner({
       window.removeEventListener("keydown", onKey)
       canvas.removeEventListener("pointerdown", flap)
     }
-  }, [running, profile, onMilestone])
+  }, [running, profile, onMilestone, unlockedMilestones])
 
   return (
     <div className="relative rounded-2xl bg-slate-900/70 p-4">
@@ -2158,7 +2160,14 @@ function GameCenterContent() {
 
         {game === "pong" && <NebulaPaddleDuel onWin={handlePongWin} t={t} />}
         {game === "invaders" && <OrbitInvaders onPlanetClear={handleOrbitPlanetClear} t={t} />}
-        {game === "flappy" && <AstroFlapRunner profile={profile} onMilestone={handleFlappyMilestone} t={t} />}
+        {game === "flappy" && (
+          <AstroFlapRunner
+            profile={profile}
+            onMilestone={handleFlappyMilestone}
+            unlockedMilestones={progress.flappyMilestones}
+            t={t}
+          />
+        )}
         {game === "dino" && <DinoAstroRunner profile={profile} t={t} onBestScore={handleDinoBest} />}
         {game === "memory" && <CosmicMemoryFlip t={t} onWin={handleMemoryWin} />}
       </div>
