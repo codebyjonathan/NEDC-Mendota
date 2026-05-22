@@ -108,6 +108,8 @@ const GC_TRANSLATIONS = {
     timesUp: "Time's up!",
     youWon: "You Won!",
     congratsMessage: "Great job astronaut, you completed every stage!",
+    rotateToPlayTitle: "Flip Horizontal To Play",
+    rotateToPlayBody: "Rotate your phone to landscape to play Astro Dino Runner.",
     difficulties: { easy: "Easy", medium: "Medium", hard: "Hard", impossible: "Impossible" },
     planets: PLANETS,
     rocks: {
@@ -196,6 +198,8 @@ const GC_TRANSLATIONS = {
     timesUp: "¡Se acabó el tiempo!",
     youWon: "Ganaste!",
     congratsMessage: "Gran trabajo astronauta, completaste todas las etapas!",
+    rotateToPlayTitle: "Gira Horizontal Para Jugar",
+    rotateToPlayBody: "Gira tu telefono en horizontal para jugar Astro Dino Runner.",
     difficulties: { easy: "Fácil", medium: "Medio", hard: "Difícil", impossible: "Imposible" },
     planets: ["Mercurio", "Venus", "Tierra", "Marte", "Júpiter", "Saturno", "Urano", "Neptuno"],
     rocks: {
@@ -284,6 +288,8 @@ const GC_TRANSLATIONS = {
     timesUp: "انتهى الوقت!",
     youWon: "لقد فزت!",
     congratsMessage: "عمل رائع يا رائد الفضاء، أنهيت كل المراحل!",
+    rotateToPlayTitle: "اقلب الهاتف أفقيا للعب",
+    rotateToPlayBody: "اقلب هاتفك للوضع الأفقي للعب Astro Dino Runner.",
     difficulties: { easy: "سهل", medium: "متوسط", hard: "صعب", impossible: "مستحيل" },
     planets: ["عطارد", "الزهرة", "الأرض", "المريخ", "المشتري", "زحل", "أورانوس", "نبتون"],
     rocks: {
@@ -1318,6 +1324,8 @@ function DinoAstroRunner({
   const [gameOver, setGameOver] = useState(false)
   const [score, setScore] = useState(0)
   const [crouchHeld, setCrouchHeld] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const [isLandscape, setIsLandscape] = useState(true)
   const crouchRef = useRef(false)
   const milestoneRef = useRef(0)
   const bestThisRunRef = useRef(0)
@@ -1330,7 +1338,25 @@ function DinoAstroRunner({
   }, [crouchHeld])
 
   useEffect(() => {
-    if (!running || !profile) return
+    const updateViewportState = () => {
+      const touch = window.matchMedia("(pointer: coarse)").matches || "ontouchstart" in window
+      setIsTouchDevice(touch)
+      setIsLandscape(window.innerWidth > window.innerHeight)
+    }
+    updateViewportState()
+    window.addEventListener("resize", updateViewportState)
+    window.addEventListener("orientationchange", updateViewportState)
+    return () => {
+      window.removeEventListener("resize", updateViewportState)
+      window.removeEventListener("orientationchange", updateViewportState)
+    }
+  }, [])
+
+  const requiresLandscape = isTouchDevice
+  const blockedByOrientation = requiresLandscape && !isLandscape
+
+  useEffect(() => {
+    if (!running || !profile || blockedByOrientation) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext("2d")
@@ -1622,7 +1648,7 @@ function DinoAstroRunner({
       jumpBoostUntilRef.current = 0
       jumpRequestRef.current = false
     }
-  }, [running, profile, onBestScore, t])
+  }, [running, profile, onBestScore, t, blockedByOrientation])
 
   return (
     <div className="relative rounded-2xl bg-slate-900/70 p-4">
@@ -1631,6 +1657,7 @@ function DinoAstroRunner({
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
           onClick={() => {
+            if (blockedByOrientation) return
             setGameOver(false)
             setScore(0)
             milestoneRef.current = 0
@@ -1645,9 +1672,11 @@ function DinoAstroRunner({
           {running ? t.pause : t.play}
         </Button>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:hidden">
+      {isTouchDevice && (
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <Button
           onTouchStart={() => {
+            if (blockedByOrientation) return
             if (!jumpHeldRef.current) {
               jumpHeldRef.current = true
               jumpRequestRef.current = true
@@ -1672,7 +1701,16 @@ function DinoAstroRunner({
           ↓
         </Button>
       </div>
+      )}
       <p className="mt-2 text-xs text-slate-300">{t.controls}: {t.dinoControls}</p>
+      {blockedByOrientation && (
+        <div className="absolute inset-0 z-30 grid place-items-center rounded-2xl bg-slate-950/92 px-6 text-center">
+          <div className="rounded-2xl border border-cyan-200/40 bg-slate-900/85 p-5">
+            <p className="text-lg font-bold text-cyan-100">{t.rotateToPlayTitle}</p>
+            <p className="mt-2 text-sm text-slate-200">{t.rotateToPlayBody}</p>
+          </div>
+        </div>
+      )}
       {gameOver && !running && (
         <button
           type="button"
