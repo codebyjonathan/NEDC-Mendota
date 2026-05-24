@@ -1,7 +1,7 @@
 "use client"
 
 import { useSearchParams, useParams, useRouter } from "next/navigation"
-import { Suspense, useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { Button } from "@/components/ui/button"
@@ -123,6 +123,7 @@ function CommunityContent() {
   const [postingReplyFor, setPostingReplyFor] = useState<string | null>(null)
   const [listeningPost, setListeningPost] = useState(false)
   const [listeningReplyFor, setListeningReplyFor] = useState<string | null>(null)
+  const recognitionRef = useRef<any>(null)
   const [reportingPostId, setReportingPostId] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState("")
   const [reports, setReports] = useState<Record<string, ReportEntry[]>>({})
@@ -660,7 +661,17 @@ function CommunityContent() {
       return
     }
 
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch {
+        // no-op
+      }
+      recognitionRef.current = null
+    }
+
     const recognition = new SpeechRecognition()
+    recognitionRef.current = recognition
     recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US"
     recognition.interimResults = true
     recognition.maxAlternatives = 1
@@ -675,9 +686,11 @@ function CommunityContent() {
       if (mode === "post") setListeningPost(false)
       else setListeningReplyFor((prev) => (prev === postId ? null : prev))
     }
-    recognition.onerror = () => {
+    recognition.onerror = (event: { error?: string }) => {
       if (mode === "post") setListeningPost(false)
       else setListeningReplyFor((prev) => (prev === postId ? null : prev))
+      // Ignore benign errors that happen when user stops or pauses speaking.
+      if (event.error === "aborted" || event.error === "no-speech") return
       setModerationWarning(t.speechRecognitionFailed)
     }
     recognition.onresult = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => {
@@ -695,7 +708,13 @@ function CommunityContent() {
         }))
       }
     }
-    recognition.start()
+    try {
+      recognition.start()
+    } catch {
+      if (mode === "post") setListeningPost(false)
+      else setListeningReplyFor((prev) => (prev === postId ? null : prev))
+      setModerationWarning(t.speechRecognitionFailed)
+    }
   }
 
   const stopSpeaking = () => {
@@ -747,6 +766,18 @@ function CommunityContent() {
       } catch {
         // no-op
       }
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (!recognitionRef.current) return
+      try {
+        recognitionRef.current.stop()
+      } catch {
+        // no-op
+      }
+      recognitionRef.current = null
     }
   }, [])
 
@@ -810,23 +841,24 @@ function CommunityContent() {
             />
             <div className="flex items-center justify-between">
               <button
-                onClick={() => startSpeechRecognition("post")}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${
-                  listeningPost
-                    ? "border-teal-500 bg-teal-50 text-teal-700"
-                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <Mic className="w-3.5 h-3.5" />
-                {listeningPost ? t.listening : t.voiceInput}
-              </button>
-              <button
                 onClick={() => speakText("draft_post", newPost)}
                 className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
                 title={speakingTargetId === "draft_post" ? t.stopAudio : t.readAloud}
               >
                 {speakingTargetId === "draft_post" ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                 {speakingTargetId === "draft_post" ? t.stopAudio : t.readAloud}
+              </button>
+              <button
+                onClick={() => startSpeechRecognition("post")}
+                className={`inline-flex items-center justify-center rounded-full border p-2 ${
+                  listeningPost
+                    ? "border-teal-500 bg-teal-50 text-teal-700"
+                    : "border-teal-400 text-teal-700 hover:bg-teal-50"
+                }`}
+                title={t.voiceInput}
+                aria-label={t.voiceInput}
+              >
+                <Mic className="w-4 h-4" />
               </button>
             </div>
 
@@ -1040,23 +1072,24 @@ function CommunityContent() {
                       />
                       <div className="flex items-center justify-between">
                         <button
-                          onClick={() => startSpeechRecognition("reply", post.id)}
-                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${
-                            listeningReplyFor === post.id
-                              ? "border-teal-500 bg-teal-50 text-teal-700"
-                              : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                          }`}
-                        >
-                          <Mic className="w-3.5 h-3.5" />
-                          {listeningReplyFor === post.id ? t.listening : t.voiceInput}
-                        </button>
-                        <button
                           onClick={() => speakText(`draft_reply_${post.id}`, replyDrafts[post.id] || "")}
                           className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
                           title={speakingTargetId === `draft_reply_${post.id}` ? t.stopAudio : t.readAloud}
                         >
                           {speakingTargetId === `draft_reply_${post.id}` ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                           {speakingTargetId === `draft_reply_${post.id}` ? t.stopAudio : t.readAloud}
+                        </button>
+                        <button
+                          onClick={() => startSpeechRecognition("reply", post.id)}
+                          className={`inline-flex items-center justify-center rounded-full border p-2 ${
+                            listeningReplyFor === post.id
+                              ? "border-teal-500 bg-teal-50 text-teal-700"
+                              : "border-teal-400 text-teal-700 hover:bg-teal-50"
+                          }`}
+                          title={t.voiceInput}
+                          aria-label={t.voiceInput}
+                        >
+                          <Mic className="w-4 h-4" />
                         </button>
                       </div>
 
