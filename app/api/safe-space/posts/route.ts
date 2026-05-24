@@ -113,6 +113,10 @@ export async function POST(request: NextRequest) {
 
     if (action === "create_reply") {
       const { postId, author, authorId, content } = body
+      const targetPost = posts.find((p) => p.id === postId)
+      if (!targetPost) {
+        return NextResponse.json({ error: "Post not found" }, { status: 404 })
+      }
       const next = posts.map((p) =>
         p.id === postId
           ? {
@@ -138,6 +142,10 @@ export async function POST(request: NextRequest) {
 
     if (action === "toggle_reaction") {
       const { postId, reactionType, userKey } = body
+      const targetPost = posts.find((p) => p.id === postId)
+      if (!targetPost) {
+        return NextResponse.json({ error: "Post not found" }, { status: 404 })
+      }
       const next = posts.map((p) => {
         if (p.id !== postId) return p
         const users = new Set<string>(p.reactionUsers[reactionType] || [])
@@ -166,27 +174,41 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "delete_post") {
-      const { postId, userId } = body
-      if (!userId) {
-        return NextResponse.json({ error: "userId is required" }, { status: 400 })
+      const { postId, userId, userKey } = body
+      if (!userId && !userKey) {
+        return NextResponse.json({ error: "userId or userKey is required" }, { status: 400 })
       }
-      const next = posts.filter((p) => !(p.id === postId && p.authorId && p.authorId === userId))
+      const next = posts.filter((p) => {
+        if (p.id !== postId) return true
+        const isOwnerById = Boolean(userId && p.authorId && p.authorId === userId)
+        const isOwnerByLegacyName = Boolean(userKey && !p.authorId && p.author === userKey)
+        return !(isOwnerById || isOwnerByLegacyName)
+      })
       store[threadKey] = next
       await writeStore(store)
       return NextResponse.json({ posts: serialize(next) })
     }
 
     if (action === "delete_reply") {
-      const { postId, replyId, userId } = body
-      if (!userId) {
-        return NextResponse.json({ error: "userId is required" }, { status: 400 })
+      const { postId, replyId, userId, userKey } = body
+      if (!userId && !userKey) {
+        return NextResponse.json({ error: "userId or userKey is required" }, { status: 400 })
+      }
+      const targetPost = posts.find((p) => p.id === postId)
+      if (!targetPost) {
+        return NextResponse.json({ error: "Post not found" }, { status: 404 })
       }
       const next = posts.map((p) =>
         p.id !== postId
           ? p
           : {
               ...p,
-              replies: p.replies.filter((r) => !(r.id === replyId && r.authorId && r.authorId === userId)),
+              replies: p.replies.filter((r) => {
+                if (r.id !== replyId) return true
+                const isOwnerById = Boolean(userId && r.authorId && r.authorId === userId)
+                const isOwnerByLegacyName = Boolean(userKey && !r.authorId && r.author === userKey)
+                return !(isOwnerById || isOwnerByLegacyName)
+              }),
             },
       )
 

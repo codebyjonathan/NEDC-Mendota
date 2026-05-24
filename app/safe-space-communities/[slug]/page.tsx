@@ -185,6 +185,22 @@ function CommunityContent() {
   }, [community, storageKeys])
 
   useEffect(() => {
+    if (!community) return
+    const intervalId = window.setInterval(async () => {
+      try {
+        const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
+        if (!postsResponse.ok) return
+        const data = await postsResponse.json()
+        setPosts((data.posts || []) as CommunityPost[])
+      } catch {
+        // no-op
+      }
+    }, 8000)
+
+    return () => window.clearInterval(intervalId)
+  }, [community])
+
+  useEffect(() => {
     if (!community || !hydratedFromStorage) return
     window.localStorage.setItem(storageKeys.reactions, JSON.stringify(userReactions))
   }, [userReactions, community, storageKeys, hydratedFromStorage])
@@ -498,11 +514,18 @@ function CommunityContent() {
         communityId: community.id,
         postId,
         userId,
+        userKey: currentAnonymousName,
       }),
     })
     if (response.ok) {
       const data = await response.json()
       setPosts((data.posts || []) as CommunityPost[])
+    } else if (response.status === 404) {
+      const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
+      if (postsResponse.ok) {
+        const data = await postsResponse.json()
+        setPosts((data.posts || []) as CommunityPost[])
+      }
     }
     setOpenReplyPostId((prev) => (prev === postId ? null : prev))
     setReplyDrafts((prev) => {
@@ -523,11 +546,18 @@ function CommunityContent() {
         postId,
         replyId,
         userId,
+        userKey: currentAnonymousName,
       }),
     })
     if (response.ok) {
       const data = await response.json()
       setPosts((data.posts || []) as CommunityPost[])
+    } else if (response.status === 404) {
+      const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
+      if (postsResponse.ok) {
+        const data = await postsResponse.json()
+        setPosts((data.posts || []) as CommunityPost[])
+      }
     }
   }
 
@@ -754,7 +784,8 @@ function CommunityContent() {
                               ) : (
                                 <p className="mt-1 text-sm text-gray-700">{reply.content}</p>
                               )}
-                              {reply.authorId && reply.authorId === currentAnonymousId ? (
+                              {(reply.authorId && reply.authorId === currentAnonymousId) ||
+                              (!reply.authorId && reply.author === currentAnonymousName) ? (
                                 <div className="mt-2">
                                   <Button
                                     onClick={() => deleteReply(post.id, reply.id)}
@@ -797,7 +828,8 @@ function CommunityContent() {
                   )}
                 </div>
 
-                {post.authorId && post.authorId === currentAnonymousId ? (
+                {(post.authorId && post.authorId === currentAnonymousId) ||
+                (!post.authorId && post.author === currentAnonymousName) ? (
                   <div className="pt-1">
                     <Button
                       onClick={() => void deletePost(post.id)}
