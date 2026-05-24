@@ -77,6 +77,7 @@ function CommunitiesContent() {
         subtitle="Peer Support & Mental Wellness"
         backHref={`/main?lang=${lang}`}
         backLabel={lang === "es" ? "Volver" : "Back"}
+        hideControlsOnMobile
       />
 
       <div className="home-scroll-shell flex-1 overflow-y-auto px-5 py-8 space-y-6 pb-24">

@@ -473,6 +473,7 @@ function CommunityContent() {
         subtitle={localizedCommunity?.description || community.description}
         backHref={`/safe-space-communities?lang=${lang}&skipGuidelines=1`}
         backLabel={backLabel}
+        hideControlsOnMobile
       />
 
       <div className="home-scroll-shell flex-1 overflow-y-auto px-5 py-8 space-y-6 pb-24">
