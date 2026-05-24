@@ -87,6 +87,7 @@ function CommunityContent() {
   const [bannedUntil, setBannedUntil] = useState<string | null>(null)
   const [banCount, setBanCount] = useState(0)
   const [strikeOverlayMessage, setStrikeOverlayMessage] = useState<string | null>(null)
+  const [guidelinesChecked, setGuidelinesChecked] = useState(false)
 
   const backLabel = lang === "es" ? "Volver" : "Back"
 
@@ -98,6 +99,20 @@ function CommunityContent() {
       identity: "safe_space_community_identity_v1",
     }
   }, [community?.id])
+
+  useEffect(() => {
+    try {
+      const accepted = window.localStorage.getItem("safe_space_guidelines_accepted_v1") === "true"
+      if (!accepted) {
+        router.replace(`/safe-space-communities?lang=${lang}`)
+        return
+      }
+    } catch {
+      router.replace(`/safe-space-communities?lang=${lang}`)
+      return
+    }
+    setGuidelinesChecked(true)
+  }, [lang, router])
 
   useEffect(() => {
     try {
@@ -240,49 +255,58 @@ function CommunityContent() {
     setIsPosting(true)
     setModerationWarning(null)
 
-    const moderationResult = await moderateContent(newPost, community.id, "user_anonymous_id")
+    try {
+      const moderationResult = await moderateContent(newPost, community.id, "user_anonymous_id")
 
-    if (moderationResult.recommended_action === "block") {
-      setModerationWarning("This content contains harmful language and cannot be posted.")
-      registerViolation("Blocked content")
-      setIsPosting(false)
-      return
-    }
+      if (moderationResult.recommended_action === "block") {
+        setModerationWarning("This content contains harmful language and cannot be posted.")
+        registerViolation("Blocked content")
+        setIsPosting(false)
+        return
+      }
 
-    if (moderationResult.recommended_action === "escalate") {
-      setModerationWarning(
-        "Your post contains crisis language. Would you like to speak with a counselor instead?",
-      )
-      registerViolation("Crisis-risk content")
-      setIsPosting(false)
-      return
-    }
+      if (moderationResult.recommended_action === "escalate") {
+        setModerationWarning(
+          "Your post contains crisis language. Would you like to speak with a counselor instead?",
+        )
+        registerViolation("Crisis-risk content")
+        setIsPosting(false)
+        return
+      }
 
-    if (moderationResult.recommended_action === "rewrite") {
-      setModerationWarning("Your post violates community rules and must be rewritten before submitting.")
-      registerViolation("Needs rewrite")
-      setIsPosting(false)
-      return
-    }
+      if (moderationResult.recommended_action === "rewrite") {
+        setModerationWarning("Your post violates community rules and must be rewritten before submitting.")
+        registerViolation("Needs rewrite")
+        setIsPosting(false)
+        return
+      }
 
-    const response = await fetch("/api/safe-space/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "create_post",
-        communityId: community.id,
-        lang,
-        author: currentAnonymousName,
-        content: newPost.trim(),
-      }),
-    })
-    if (response.ok) {
+      const response = await fetch("/api/safe-space/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_post",
+          communityId: community.id,
+          lang,
+          author: currentAnonymousName,
+          content: newPost.trim(),
+        }),
+      })
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null
+        setModerationWarning(payload?.error || "Unable to submit post right now. Please try again.")
+        setIsPosting(false)
+        return
+      }
       const data = await response.json()
       setPosts((data.posts || []) as CommunityPost[])
+      setNewPost("")
+      setShowPostForm(false)
+      setIsPosting(false)
+    } catch {
+      setModerationWarning("Unable to submit post right now. Please try again.")
+      setIsPosting(false)
     }
-    setNewPost("")
-    setShowPostForm(false)
-    setIsPosting(false)
   }
 
   const toggleReaction = (postId: string, reactionType: string) => {
@@ -378,10 +402,17 @@ function CommunityContent() {
         content: draft,
       }),
     })
-    if (response.ok) {
-      const data = await response.json()
-      setPosts((data.posts || []) as CommunityPost[])
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null
+      setReplyWarnings((prev) => ({
+        ...prev,
+        [postId]: payload?.error || "Unable to submit reply right now. Please try again.",
+      }))
+      setPostingReplyFor(null)
+      return
     }
+    const data = await response.json()
+    setPosts((data.posts || []) as CommunityPost[])
     setReplyDrafts((prev) => ({ ...prev, [postId]: "" }))
     setOpenReplyPostId(postId)
     setPostingReplyFor(null)
@@ -466,12 +497,16 @@ function CommunityContent() {
     }
   }
 
+  if (!guidelinesChecked) {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
       <AppHeader
         title={localizedCommunity?.name || community.name}
         subtitle={localizedCommunity?.description || community.description}
-        backHref={`/safe-space-communities?lang=${lang}&skipGuidelines=1`}
+        backHref={`/safe-space-communities?lang=${lang}`}
         backLabel={backLabel}
         hideControlsOnMobile
       />

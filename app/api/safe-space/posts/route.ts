@@ -59,106 +59,111 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const { action, communityId, lang } = body || {}
-  if (!communityId) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
+  try {
+    const body = await request.json()
+    const { action, communityId, lang } = body || {}
+    if (!communityId) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
 
-  const threadKey = getThreadKey(communityId, lang)
-  const store = await readStore()
-  const posts = store[threadKey] || []
+    const threadKey = getThreadKey(communityId, lang)
+    const store = await readStore()
+    const posts = store[threadKey] || []
 
-  if (action === "create_post") {
-    const post: PostRecord = {
-      id: `post_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      author: body.author || "Anonymous",
-      content: body.content || "",
-      timestamp: "Just now",
-      reactions: { heard: 0, strong: 0, relate: 0, support: 0, hope: 0 },
-      reactionUsers: {},
-      replies: [],
+    if (action === "create_post") {
+      const post: PostRecord = {
+        id: `post_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        author: body.author || "Anonymous",
+        content: body.content || "",
+        timestamp: "Just now",
+        reactions: { heard: 0, strong: 0, relate: 0, support: 0, hope: 0 },
+        reactionUsers: {},
+        replies: [],
+      }
+
+      store[threadKey] = [post, ...posts]
+      await writeStore(store)
+      return NextResponse.json({ posts: serialize(store[threadKey] || []) })
     }
 
-    store[threadKey] = [post, ...posts]
-    await writeStore(store)
-    return NextResponse.json({ posts: serialize(store[threadKey] || []) })
-  }
+    if (action === "create_reply") {
+      const { postId, author, content } = body
+      const next = posts.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              replies: [
+                ...p.replies,
+                {
+                  id: `reply_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                  author: author || "Anonymous",
+                  content: content || "",
+                  timestamp: "Just now",
+                },
+              ],
+            }
+          : p,
+      )
 
-  if (action === "create_reply") {
-    const { postId, author, content } = body
-    const next = posts.map((p) =>
-      p.id === postId
-        ? {
-            ...p,
-            replies: [
-              ...p.replies,
-              {
-                id: `reply_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-                author: author || "Anonymous",
-                content: content || "",
-                timestamp: "Just now",
-              },
-            ],
-          }
-        : p,
-    )
+      store[threadKey] = next
+      await writeStore(store)
+      return NextResponse.json({ posts: serialize(next) })
+    }
 
-    store[threadKey] = next
-    await writeStore(store)
-    return NextResponse.json({ posts: serialize(next) })
-  }
+    if (action === "toggle_reaction") {
+      const { postId, reactionType, userKey } = body
+      const next = posts.map((p) => {
+        if (p.id !== postId) return p
+        const users = new Set<string>(p.reactionUsers[reactionType] || [])
+        const already = users.has(userKey)
+        if (already) users.delete(userKey)
+        else users.add(userKey)
 
-  if (action === "toggle_reaction") {
-    const { postId, reactionType, userKey } = body
-    const next = posts.map((p) => {
-      if (p.id !== postId) return p
-      const users = new Set<string>(p.reactionUsers[reactionType] || [])
-      const already = users.has(userKey)
-      if (already) users.delete(userKey)
-      else users.add(userKey)
-
-      return {
-        ...p,
-        reactions: {
-          ...p.reactions,
-          [reactionType]: already
-            ? Math.max(0, (p.reactions[reactionType] || 0) - 1)
-            : (p.reactions[reactionType] || 0) + 1,
-        },
-        reactionUsers: {
-          ...p.reactionUsers,
-          [reactionType]: Array.from(users),
-        },
-      }
-    })
-
-    store[threadKey] = next
-    await writeStore(store)
-    return NextResponse.json({ posts: serialize(next) })
-  }
-
-  if (action === "delete_post") {
-    const { postId, userKey } = body
-    const next = posts.filter((p) => !(p.id === postId && p.author === userKey))
-    store[threadKey] = next
-    await writeStore(store)
-    return NextResponse.json({ posts: serialize(next) })
-  }
-
-  if (action === "delete_reply") {
-    const { postId, replyId, userKey } = body
-    const next = posts.map((p) =>
-      p.id !== postId
-        ? p
-        : {
-            ...p,
-            replies: p.replies.filter((r) => !(r.id === replyId && r.author === userKey)),
+        return {
+          ...p,
+          reactions: {
+            ...p.reactions,
+            [reactionType]: already
+              ? Math.max(0, (p.reactions[reactionType] || 0) - 1)
+              : (p.reactions[reactionType] || 0) + 1,
           },
-    )
+          reactionUsers: {
+            ...p.reactionUsers,
+            [reactionType]: Array.from(users),
+          },
+        }
+      })
 
-    store[threadKey] = next
-    await writeStore(store)
-    return NextResponse.json({ posts: serialize(next) })
+      store[threadKey] = next
+      await writeStore(store)
+      return NextResponse.json({ posts: serialize(next) })
+    }
+
+    if (action === "delete_post") {
+      const { postId, userKey } = body
+      const next = posts.filter((p) => !(p.id === postId && p.author === userKey))
+      store[threadKey] = next
+      await writeStore(store)
+      return NextResponse.json({ posts: serialize(next) })
+    }
+
+    if (action === "delete_reply") {
+      const { postId, replyId, userKey } = body
+      const next = posts.map((p) =>
+        p.id !== postId
+          ? p
+          : {
+              ...p,
+              replies: p.replies.filter((r) => !(r.id === replyId && r.author === userKey)),
+            },
+      )
+
+      store[threadKey] = next
+      await writeStore(store)
+      return NextResponse.json({ posts: serialize(next) })
+    }
+
+    return NextResponse.json({ error: "Unsupported action" }, { status: 400 })
+  } catch (error) {
+    console.error("safe-space posts error:", error)
+    return NextResponse.json({ error: "Unable to save post data" }, { status: 500 })
   }
-
-  return NextResponse.json({ error: "Unsupported action" }, { status: 400 })
 }

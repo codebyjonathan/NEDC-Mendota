@@ -56,7 +56,6 @@ function CommunitiesContent() {
           }
 
   const [guidesAccepted, setGuidesAccepted] = useState(false)
-  const skipGuidelines = searchParams.get("skipGuidelines") === "1"
 
   useEffect(() => {
     const state = getCommunityBanState()
@@ -67,8 +66,8 @@ function CommunitiesContent() {
 
   useEffect(() => {
     const stored = window.localStorage.getItem("safe_space_guidelines_accepted_v1")
-    if (stored === "true" || skipGuidelines) setGuidesAccepted(true)
-  }, [skipGuidelines])
+    if (stored === "true") setGuidesAccepted(true)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
