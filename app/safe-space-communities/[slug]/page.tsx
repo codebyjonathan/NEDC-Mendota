@@ -52,6 +52,35 @@ type ReportEntry = {
   communityId: string
 }
 
+function mergeReplies(base: CommunityReply[], incoming: CommunityReply[]): CommunityReply[] {
+  const byId = new Map<string, CommunityReply>()
+  base.forEach((reply) => byId.set(reply.id, reply))
+  incoming.forEach((reply) => {
+    const prev = byId.get(reply.id)
+    byId.set(reply.id, prev ? { ...prev, ...reply } : reply)
+  })
+  return Array.from(byId.values())
+}
+
+function mergePosts(base: CommunityPost[], incoming: CommunityPost[]): CommunityPost[] {
+  const byId = new Map<string, CommunityPost>()
+  base.forEach((post) => byId.set(post.id, post))
+  incoming.forEach((post) => {
+    const prev = byId.get(post.id)
+    if (!prev) {
+      byId.set(post.id, post)
+      return
+    }
+    byId.set(post.id, {
+      ...prev,
+      ...post,
+      reactions: { ...prev.reactions, ...post.reactions },
+      replies: mergeReplies(prev.replies || [], post.replies || []),
+    })
+  })
+  return Array.from(byId.values())
+}
+
 function CommunityContent() {
   const searchParams = useSearchParams()
   const params = useParams()
@@ -97,6 +126,7 @@ function CommunityContent() {
   const storageKeys = useMemo(() => {
     const id = community?.id || "default"
     return {
+      posts: `safe_space_community_posts_${id}`,
       reactions: `safe_space_community_reactions_${id}`,
       reports: `safe_space_community_reports_${id}`,
       identity: "safe_space_community_identity_v1",
@@ -146,10 +176,18 @@ function CommunityContent() {
     if (!community) return
     const hydrate = async () => {
       try {
+        let cachedPosts: CommunityPost[] = []
+        const storedPosts = window.localStorage.getItem(storageKeys.posts)
+        if (storedPosts) {
+          cachedPosts = (JSON.parse(storedPosts) as CommunityPost[]) || []
+        }
         const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
         if (postsResponse.ok) {
           const data = await postsResponse.json()
-          setPosts((data.posts || []) as CommunityPost[])
+          const serverPosts = (data.posts || []) as CommunityPost[]
+          setPosts(mergePosts(cachedPosts, serverPosts))
+        } else {
+          setPosts(cachedPosts)
         }
       const storedReactions = window.localStorage.getItem(storageKeys.reactions)
       if (storedReactions) {
@@ -191,7 +229,8 @@ function CommunityContent() {
         const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
         if (!postsResponse.ok) return
         const data = await postsResponse.json()
-        setPosts((data.posts || []) as CommunityPost[])
+        const serverPosts = (data.posts || []) as CommunityPost[]
+        setPosts((prev) => mergePosts(prev, serverPosts))
       } catch {
         // no-op
       }
@@ -209,6 +248,11 @@ function CommunityContent() {
     if (!community || !hydratedFromStorage) return
     window.localStorage.setItem(storageKeys.reports, JSON.stringify(reports))
   }, [reports, community, storageKeys, hydratedFromStorage])
+
+  useEffect(() => {
+    if (!community || !hydratedFromStorage) return
+    window.localStorage.setItem(storageKeys.posts, JSON.stringify(posts))
+  }, [posts, community, storageKeys, hydratedFromStorage])
 
   useEffect(() => {
     if (!hydratedFromStorage) return
@@ -245,6 +289,7 @@ function CommunityContent() {
     try {
       window.localStorage.removeItem(storageKeys.reactions)
       window.localStorage.removeItem(storageKeys.reports)
+      window.localStorage.removeItem(storageKeys.posts)
     } catch (error) {
       console.warn("Failed to clear local community activity", error)
     }
