@@ -81,6 +81,21 @@ function mergePosts(base: CommunityPost[], incoming: CommunityPost[]): Community
   return Array.from(byId.values())
 }
 
+function getStringArrayFromStorage(key: string): string[] {
+  try {
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : []
+  } catch {
+    return []
+  }
+}
+
+function writeStringArrayToStorage(key: string, values: string[]) {
+  window.localStorage.setItem(key, JSON.stringify(Array.from(new Set(values))))
+}
+
 function CommunityContent() {
   const searchParams = useSearchParams()
   const params = useParams()
@@ -127,6 +142,8 @@ function CommunityContent() {
     const id = community?.id || "default"
     return {
       posts: `safe_space_community_posts_${id}`,
+      deletedPosts: `safe_space_community_deleted_posts_${id}`,
+      deletedReplies: `safe_space_community_deleted_replies_${id}`,
       reactions: `safe_space_community_reactions_${id}`,
       reports: `safe_space_community_reports_${id}`,
       identity: "safe_space_community_identity_v1",
@@ -185,7 +202,17 @@ function CommunityContent() {
         if (postsResponse.ok) {
           const data = await postsResponse.json()
           const serverPosts = (data.posts || []) as CommunityPost[]
-          setPosts(mergePosts(cachedPosts, serverPosts))
+          const deletedPostIds = new Set(getStringArrayFromStorage(storageKeys.deletedPosts))
+          const deletedReplyIds = new Set(getStringArrayFromStorage(storageKeys.deletedReplies))
+
+          const visibleServerPosts = serverPosts
+            .filter((post) => !deletedPostIds.has(post.id))
+            .map((post) => ({
+              ...post,
+              replies: (post.replies || []).filter((reply) => !deletedReplyIds.has(reply.id)),
+            }))
+
+          setPosts(visibleServerPosts)
         } else {
           setPosts(cachedPosts)
         }
@@ -230,14 +257,22 @@ function CommunityContent() {
         if (!postsResponse.ok) return
         const data = await postsResponse.json()
         const serverPosts = (data.posts || []) as CommunityPost[]
-        setPosts((prev) => mergePosts(prev, serverPosts))
+        const deletedPostIds = new Set(getStringArrayFromStorage(storageKeys.deletedPosts))
+        const deletedReplyIds = new Set(getStringArrayFromStorage(storageKeys.deletedReplies))
+        const visibleServerPosts = serverPosts
+          .filter((post) => !deletedPostIds.has(post.id))
+          .map((post) => ({
+            ...post,
+            replies: (post.replies || []).filter((reply) => !deletedReplyIds.has(reply.id)),
+          }))
+        setPosts(visibleServerPosts)
       } catch {
         // no-op
       }
     }, 8000)
 
     return () => window.clearInterval(intervalId)
-  }, [community])
+  }, [community, storageKeys.deletedPosts, storageKeys.deletedReplies])
 
   useEffect(() => {
     if (!community || !hydratedFromStorage) return
@@ -290,6 +325,8 @@ function CommunityContent() {
       window.localStorage.removeItem(storageKeys.reactions)
       window.localStorage.removeItem(storageKeys.reports)
       window.localStorage.removeItem(storageKeys.posts)
+      window.localStorage.removeItem(storageKeys.deletedPosts)
+      window.localStorage.removeItem(storageKeys.deletedReplies)
     } catch (error) {
       console.warn("Failed to clear local community activity", error)
     }
@@ -565,6 +602,8 @@ function CommunityContent() {
     if (response.ok) {
       const data = await response.json()
       setPosts((data.posts || []) as CommunityPost[])
+      const deletedPostIds = getStringArrayFromStorage(storageKeys.deletedPosts)
+      writeStringArrayToStorage(storageKeys.deletedPosts, [...deletedPostIds, postId])
     } else if (response.status === 404) {
       const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
       if (postsResponse.ok) {
@@ -597,6 +636,8 @@ function CommunityContent() {
     if (response.ok) {
       const data = await response.json()
       setPosts((data.posts || []) as CommunityPost[])
+      const deletedReplyIds = getStringArrayFromStorage(storageKeys.deletedReplies)
+      writeStringArrayToStorage(storageKeys.deletedReplies, [...deletedReplyIds, replyId])
     } else if (response.status === 404) {
       const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
       if (postsResponse.ok) {
