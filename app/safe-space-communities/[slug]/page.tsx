@@ -656,7 +656,7 @@ function CommunityContent() {
       (window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any }).SpeechRecognition ||
       (window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any }).webkitSpeechRecognition
     if (!SpeechRecognition) {
-      setModerationWarning("Speech recognition is not supported in this browser.")
+      setModerationWarning(t.speechRecognitionUnsupported)
       return
     }
 
@@ -675,7 +675,7 @@ function CommunityContent() {
     recognition.onerror = () => {
       if (mode === "post") setListeningPost(false)
       else setListeningReplyFor((prev) => (prev === postId ? null : prev))
-      setModerationWarning("Speech recognition failed. Please try again.")
+      setModerationWarning(t.speechRecognitionFailed)
     }
     recognition.onresult = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => {
       const transcript = event.results[0][0].transcript
@@ -704,7 +704,7 @@ function CommunityContent() {
     if (!value) return
 
     if (!("speechSynthesis" in window)) {
-      setModerationWarning("Text-to-speech is not supported on this device/browser.")
+      setModerationWarning(t.ttsUnsupported)
       return
     }
 
@@ -725,7 +725,7 @@ function CommunityContent() {
       window.speechSynthesis.speak(utterance)
     } catch {
       setSpeakingTargetId(null)
-      setModerationWarning("Unable to play text-to-speech right now.")
+      setModerationWarning(t.ttsFailed)
     }
   }
 
@@ -808,7 +808,7 @@ function CommunityContent() {
                 }`}
               >
                 <Mic className="w-3.5 h-3.5" />
-                {listeningPost ? "Listening..." : "Voice input"}
+                {listeningPost ? t.listening : t.voiceInput}
               </button>
             </div>
 
@@ -898,10 +898,10 @@ function CommunityContent() {
                     <button
                       onClick={() => speakText(`post_${post.id}`, post.content)}
                       className="inline-flex items-center gap-2 text-xs text-teal-700 hover:text-teal-900"
-                      title={speakingTargetId === `post_${post.id}` ? "Stop reading post" : "Read post aloud"}
+                      title={speakingTargetId === `post_${post.id}` ? t.stopAudio : t.readAloud}
                     >
                       {speakingTargetId === `post_${post.id}` ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                      {speakingTargetId === `post_${post.id}` ? "Stop audio" : "Read aloud"}
+                      {speakingTargetId === `post_${post.id}` ? t.stopAudio : t.readAloud}
                     </button>
                   </div>
                 ) : null}
@@ -989,10 +989,10 @@ function CommunityContent() {
                                   <button
                                     onClick={() => speakText(`reply_${reply.id}`, reply.content)}
                                     className="inline-flex items-center gap-2 text-xs text-teal-700 hover:text-teal-900"
-                                    title={speakingTargetId === `reply_${reply.id}` ? "Stop reading reply" : "Read reply aloud"}
+                                    title={speakingTargetId === `reply_${reply.id}` ? t.stopAudio : t.readAloud}
                                   >
                                     {speakingTargetId === `reply_${reply.id}` ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                                    {speakingTargetId === `reply_${reply.id}` ? "Stop audio" : "Read aloud"}
+                                    {speakingTargetId === `reply_${reply.id}` ? t.stopAudio : t.readAloud}
                                   </button>
                                 </div>
                               )}
@@ -1030,7 +1030,7 @@ function CommunityContent() {
                           }`}
                         >
                           <Mic className="w-3.5 h-3.5" />
-                          {listeningReplyFor === post.id ? "Listening..." : "Voice input"}
+                          {listeningReplyFor === post.id ? t.listening : t.voiceInput}
                         </button>
                       </div>
 

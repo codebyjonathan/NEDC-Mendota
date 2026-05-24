@@ -101,7 +101,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const startSpeechRecognition = (setter: Dispatch<SetStateAction<string>>, micType: "ai" | "plan") => {
     const SpeechRecognition = (window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any }).SpeechRecognition || (window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any }).webkitSpeechRecognition
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser.")
+      alert(t.speechRecognitionUnsupported)
       return
     }
 
@@ -113,7 +113,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     recognition.onend = () => (micType === "ai" ? setListeningAI(false) : setListeningPlan(false))
     recognition.onerror = () => {
       micType === "ai" ? setListeningAI(false) : setListeningPlan(false)
-      alert("Speech recognition failed. Try again.")
+      alert(t.speechRecognitionFailed)
     }
     recognition.onresult = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => {
       const transcript = event.results[0][0].transcript
@@ -216,7 +216,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
     const value = text.trim()
     if (!value) return
     if (!("speechSynthesis" in window)) {
-      alert("Text-to-speech is not supported in this browser.")
+      alert(t.ttsUnsupported)
       return
     }
     if (speakingMessageId === messageId) {
@@ -235,7 +235,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
       window.speechSynthesis.speak(utterance)
     } catch {
       setSpeakingMessageId(null)
-      alert("Unable to play text-to-speech right now.")
+      alert(t.ttsFailed)
     }
   }
 
@@ -366,9 +366,10 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                   isReported={reportedAssistantMessages.includes(index)}
                   onReadAloud={() => speakMessage(`msg_${index}`, message.content)}
                   isSpeaking={speakingMessageId === `msg_${index}`}
+                  t={t}
                 />
               ))}
-              {loading && <div className="mt-2 text-sm italic text-gray-500">Typing...</div>}
+              {loading && <div className="mt-2 text-sm italic text-gray-500">{t.typing}</div>}
             </div>
 
             <div className="flex items-center gap-2 border-t bg-white p-3">
@@ -377,13 +378,13 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => event.key === "Enter" && sendMessage()}
                 className="flex-1 rounded-2xl border bg-white px-4 py-3 text-sm outline-none placeholder:text-gray-400"
-                placeholder="Type your message..."
+                placeholder={t.typeYourMessage}
               />
 
               <div className="flex items-center gap-2">
                 {listeningAI && (
                   <span className="text-sm font-medium" style={{ color: "var(--app-accent-strong)" }}>
-                    Listening...
+                    {t.listening}
                   </span>
                 )}
                 <button
@@ -408,19 +409,19 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
         {activeTab === "plan" && (
           <div className="flex flex-1 flex-col overflow-hidden rounded-3xl border bg-white p-4">
-            <label className="mb-2 block text-sm font-medium text-gray-700">Type your plan...</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">{t.typeYourPlan}</label>
 
             <div className="relative flex items-center">
               <textarea
                 value={myPlan}
                 onChange={(event) => setMyPlan(event.target.value)}
                 className="w-full flex-1 resize-none rounded-2xl border px-4 py-3 text-sm placeholder:text-gray-400"
-                placeholder="Write your safety plan here..."
+                placeholder={t.writeSafetyPlanHere}
               />
               <div className="absolute right-3 top-3 flex items-center gap-2">
                 {listeningPlan && (
                   <span className="text-xs font-medium" style={{ color: "var(--app-accent-strong)" }}>
-                    Listening...
+                    {t.listening}
                   </span>
                 )}
                 <button
@@ -440,7 +441,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                 style={{ backgroundColor: "var(--app-accent-strong)" }}
               >
                 <Save className="h-4 w-4" />
-                Save Plan
+                {t.savePlan}
               </button>
             </div>
           </div>
@@ -448,9 +449,9 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
         {activeTab === "saved" && (
           <div className="flex flex-1 flex-col overflow-hidden rounded-3xl border bg-white p-4">
-            <label className="mb-2 block text-sm font-medium text-gray-700">Your Saved Plan</label>
+            <label className="mb-2 block text-sm font-medium text-gray-700">{t.yourSavedPlan}</label>
             <div className="flex-1 overflow-y-auto rounded-2xl border bg-gray-50 p-4 whitespace-pre-wrap" style={{ color: "var(--app-text)" }}>
-              {myPlan || "No plan saved yet."}
+              {myPlan || t.noPlanSavedYet}
             </div>
             {myPlan && (
               <button
@@ -466,7 +467,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
                 style={{ backgroundColor: "var(--app-accent-strong)" }}
               >
                 <Download className="h-4 w-4" />
-                Download Plan
+                {t.downloadPlan}
               </button>
             )}
           </div>
@@ -608,6 +609,7 @@ function ChatBubble({
   isReported,
   onReadAloud,
   isSpeaking,
+  t,
 }: ChatMessage & {
   messageId: string
   selectedRobot: RobotStyleId
@@ -616,6 +618,7 @@ function ChatBubble({
   isReported?: boolean
   onReadAloud?: () => void
   isSpeaking?: boolean
+  t: (typeof translations)["en"]
 }) {
   if (role === "assistant") {
     return (
@@ -628,12 +631,12 @@ function ChatBubble({
           <p className="text-sm leading-relaxed" style={{ color: "var(--app-text)" }}>{content}</p>
           <div className="mt-2 flex items-center justify-end gap-2">
             <button
-              onClick={onReadAloud}
-              className="inline-flex items-center gap-1 rounded-full border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
-              title={isSpeaking ? "Stop reading" : "Read aloud"}
+                onClick={onReadAloud}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
+              title={isSpeaking ? t.stopAudio : t.readAloud}
             >
               {isSpeaking ? <Square className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-              {isSpeaking ? "Stop" : "Read"}
+              {isSpeaking ? t.stop : t.readAloud}
             </button>
             {onReport && (
               <button
@@ -641,7 +644,7 @@ function ChatBubble({
                 disabled={isReported}
                 className="rounded-full border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isReported ? "Reported" : "Report"}
+                {isReported ? t.reported : t.report}
               </button>
             )}
           </div>
@@ -658,10 +661,10 @@ function ChatBubble({
           <button
             onClick={onReadAloud}
             className="inline-flex items-center gap-1 rounded-full border border-white/40 px-2 py-1 text-xs text-white hover:bg-white/15"
-            title={isSpeaking ? "Stop reading" : "Read aloud"}
+            title={isSpeaking ? t.stopAudio : t.readAloud}
           >
             {isSpeaking ? <Square className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-            {isSpeaking ? "Stop" : "Read"}
+            {isSpeaking ? t.stop : t.readAloud}
           </button>
         </div>
       </div>
