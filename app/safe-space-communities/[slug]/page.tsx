@@ -808,7 +808,7 @@ function CommunityContent() {
               className="w-full p-4 rounded-2xl border border-gray-300 focus:border-teal-500 focus:outline-none resize-none text-gray-900 placeholder-gray-500"
               rows={4}
             />
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
               <button
                 onClick={() => startSpeechRecognition("post")}
                 className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${
@@ -819,6 +819,14 @@ function CommunityContent() {
               >
                 <Mic className="w-3.5 h-3.5" />
                 {listeningPost ? t.listening : t.voiceInput}
+              </button>
+              <button
+                onClick={() => speakText("draft_post", newPost)}
+                className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                title={speakingTargetId === "draft_post" ? t.stopAudio : t.readAloud}
+              >
+                {speakingTargetId === "draft_post" ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                {speakingTargetId === "draft_post" ? t.stopAudio : t.readAloud}
               </button>
             </div>
 
@@ -1030,7 +1038,7 @@ function CommunityContent() {
                         className="w-full p-3 rounded-2xl border border-gray-300 focus:border-teal-500 focus:outline-none resize-none text-gray-900 placeholder-gray-500"
                         rows={2}
                       />
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-between">
                         <button
                           onClick={() => startSpeechRecognition("reply", post.id)}
                           className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${
@@ -1041,6 +1049,14 @@ function CommunityContent() {
                         >
                           <Mic className="w-3.5 h-3.5" />
                           {listeningReplyFor === post.id ? t.listening : t.voiceInput}
+                        </button>
+                        <button
+                          onClick={() => speakText(`draft_reply_${post.id}`, replyDrafts[post.id] || "")}
+                          className="inline-flex items-center gap-2 rounded-full border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                          title={speakingTargetId === `draft_reply_${post.id}` ? t.stopAudio : t.readAloud}
+                        >
+                          {speakingTargetId === `draft_reply_${post.id}` ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                          {speakingTargetId === `draft_reply_${post.id}` ? t.stopAudio : t.readAloud}
                         </button>
                       </div>
 
