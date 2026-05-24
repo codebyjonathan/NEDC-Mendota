@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { promises as fs } from "fs"
+import path from "path"
 
 type Reply = { id: string; author: string; content: string; timestamp: string }
 type PostRecord = {
@@ -7,16 +9,32 @@ type PostRecord = {
   content: string
   timestamp: string
   reactions: Record<string, number>
-  reactionUsers: Record<string, Set<string>>
+  reactionUsers: Record<string, string[]>
   replies: Reply[]
 }
 
-const store = new Map<string, PostRecord[]>()
+type StoreShape = Record<string, PostRecord[]>
+
 const DEFAULT_LANG = "en"
+const STORE_PATH = path.join(process.cwd(), "lib", "server", "safe-space-posts-store.json")
 
 function getThreadKey(communityId: string, lang?: string) {
   const safeLang = typeof lang === "string" && lang.trim() ? lang.trim() : DEFAULT_LANG
   return `${communityId}::${safeLang}`
+}
+
+async function readStore(): Promise<StoreShape> {
+  try {
+    const raw = await fs.readFile(STORE_PATH, "utf8")
+    return (JSON.parse(raw) as StoreShape) || {}
+  } catch {
+    return {}
+  }
+}
+
+async function writeStore(store: StoreShape): Promise<void> {
+  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true })
+  await fs.writeFile(STORE_PATH, JSON.stringify(store), "utf8")
 }
 
 function serialize(posts: PostRecord[]) {
@@ -34,17 +52,20 @@ export async function GET(request: NextRequest) {
   const communityId = request.nextUrl.searchParams.get("communityId")
   const lang = request.nextUrl.searchParams.get("lang") || DEFAULT_LANG
   if (!communityId) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
+
   const threadKey = getThreadKey(communityId, lang)
-  return NextResponse.json({ posts: serialize(store.get(threadKey) || []) })
+  const store = await readStore()
+  return NextResponse.json({ posts: serialize(store[threadKey] || []) })
 }
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
   const { action, communityId, lang } = body || {}
   if (!communityId) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
-  const threadKey = getThreadKey(communityId, lang)
 
-  const posts = store.get(threadKey) || []
+  const threadKey = getThreadKey(communityId, lang)
+  const store = await readStore()
+  const posts = store[threadKey] || []
 
   if (action === "create_post") {
     const post: PostRecord = {
@@ -56,8 +77,10 @@ export async function POST(request: NextRequest) {
       reactionUsers: {},
       replies: [],
     }
-    store.set(threadKey, [post, ...posts])
-    return NextResponse.json({ posts: serialize(store.get(threadKey) || []) })
+
+    store[threadKey] = [post, ...posts]
+    await writeStore(store)
+    return NextResponse.json({ posts: serialize(store[threadKey] || []) })
   }
 
   if (action === "create_reply") {
@@ -78,7 +101,9 @@ export async function POST(request: NextRequest) {
           }
         : p,
     )
-    store.set(threadKey, next)
+
+    store[threadKey] = next
+    await writeStore(store)
     return NextResponse.json({ posts: serialize(next) })
   }
 
@@ -86,10 +111,11 @@ export async function POST(request: NextRequest) {
     const { postId, reactionType, userKey } = body
     const next = posts.map((p) => {
       if (p.id !== postId) return p
-      const users = p.reactionUsers[reactionType] || new Set<string>()
+      const users = new Set<string>(p.reactionUsers[reactionType] || [])
       const already = users.has(userKey)
       if (already) users.delete(userKey)
       else users.add(userKey)
+
       return {
         ...p,
         reactions: {
@@ -100,18 +126,21 @@ export async function POST(request: NextRequest) {
         },
         reactionUsers: {
           ...p.reactionUsers,
-          [reactionType]: users,
+          [reactionType]: Array.from(users),
         },
       }
     })
-    store.set(threadKey, next)
+
+    store[threadKey] = next
+    await writeStore(store)
     return NextResponse.json({ posts: serialize(next) })
   }
 
   if (action === "delete_post") {
     const { postId, userKey } = body
     const next = posts.filter((p) => !(p.id === postId && p.author === userKey))
-    store.set(threadKey, next)
+    store[threadKey] = next
+    await writeStore(store)
     return NextResponse.json({ posts: serialize(next) })
   }
 
@@ -125,7 +154,9 @@ export async function POST(request: NextRequest) {
             replies: p.replies.filter((r) => !(r.id === replyId && r.author === userKey)),
           },
     )
-    store.set(threadKey, next)
+
+    store[threadKey] = next
+    await writeStore(store)
     return NextResponse.json({ posts: serialize(next) })
   }
 
