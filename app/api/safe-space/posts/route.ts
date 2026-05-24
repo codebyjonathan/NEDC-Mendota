@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { promises as fs } from "fs"
 import path from "path"
+import { tmpdir } from "os"
 
 type Reply = { id: string; author: string; content: string; timestamp: string }
 type PostRecord = {
@@ -16,7 +17,11 @@ type PostRecord = {
 type StoreShape = Record<string, PostRecord[]>
 
 const DEFAULT_LANG = "en"
-const STORE_PATH = path.join(process.cwd(), "lib", "server", "safe-space-posts-store.json")
+const STORE_PATH =
+  process.env.SAFE_SPACE_POSTS_STORE_PATH?.trim() ||
+  (process.env.NODE_ENV === "production"
+    ? path.join(tmpdir(), "safe-space-posts-store.json")
+    : path.join(process.cwd(), "lib", "server", "safe-space-posts-store.json"))
 
 function getThreadKey(communityId: string, lang?: string) {
   const safeLang = typeof lang === "string" && lang.trim() ? lang.trim() : DEFAULT_LANG
