@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
 import { SolarSystemJourney } from "@/components/solar-system-journey"
 import { translations } from "@/lib/translations"
+import { getCommunityBanRemainingMs, getCommunityBanState, isCommunityBanActive } from "@/lib/safe-space/community-ban"
 
 function ScrollReveal({
   children,
@@ -63,6 +64,30 @@ function MainScreenContent() {
   ) as keyof typeof translations
   const t = translations[lang]
   const isRTL = lang === "ar"
+  const [communityBanMessage, setCommunityBanMessage] = useState<string | null>(null)
+  const [communityBanned, setCommunityBanned] = useState(false)
+
+  useEffect(() => {
+    const syncBanState = () => {
+      const state = getCommunityBanState()
+      const active = isCommunityBanActive(state.bannedUntil)
+      setCommunityBanned(active)
+      if (!active) setCommunityBanMessage(null)
+    }
+
+    syncBanState()
+    const timer = window.setInterval(syncBanState, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const handleBlockedCommunitiesClick = () => {
+    const state = getCommunityBanState()
+    const remainingMs = getCommunityBanRemainingMs(state.bannedUntil)
+    const remainingSec = Math.ceil(remainingMs / 1000)
+    setCommunityBanMessage(
+      `You're currently banned due to going against Community Guidelines for ${remainingSec} seconds.`,
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
@@ -162,14 +187,38 @@ function MainScreenContent() {
         </ScrollReveal>
 
         <ScrollReveal delay={110}>
-          <div className="bg-white rounded-3xl p-6 shadow-md space-y-5">
-            <h3 className="font-display text-xl font-bold text-gray-900 tracking-tight">{t.safetyPlan}</h3>
-            <p className="text-base text-gray-600 leading-relaxed">{t.safetyDesc}</p>
+          <div className="rounded-3xl border border-emerald-200/50 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 p-6 shadow-md space-y-5">
+            <h3 className="font-display text-xl font-bold text-emerald-950 tracking-tight">{t.safetyPlan}</h3>
+            <p className="text-base text-emerald-900/80 leading-relaxed">{t.safetyDesc}</p>
             <Link href={`/safety-plan?lang=${lang}`} data-transition-style="random">
-              <Button className="app-cta font-display w-full h-14 text-lg font-bold rounded-2xl">
+              <Button className="font-display w-full h-14 text-lg font-bold rounded-2xl bg-emerald-600 text-white hover:bg-emerald-500">
                 {t.openSafety}
               </Button>
             </Link>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal delay={120}>
+          <div className="rounded-3xl border border-blue-300/50 bg-gradient-to-br from-blue-100 via-sky-50 to-cyan-100 p-6 shadow-md space-y-5">
+            <h3 className="font-display text-xl font-bold text-blue-950 tracking-tight">{t.communitiesTitle}</h3>
+            <p className="text-base text-blue-900/85 leading-relaxed">{t.communitiesDesc}</p>
+            {communityBanned ? (
+              <Button
+                onClick={handleBlockedCommunitiesClick}
+                className="font-display w-full h-14 text-lg font-bold rounded-2xl bg-gray-500 text-white hover:bg-gray-500"
+              >
+                {t.openCommunities}
+              </Button>
+            ) : (
+              <Link href={`/safe-space-communities?lang=${lang}`} data-transition-style="random">
+                <Button className="font-display w-full h-14 text-lg font-bold rounded-2xl bg-blue-700 text-white hover:bg-blue-600">
+                  {t.openCommunities}
+                </Button>
+              </Link>
+            )}
+            {communityBanMessage ? (
+              <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded-xl p-3">{communityBanMessage}</p>
+            ) : null}
           </div>
         </ScrollReveal>
 
