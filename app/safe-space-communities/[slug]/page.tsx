@@ -80,7 +80,6 @@ function CommunityContent() {
   const [reports, setReports] = useState<Record<string, ReportEntry[]>>({})
   const [hiddenReplies, setHiddenReplies] = useState<Record<string, boolean>>({})
   const [hiddenPosts, setHiddenPosts] = useState<Record<string, boolean>>({})
-  const [locallyHiddenPostIds, setLocallyHiddenPostIds] = useState<Record<string, boolean>>({})
   const [reportSuccessForPostId, setReportSuccessForPostId] = useState<string | null>(null)
   const [hydratedFromStorage, setHydratedFromStorage] = useState(false)
   const [currentAnonymousName, setCurrentAnonymousName] = useState("AnonymousUser")
@@ -96,7 +95,6 @@ function CommunityContent() {
     return {
       reactions: `safe_space_community_reactions_${id}`,
       reports: `safe_space_community_reports_${id}`,
-      hiddenPosts: `safe_space_community_hidden_posts_${id}`,
       identity: "safe_space_community_identity_v1",
     }
   }, [community?.id])
@@ -121,7 +119,7 @@ function CommunityContent() {
     if (!community) return
     const hydrate = async () => {
       try {
-        const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
+        const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}&lang=${lang}`)
         if (postsResponse.ok) {
           const data = await postsResponse.json()
           setPosts((data.posts || []) as CommunityPost[])
@@ -131,12 +129,6 @@ function CommunityContent() {
         const parsed = JSON.parse(storedReactions) as Record<string, string>
         setUserReactions(parsed || {})
       }
-      const storedHiddenPosts = window.localStorage.getItem(storageKeys.hiddenPosts)
-      if (storedHiddenPosts) {
-        const parsed = JSON.parse(storedHiddenPosts) as Record<string, boolean>
-        setLocallyHiddenPostIds(parsed || {})
-      }
-
       const storedReports = window.localStorage.getItem(storageKeys.reports)
       if (storedReports) {
         const parsed = JSON.parse(storedReports) as Record<string, ReportEntry[] | string>
@@ -172,11 +164,6 @@ function CommunityContent() {
 
   useEffect(() => {
     if (!community || !hydratedFromStorage) return
-    window.localStorage.setItem(storageKeys.hiddenPosts, JSON.stringify(locallyHiddenPostIds))
-  }, [locallyHiddenPostIds, community, storageKeys, hydratedFromStorage])
-
-  useEffect(() => {
-    if (!community || !hydratedFromStorage) return
     window.localStorage.setItem(storageKeys.reports, JSON.stringify(reports))
   }, [reports, community, storageKeys, hydratedFromStorage])
 
@@ -203,7 +190,6 @@ function CommunityContent() {
     try {
       window.localStorage.removeItem(storageKeys.reactions)
       window.localStorage.removeItem(storageKeys.reports)
-      window.localStorage.removeItem(storageKeys.hiddenPosts)
     } catch (error) {
       console.warn("Failed to clear local community activity", error)
     }
@@ -285,6 +271,7 @@ function CommunityContent() {
       body: JSON.stringify({
         action: "create_post",
         communityId: community.id,
+        lang,
         author: currentAnonymousName,
         content: newPost.trim(),
       }),
@@ -318,6 +305,7 @@ function CommunityContent() {
       body: JSON.stringify({
         action: "toggle_reaction",
         communityId: community.id,
+        lang,
         postId,
         reactionType,
         userKey: currentAnonymousName,
@@ -384,6 +372,7 @@ function CommunityContent() {
       body: JSON.stringify({
         action: "create_reply",
         communityId: community.id,
+        lang,
         postId,
         author: currentAnonymousName,
         content: draft,
@@ -434,14 +423,47 @@ function CommunityContent() {
     setReportSuccessForPostId(postId)
   }
 
-  const deletePost = (postId: string) => {
-    setLocallyHiddenPostIds((prev) => ({ ...prev, [postId]: true }))
+  const deletePost = async (postId: string) => {
+    const response = await fetch("/api/safe-space/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "delete_post",
+        communityId: community.id,
+        lang,
+        postId,
+        userKey: currentAnonymousName,
+      }),
+    })
+    if (response.ok) {
+      const data = await response.json()
+      setPosts((data.posts || []) as CommunityPost[])
+    }
     setOpenReplyPostId((prev) => (prev === postId ? null : prev))
     setReplyDrafts((prev) => {
       const next = { ...prev }
       delete next[postId]
       return next
     })
+  }
+
+  const deleteReply = async (postId: string, replyId: string) => {
+    const response = await fetch("/api/safe-space/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "delete_reply",
+        communityId: community.id,
+        lang,
+        postId,
+        replyId,
+        userKey: currentAnonymousName,
+      }),
+    })
+    if (response.ok) {
+      const data = await response.json()
+      setPosts((data.posts || []) as CommunityPost[])
+    }
   }
 
   return (
@@ -534,7 +556,7 @@ function CommunityContent() {
           </div>
         ) : (
           <div className="space-y-4">
-            {posts.filter((post) => !locallyHiddenPostIds[post.id]).map((post) => (
+            {posts.map((post) => (
               <div key={post.id} className="bg-white rounded-3xl p-6 shadow-md border border-gray-100 space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
@@ -662,6 +684,17 @@ function CommunityContent() {
                               ) : (
                                 <p className="mt-1 text-sm text-gray-700">{reply.content}</p>
                               )}
+                              {reply.author === currentAnonymousName ? (
+                                <div className="mt-2">
+                                  <Button
+                                    onClick={() => deleteReply(post.id, reply.id)}
+                                    variant="outline"
+                                    className="h-8 rounded-lg border-red-200 text-red-600 hover:bg-red-50 text-xs"
+                                  >
+                                    Delete Reply
+                                  </Button>
+                                </div>
+                              ) : null}
                             </div>
                           ))}
                         </div>
@@ -694,10 +727,10 @@ function CommunityContent() {
                   )}
                 </div>
 
-                {post.createdByUser ? (
+                {post.author === currentAnonymousName ? (
                   <div className="pt-1">
                     <Button
-                      onClick={() => deletePost(post.id)}
+                      onClick={() => void deletePost(post.id)}
                       variant="outline"
                       className="h-9 rounded-xl border-red-200 text-red-600 hover:bg-red-50"
                     >
