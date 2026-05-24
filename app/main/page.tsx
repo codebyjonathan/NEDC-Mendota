@@ -211,7 +211,16 @@ function MainScreenContent() {
               </Button>
             ) : (
               <Link href={`/safe-space-communities?lang=${lang}`} data-transition-style="random">
-                <Button className="font-display w-full h-14 text-lg font-bold rounded-2xl bg-blue-700 text-white hover:bg-blue-600">
+                <Button
+                  onClick={() => {
+                    try {
+                      window.localStorage.removeItem("safe_space_guidelines_accepted_v1")
+                    } catch {
+                      // no-op
+                    }
+                  }}
+                  className="font-display w-full h-14 text-lg font-bold rounded-2xl bg-blue-700 text-white hover:bg-blue-600"
+                >
                   {t.openCommunities}
                 </Button>
               </Link>
