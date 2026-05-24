@@ -28,6 +28,7 @@ import {
 type CommunityReply = {
   id: string
   author: string
+  authorId?: string
   content: string
   timestamp: string
 }
@@ -35,6 +36,7 @@ type CommunityReply = {
 type CommunityPost = {
   id: string
   author: string
+  authorId?: string
   content: string
   timestamp: string
   reactions: Record<string, number>
@@ -83,6 +85,7 @@ function CommunityContent() {
   const [reportSuccessForPostId, setReportSuccessForPostId] = useState<string | null>(null)
   const [hydratedFromStorage, setHydratedFromStorage] = useState(false)
   const [currentAnonymousName, setCurrentAnonymousName] = useState("AnonymousUser")
+  const [currentAnonymousId, setCurrentAnonymousId] = useState("")
   const [strikeCount, setStrikeCount] = useState(0)
   const [bannedUntil, setBannedUntil] = useState<string | null>(null)
   const [banCount, setBanCount] = useState(0)
@@ -97,6 +100,7 @@ function CommunityContent() {
       reactions: `safe_space_community_reactions_${id}`,
       reports: `safe_space_community_reports_${id}`,
       identity: "safe_space_community_identity_v1",
+      identityId: "safe_space_community_identity_id_v1",
     }
   }, [community?.id])
 
@@ -117,24 +121,32 @@ function CommunityContent() {
   useEffect(() => {
     try {
       const storedIdentity = window.localStorage.getItem(storageKeys.identity)
+      const storedIdentityId = window.localStorage.getItem(storageKeys.identityId)
       if (storedIdentity) {
         setCurrentAnonymousName(storedIdentity)
-        return
+      } else {
+        const newIdentity = generateAnonymousUsername()
+        window.localStorage.setItem(storageKeys.identity, newIdentity)
+        setCurrentAnonymousName(newIdentity)
       }
 
-      const newIdentity = generateAnonymousUsername()
-      window.localStorage.setItem(storageKeys.identity, newIdentity)
-      setCurrentAnonymousName(newIdentity)
+      if (storedIdentityId) {
+        setCurrentAnonymousId(storedIdentityId)
+      } else {
+        const newIdentityId = `anon_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+        window.localStorage.setItem(storageKeys.identityId, newIdentityId)
+        setCurrentAnonymousId(newIdentityId)
+      }
     } catch (error) {
       console.warn("Failed to restore anonymous identity", error)
     }
-  }, [storageKeys.identity])
+  }, [storageKeys.identity, storageKeys.identityId])
 
   useEffect(() => {
     if (!community) return
     const hydrate = async () => {
       try {
-        const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}&lang=${lang}`)
+        const postsResponse = await fetch(`/api/safe-space/posts?communityId=${community.id}`)
         if (postsResponse.ok) {
           const data = await postsResponse.json()
           setPosts((data.posts || []) as CommunityPost[])
@@ -200,6 +212,18 @@ function CommunityContent() {
   }
 
   const isBanned = isCommunityBanActive(bannedUntil)
+
+  const ensureAnonymousId = () => {
+    if (currentAnonymousId) return currentAnonymousId
+    const fallbackId = `anon_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+    setCurrentAnonymousId(fallbackId)
+    try {
+      window.localStorage.setItem(storageKeys.identityId, fallbackId)
+    } catch (error) {
+      console.warn("Failed to persist anonymous identity id", error)
+    }
+    return fallbackId
+  }
 
   const clearLocalCommunityActivity = () => {
     try {
@@ -281,6 +305,7 @@ function CommunityContent() {
         return
       }
 
+      const authorId = ensureAnonymousId()
       const response = await fetch("/api/safe-space/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -289,6 +314,7 @@ function CommunityContent() {
           communityId: community.id,
           lang,
           author: currentAnonymousName,
+          authorId,
           content: newPost.trim(),
         }),
       })
@@ -329,7 +355,6 @@ function CommunityContent() {
       body: JSON.stringify({
         action: "toggle_reaction",
         communityId: community.id,
-        lang,
         postId,
         reactionType,
         userKey: currentAnonymousName,
@@ -390,32 +415,41 @@ function CommunityContent() {
       return
     }
 
-    const response = await fetch("/api/safe-space/posts", {
+    try {
+      const authorId = ensureAnonymousId()
+      const response = await fetch("/api/safe-space/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "create_reply",
         communityId: community.id,
-        lang,
         postId,
         author: currentAnonymousName,
+        authorId,
         content: draft,
       }),
     })
-    if (!response.ok) {
-      const payload = (await response.json().catch(() => null)) as { error?: string } | null
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null
+        setReplyWarnings((prev) => ({
+          ...prev,
+          [postId]: payload?.error || "Unable to submit reply right now. Please try again.",
+        }))
+        setPostingReplyFor(null)
+        return
+      }
+      const data = await response.json()
+      setPosts((data.posts || []) as CommunityPost[])
+      setReplyDrafts((prev) => ({ ...prev, [postId]: "" }))
+      setOpenReplyPostId(postId)
+      setPostingReplyFor(null)
+    } catch {
       setReplyWarnings((prev) => ({
         ...prev,
-        [postId]: payload?.error || "Unable to submit reply right now. Please try again.",
+        [postId]: "Unable to submit reply right now. Please try again.",
       }))
       setPostingReplyFor(null)
-      return
     }
-    const data = await response.json()
-    setPosts((data.posts || []) as CommunityPost[])
-    setReplyDrafts((prev) => ({ ...prev, [postId]: "" }))
-    setOpenReplyPostId(postId)
-    setPostingReplyFor(null)
   }
 
   const openReportComposer = (postId: string) => {
@@ -455,15 +489,15 @@ function CommunityContent() {
   }
 
   const deletePost = async (postId: string) => {
+    const userId = ensureAnonymousId()
     const response = await fetch("/api/safe-space/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "delete_post",
         communityId: community.id,
-        lang,
         postId,
-        userKey: currentAnonymousName,
+        userId,
       }),
     })
     if (response.ok) {
@@ -479,16 +513,16 @@ function CommunityContent() {
   }
 
   const deleteReply = async (postId: string, replyId: string) => {
+    const userId = ensureAnonymousId()
     const response = await fetch("/api/safe-space/posts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "delete_reply",
         communityId: community.id,
-        lang,
         postId,
         replyId,
-        userKey: currentAnonymousName,
+        userId,
       }),
     })
     if (response.ok) {
@@ -720,7 +754,7 @@ function CommunityContent() {
                               ) : (
                                 <p className="mt-1 text-sm text-gray-700">{reply.content}</p>
                               )}
-                              {reply.author === currentAnonymousName ? (
+                              {reply.authorId && reply.authorId === currentAnonymousId ? (
                                 <div className="mt-2">
                                   <Button
                                     onClick={() => deleteReply(post.id, reply.id)}
@@ -763,7 +797,7 @@ function CommunityContent() {
                   )}
                 </div>
 
-                {post.author === currentAnonymousName ? (
+                {post.authorId && post.authorId === currentAnonymousId ? (
                   <div className="pt-1">
                     <Button
                       onClick={() => void deletePost(post.id)}
