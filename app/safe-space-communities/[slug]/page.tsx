@@ -13,7 +13,7 @@ import {
   EMOTIONAL_REACTIONS,
   generateAnonymousUsername,
 } from "@/lib/safe-space/utils"
-import { AlertCircle, X, Flag, MessageCircle, Eye, EyeOff } from "lucide-react"
+import { AlertCircle, X, Flag, MessageCircle, Eye, EyeOff, Volume2, Square } from "lucide-react"
 import { moderateContent } from "@/lib/safe-space/moderation"
 import {
   getCommunityBanRemainingMs,
@@ -127,6 +127,7 @@ function CommunityContent() {
   const [hiddenReplies, setHiddenReplies] = useState<Record<string, boolean>>({})
   const [hiddenPosts, setHiddenPosts] = useState<Record<string, boolean>>({})
   const [reportSuccessForPostId, setReportSuccessForPostId] = useState<string | null>(null)
+  const [speakingTargetId, setSpeakingTargetId] = useState<string | null>(null)
   const [hydratedFromStorage, setHydratedFromStorage] = useState(false)
   const [currentAnonymousName, setCurrentAnonymousName] = useState("AnonymousUser")
   const [currentAnonymousId, setCurrentAnonymousId] = useState("")
@@ -647,6 +648,58 @@ function CommunityContent() {
     }
   }
 
+  const stopSpeaking = () => {
+    if (typeof window === "undefined") return
+    try {
+      window.speechSynthesis.cancel()
+    } catch {
+      // no-op
+    }
+    setSpeakingTargetId(null)
+  }
+
+  const speakText = (targetId: string, text: string) => {
+    if (typeof window === "undefined") return
+    const value = text.trim()
+    if (!value) return
+
+    if (!("speechSynthesis" in window)) {
+      setModerationWarning("Text-to-speech is not supported on this device/browser.")
+      return
+    }
+
+    if (speakingTargetId === targetId) {
+      stopSpeaking()
+      return
+    }
+
+    try {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(value)
+      utterance.lang = lang === "es" ? "es-ES" : lang === "ar" ? "ar-SA" : "en-US"
+      utterance.rate = 1
+      utterance.pitch = 1
+      utterance.onend = () => setSpeakingTargetId((prev) => (prev === targetId ? null : prev))
+      utterance.onerror = () => setSpeakingTargetId((prev) => (prev === targetId ? null : prev))
+      setSpeakingTargetId(targetId)
+      window.speechSynthesis.speak(utterance)
+    } catch {
+      setSpeakingTargetId(null)
+      setModerationWarning("Unable to play text-to-speech right now.")
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === "undefined") return
+      try {
+        window.speechSynthesis.cancel()
+      } catch {
+        // no-op
+      }
+    }
+  }, [])
+
   if (!guidelinesChecked) {
     return null
   }
@@ -787,7 +840,17 @@ function CommunityContent() {
                 )}
 
                 {!hiddenPosts[post.id] ? (
-                  <p className="text-gray-800 leading-relaxed text-sm">{post.content}</p>
+                  <div className="space-y-2">
+                    <p className="text-gray-800 leading-relaxed text-sm">{post.content}</p>
+                    <button
+                      onClick={() => speakText(`post_${post.id}`, post.content)}
+                      className="inline-flex items-center gap-2 text-xs text-teal-700 hover:text-teal-900"
+                      title={speakingTargetId === `post_${post.id}` ? "Stop reading post" : "Read post aloud"}
+                    >
+                      {speakingTargetId === `post_${post.id}` ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                      {speakingTargetId === `post_${post.id}` ? "Stop audio" : "Read aloud"}
+                    </button>
+                  </div>
                 ) : null}
 
                 <div className="pt-1">
@@ -868,7 +931,17 @@ function CommunityContent() {
                               {hiddenReplies[reply.id] ? (
                                 <p className="mt-1 text-sm text-gray-500 italic">Reply hidden. Tap the eye to show.</p>
                               ) : (
-                                <p className="mt-1 text-sm text-gray-700">{reply.content}</p>
+                                <div className="mt-1 space-y-2">
+                                  <p className="text-sm text-gray-700">{reply.content}</p>
+                                  <button
+                                    onClick={() => speakText(`reply_${reply.id}`, reply.content)}
+                                    className="inline-flex items-center gap-2 text-xs text-teal-700 hover:text-teal-900"
+                                    title={speakingTargetId === `reply_${reply.id}` ? "Stop reading reply" : "Read reply aloud"}
+                                  >
+                                    {speakingTargetId === `reply_${reply.id}` ? <Square className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                                    {speakingTargetId === `reply_${reply.id}` ? "Stop audio" : "Read aloud"}
+                                  </button>
+                                </div>
                               )}
                               {(reply.authorId && reply.authorId === currentAnonymousId) ||
                               (!reply.authorId && reply.author === currentAnonymousName) ? (
