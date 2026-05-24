@@ -662,8 +662,11 @@ function CommunityContent() {
 
     const recognition = new SpeechRecognition()
     recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US"
-    recognition.interimResults = false
+    recognition.interimResults = true
     recognition.maxAlternatives = 1
+    recognition.continuous = false
+    const basePostText = mode === "post" ? newPost : ""
+    const baseReplyText = mode === "reply" && postId ? replyDrafts[postId] || "" : ""
     recognition.onstart = () => {
       if (mode === "post") setListeningPost(true)
       else setListeningReplyFor(postId || null)
@@ -678,11 +681,18 @@ function CommunityContent() {
       setModerationWarning(t.speechRecognitionFailed)
     }
     recognition.onresult = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => {
-      const transcript = event.results[0][0].transcript
+      let transcript = ""
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript
+      }
+      const nextText = transcript.trim()
       if (mode === "post") {
-        setNewPost((prev) => (prev ? `${prev} ${transcript}` : transcript))
+        setNewPost(nextText ? `${basePostText}${basePostText ? " " : ""}${nextText}` : basePostText)
       } else if (postId) {
-        setReplyDrafts((prev) => ({ ...prev, [postId]: prev[postId] ? `${prev[postId]} ${transcript}` : transcript }))
+        setReplyDrafts((prev) => ({
+          ...prev,
+          [postId]: nextText ? `${baseReplyText}${baseReplyText ? " " : ""}${nextText}` : baseReplyText,
+        }))
       }
     }
     recognition.start()
