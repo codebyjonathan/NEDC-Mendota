@@ -62,6 +62,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const [listeningAI, setListeningAI] = useState(false)
   const [listeningPlan, setListeningPlan] = useState(false)
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null)
+  const recognitionRef = useRef<any>(null)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
@@ -105,21 +106,47 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
       return
     }
 
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch {
+        // no-op
+      }
+      recognitionRef.current = null
+    }
+
     const recognition = new SpeechRecognition()
+    recognitionRef.current = recognition
     recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US"
-    recognition.interimResults = false
+    recognition.interimResults = true
+    recognition.continuous = false
     recognition.maxAlternatives = 1
+    let baseText = ""
+    setter((prev) => {
+      baseText = prev
+      return prev
+    })
     recognition.onstart = () => (micType === "ai" ? setListeningAI(true) : setListeningPlan(true))
     recognition.onend = () => (micType === "ai" ? setListeningAI(false) : setListeningPlan(false))
-    recognition.onerror = () => {
+    recognition.onerror = (event: { error?: string }) => {
       micType === "ai" ? setListeningAI(false) : setListeningPlan(false)
+      if (event.error === "aborted" || event.error === "no-speech") return
       alert(t.speechRecognitionFailed)
     }
     recognition.onresult = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => {
-      const transcript = event.results[0][0].transcript
-      setter((prev) => (prev ? `${prev} ${transcript}` : transcript))
+      let transcript = ""
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript
+      }
+      const nextText = transcript.trim()
+      setter(nextText ? `${baseText}${baseText ? " " : ""}${nextText}` : baseText)
     }
-    recognition.start()
+    try {
+      recognition.start()
+    } catch {
+      micType === "ai" ? setListeningAI(false) : setListeningPlan(false)
+      alert(t.speechRecognitionFailed)
+    }
   }
 
   const sendMessage = async () => {
@@ -132,44 +159,47 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
     const userMessage = { role: "user", content: userText } as ChatMessage
     const newMessages = [...chatMessages, userMessage]
-    setChatMessages(newMessages)
+    const instantAssistant = { role: "assistant", content: t.typing } as ChatMessage
+    setChatMessages([...newMessages, instantAssistant])
     setInput("")
     setLoading(true)
 
     try {
-      const candidateEndpoints = ["/api/safety-chat", "/api/safety-chat/"]
-      let responseText: string | null = null
-
-      for (const endpoint of candidateEndpoints) {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: newMessages }),
-        })
-
-        const data = await res.json()
-        if (res.status === 400 && data?.blocked) {
-          alert(data?.text || "Unable to send this message because it appears offensive or unsafe.")
-          setLoading(false)
-          return
-        }
-        if (!res.ok) continue
-
-        responseText = data?.text || "No response from Safe AI."
-        break
+      const res = await fetch("/api/safety-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
+      })
+      const data = await res.json().catch(() => null)
+      if (res.status === 400 && data?.blocked) {
+        alert(data?.text || "Unable to send this message because it appears offensive or unsafe.")
+        setChatMessages(newMessages)
+        setLoading(false)
+        return
       }
-
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            responseText ||
-            "Safe AI is temporarily unavailable. Please try again in a moment.",
-        },
-      ])
+      const finalText =
+        res.ok && data?.text
+          ? data.text
+          : "Safe AI is temporarily unavailable. Please try again in a moment."
+      setChatMessages((prev) => {
+        const next = [...prev]
+        const index = next.findIndex((m) => m.role === "assistant" && m.content === t.typing)
+        if (index >= 0) {
+          next[index] = { role: "assistant", content: finalText }
+          return next
+        }
+        return [...next, { role: "assistant", content: finalText }]
+      })
     } catch {
-      setChatMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong. Please try again." }])
+      setChatMessages((prev) => {
+        const next = [...prev]
+        const index = next.findIndex((m) => m.role === "assistant" && m.content === t.typing)
+        if (index >= 0) {
+          next[index] = { role: "assistant", content: "Something went wrong. Please try again." }
+          return next
+        }
+        return [...next, { role: "assistant", content: "Something went wrong. Please try again." }]
+      })
     } finally {
       setLoading(false)
     }
@@ -241,6 +271,14 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
   useEffect(() => {
     return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch {
+          // no-op
+        }
+        recognitionRef.current = null
+      }
       if (typeof window === "undefined") return
       try {
         window.speechSynthesis.cancel()
