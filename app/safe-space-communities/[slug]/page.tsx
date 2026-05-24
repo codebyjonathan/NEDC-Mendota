@@ -13,7 +13,7 @@ import {
   EMOTIONAL_REACTIONS,
   generateAnonymousUsername,
 } from "@/lib/safe-space/utils"
-import { AlertCircle, X, Flag, MessageCircle, Eye, EyeOff, Volume2, Square } from "lucide-react"
+import { AlertCircle, X, Flag, MessageCircle, Eye, EyeOff, Volume2, Square, Mic } from "lucide-react"
 import { moderateContent } from "@/lib/safe-space/moderation"
 import {
   getCommunityBanRemainingMs,
@@ -121,6 +121,8 @@ function CommunityContent() {
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({})
   const [replyWarnings, setReplyWarnings] = useState<Record<string, string>>({})
   const [postingReplyFor, setPostingReplyFor] = useState<string | null>(null)
+  const [listeningPost, setListeningPost] = useState(false)
+  const [listeningReplyFor, setListeningReplyFor] = useState<string | null>(null)
   const [reportingPostId, setReportingPostId] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState("")
   const [reports, setReports] = useState<Record<string, ReportEntry[]>>({})
@@ -648,6 +650,44 @@ function CommunityContent() {
     }
   }
 
+  const startSpeechRecognition = (mode: "post" | "reply", postId?: string) => {
+    if (typeof window === "undefined") return
+    const SpeechRecognition =
+      (window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any }).SpeechRecognition ||
+      (window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any }).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      setModerationWarning("Speech recognition is not supported in this browser.")
+      return
+    }
+
+    const recognition = new SpeechRecognition()
+    recognition.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US"
+    recognition.interimResults = false
+    recognition.maxAlternatives = 1
+    recognition.onstart = () => {
+      if (mode === "post") setListeningPost(true)
+      else setListeningReplyFor(postId || null)
+    }
+    recognition.onend = () => {
+      if (mode === "post") setListeningPost(false)
+      else setListeningReplyFor((prev) => (prev === postId ? null : prev))
+    }
+    recognition.onerror = () => {
+      if (mode === "post") setListeningPost(false)
+      else setListeningReplyFor((prev) => (prev === postId ? null : prev))
+      setModerationWarning("Speech recognition failed. Please try again.")
+    }
+    recognition.onresult = (event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => {
+      const transcript = event.results[0][0].transcript
+      if (mode === "post") {
+        setNewPost((prev) => (prev ? `${prev} ${transcript}` : transcript))
+      } else if (postId) {
+        setReplyDrafts((prev) => ({ ...prev, [postId]: prev[postId] ? `${prev[postId]} ${transcript}` : transcript }))
+      }
+    }
+    recognition.start()
+  }
+
   const stopSpeaking = () => {
     if (typeof window === "undefined") return
     try {
@@ -758,6 +798,19 @@ function CommunityContent() {
               className="w-full p-4 rounded-2xl border border-gray-300 focus:border-teal-500 focus:outline-none resize-none text-gray-900 placeholder-gray-500"
               rows={4}
             />
+            <div className="flex justify-end">
+              <button
+                onClick={() => startSpeechRecognition("post")}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${
+                  listeningPost
+                    ? "border-teal-500 bg-teal-50 text-teal-700"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <Mic className="w-3.5 h-3.5" />
+                {listeningPost ? "Listening..." : "Voice input"}
+              </button>
+            </div>
 
             {moderationWarning && (
               <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3">
@@ -967,6 +1020,19 @@ function CommunityContent() {
                         className="w-full p-3 rounded-2xl border border-gray-300 focus:border-teal-500 focus:outline-none resize-none text-gray-900 placeholder-gray-500"
                         rows={2}
                       />
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => startSpeechRecognition("reply", post.id)}
+                          className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs ${
+                            listeningReplyFor === post.id
+                              ? "border-teal-500 bg-teal-50 text-teal-700"
+                              : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <Mic className="w-3.5 h-3.5" />
+                          {listeningReplyFor === post.id ? "Listening..." : "Voice input"}
+                        </button>
+                      </div>
 
                       {replyWarnings[post.id] ? (
                         <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2">

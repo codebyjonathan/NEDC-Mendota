@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { Dispatch, SetStateAction } from "react"
 import { useSearchParams } from "next/navigation"
-import { Download, Mic, Save, Send, Sparkles } from "lucide-react"
+import { Download, Mic, Save, Send, Sparkles, Square, Volume2 } from "lucide-react"
 import jsPDF from "jspdf"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
@@ -61,6 +61,7 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
   const [customRobot, setCustomRobot] = useState<CustomRobotConfig>(DEFAULT_CUSTOM_ROBOT)
   const [listeningAI, setListeningAI] = useState(false)
   const [listeningPlan, setListeningPlan] = useState(false)
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
@@ -200,6 +201,55 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
 
   const header = useMemo(() => <AppHeader title={t.appTitle} subtitle={t.appSubtitle} />, [t])
 
+  const stopSpeaking = () => {
+    if (typeof window === "undefined") return
+    try {
+      window.speechSynthesis.cancel()
+    } catch {
+      // no-op
+    }
+    setSpeakingMessageId(null)
+  }
+
+  const speakMessage = (messageId: string, text: string) => {
+    if (typeof window === "undefined") return
+    const value = text.trim()
+    if (!value) return
+    if (!("speechSynthesis" in window)) {
+      alert("Text-to-speech is not supported in this browser.")
+      return
+    }
+    if (speakingMessageId === messageId) {
+      stopSpeaking()
+      return
+    }
+    try {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(value)
+      utterance.lang = lang === "ar" ? "ar-SA" : lang === "es" ? "es-ES" : "en-US"
+      utterance.rate = 1
+      utterance.pitch = 1
+      utterance.onend = () => setSpeakingMessageId((prev) => (prev === messageId ? null : prev))
+      utterance.onerror = () => setSpeakingMessageId((prev) => (prev === messageId ? null : prev))
+      setSpeakingMessageId(messageId)
+      window.speechSynthesis.speak(utterance)
+    } catch {
+      setSpeakingMessageId(null)
+      alert("Unable to play text-to-speech right now.")
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (typeof window === "undefined") return
+      try {
+        window.speechSynthesis.cancel()
+      } catch {
+        // no-op
+      }
+    }
+  }, [])
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
       {header}
@@ -307,12 +357,15 @@ export default function SafetyPlanPage({ lang: _lang }: { lang?: string }) {
               {chatMessages.map((message, index) => (
                 <ChatBubble
                   key={index}
+                  messageId={`msg_${index}`}
                   role={message.role}
                   content={message.content}
                   selectedRobot={selectedRobot}
                   customRobot={customRobot}
                   onReport={message.role === "assistant" ? () => reportAssistantMessage(index, message.content) : undefined}
                   isReported={reportedAssistantMessages.includes(index)}
+                  onReadAloud={() => speakMessage(`msg_${index}`, message.content)}
+                  isSpeaking={speakingMessageId === `msg_${index}`}
                 />
               ))}
               {loading && <div className="mt-2 text-sm italic text-gray-500">Typing...</div>}
@@ -546,17 +599,23 @@ function getAccessoryGlyph(accessory: RobotAccessory) {
 }
 
 function ChatBubble({
+  messageId,
   role,
   content,
   selectedRobot,
   customRobot,
   onReport,
   isReported,
+  onReadAloud,
+  isSpeaking,
 }: ChatMessage & {
+  messageId: string
   selectedRobot: RobotStyleId
   customRobot: CustomRobotConfig
   onReport?: () => void
   isReported?: boolean
+  onReadAloud?: () => void
+  isSpeaking?: boolean
 }) {
   if (role === "assistant") {
     return (
@@ -567,8 +626,16 @@ function ChatBubble({
         </div>
         <div className="max-w-[85%] rounded-2xl border bg-white p-3 shadow-sm">
           <p className="text-sm leading-relaxed" style={{ color: "var(--app-text)" }}>{content}</p>
-          {onReport && (
-            <div className="mt-2 flex justify-end">
+          <div className="mt-2 flex items-center justify-end gap-2">
+            <button
+              onClick={onReadAloud}
+              className="inline-flex items-center gap-1 rounded-full border border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
+              title={isSpeaking ? "Stop reading" : "Read aloud"}
+            >
+              {isSpeaking ? <Square className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+              {isSpeaking ? "Stop" : "Read"}
+            </button>
+            {onReport && (
               <button
                 onClick={onReport}
                 disabled={isReported}
@@ -576,8 +643,8 @@ function ChatBubble({
               >
                 {isReported ? "Reported" : "Report"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     )
@@ -586,7 +653,17 @@ function ChatBubble({
   return (
     <div className="mb-3 flex items-end justify-end gap-2">
       <div className="max-w-[85%] rounded-2xl p-3 text-sm text-white shadow-sm" style={{ backgroundColor: "var(--app-accent-strong)" }}>
-        {content}
+        <p>{content}</p>
+        <div className="mt-2 flex justify-end">
+          <button
+            onClick={onReadAloud}
+            className="inline-flex items-center gap-1 rounded-full border border-white/40 px-2 py-1 text-xs text-white hover:bg-white/15"
+            title={isSpeaking ? "Stop reading" : "Read aloud"}
+          >
+            {isSpeaking ? <Square className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
+            {isSpeaking ? "Stop" : "Read"}
+          </button>
+        </div>
       </div>
       <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: "var(--app-accent)" }}>
         U
