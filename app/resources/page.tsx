@@ -71,13 +71,13 @@ function ResourcesContent() {
       color: "bg-purple-500",
     },
     {
-      title: "MHS NAMI (National Alliance on Mental Illness)",
+      title: "NAMI (National Alliance on Mental Illness)",
       description:
         lang === "en"
-          ? "Our partner in providing education, support, and advocacy for mental health here in our School!"
+          ? "Providing Mental Health Support towards individuals and families!"
           : lang === "es"
-            ? "Nuestro socio en proporcionar educación, apoyo y defensa para la salud mental"
-            : "شريكنا في توفير التعليم والدعم والدفاع عن الصحة النفسية",
+            ? "Brindando apoyo de salud mental a individuos y familias."
+            : "تقديم دعم الصحة النفسية للأفراد والعائلات!",
       url: "https://www.nami.org/",
       icon: Heart,
       color: "bg-green-500",

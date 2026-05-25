@@ -1,7 +1,7 @@
 export const CONFIG = {
   // Phone Numbers - Change these to your own numbers for testing
   CRISIS_HOTLINE: "988",
-  CRISIS_HOTLINE_ALT: "1-209-707-8186",
+  CRISIS_HOTLINE_ALT: "1-800-273-8255",
   TREVOR_PROJECT: "1‑866‑488‑7386",
   TRANS_LIFELINE: "1-877-565-8860",
   VETERANS_CRISIS: "988",

@@ -746,6 +746,14 @@ function CommunityContent() {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(value)
       utterance.lang = lang === "es" ? "es-ES" : lang === "ar" ? "ar-SA" : "en-US"
+      const voices = window.speechSynthesis.getVoices()
+      const preferredVoice =
+        lang === "es"
+          ? voices.find((voice) => voice.lang.toLowerCase().startsWith("es"))
+          : lang === "ar"
+            ? voices.find((voice) => voice.lang.toLowerCase().startsWith("ar"))
+            : voices.find((voice) => voice.lang.toLowerCase().startsWith("en"))
+      if (preferredVoice) utterance.voice = preferredVoice
       utterance.rate = 1
       utterance.pitch = 1
       utterance.onend = () => setSpeakingTargetId((prev) => (prev === targetId ? null : prev))
