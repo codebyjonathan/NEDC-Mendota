@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { promises as fs } from "fs"
 import path from "path"
 import { tmpdir } from "os"
+import { enforceRateLimit, readJsonObject, sanitizeTextInput } from "@/lib/server/api-security"
 
 type Reply = { id: string; author: string; authorId?: string; content: string; timestamp: string }
 type PostRecord = {
@@ -59,17 +60,19 @@ function serialize(posts: PostRecord[]) {
 }
 
 export async function GET(request: NextRequest) {
-  const communityId = request.nextUrl.searchParams.get("communityId")
-  if (!communityId) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
+  const limited = enforceRateLimit(request, { key: "safe-space-posts:get", maxRequests: 90, windowMs: 60_000 })
+  if (limited) return limited
+  const communityId = sanitizeTextInput(request.nextUrl.searchParams.get("communityId"), { maxLen: 120 })
+  if (!communityId.ok) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
 
-  const threadKey = getThreadKey(communityId)
+  const threadKey = getThreadKey(communityId.value)
   const store = await readStore()
   const primaryPosts = store[threadKey] || []
   if (primaryPosts.length > 0) {
     return NextResponse.json({ posts: serialize(primaryPosts) })
   }
 
-  const legacyPosts = getLegacyThreadKeys(store, communityId).flatMap((key) => store[key] || [])
+  const legacyPosts = getLegacyThreadKeys(store, communityId.value).flatMap((key) => store[key] || [])
   if (legacyPosts.length === 0) {
     return NextResponse.json({ posts: [] })
   }
@@ -86,20 +89,29 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const limited = enforceRateLimit(request, { key: "safe-space-posts:post", maxRequests: 40, windowMs: 60_000 })
+    if (limited) return limited
+    const body = await readJsonObject(request)
     const { action, communityId } = body || {}
-    if (!communityId) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
+    const actionValue = sanitizeTextInput(action, { maxLen: 40 })
+    const communityIdValue = sanitizeTextInput(communityId, { maxLen: 120 })
+    if (!communityIdValue.ok) return NextResponse.json({ error: "communityId is required" }, { status: 400 })
 
-    const threadKey = getThreadKey(communityId)
+    const threadKey = getThreadKey(communityIdValue.value)
     const store = await readStore()
     const posts = store[threadKey] || []
 
-    if (action === "create_post") {
+    if (actionValue.ok && actionValue.value === "create_post") {
+      const author = sanitizeTextInput(body.author, { maxLen: 64, allowEmpty: true, strict: true })
+      const authorId = sanitizeTextInput(body.authorId, { maxLen: 120, allowEmpty: true })
+      const content = sanitizeTextInput(body.content, { maxLen: 3000, strict: true })
+      if (!content.ok) return NextResponse.json({ error: "Invalid post content" }, { status: 400 })
+
       const post: PostRecord = {
         id: `post_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        author: body.author || "Anonymous",
-        authorId: body.authorId || "",
-        content: body.content || "",
+        author: author.ok && author.value ? author.value : "Anonymous",
+        authorId: authorId.ok ? authorId.value : "",
+        content: content.value,
         timestamp: "Just now",
         reactions: { heard: 0, strong: 0, relate: 0, support: 0, hope: 0 },
         reactionUsers: {},
@@ -111,23 +123,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ posts: serialize(store[threadKey] || []) })
     }
 
-    if (action === "create_reply") {
-      const { postId, author, authorId, content } = body
-      const targetPost = posts.find((p) => p.id === postId)
+    if (actionValue.ok && actionValue.value === "create_reply") {
+      const postId = sanitizeTextInput(body.postId, { maxLen: 120 })
+      const author = sanitizeTextInput(body.author, { maxLen: 64, allowEmpty: true, strict: true })
+      const authorId = sanitizeTextInput(body.authorId, { maxLen: 120, allowEmpty: true })
+      const content = sanitizeTextInput(body.content, { maxLen: 2000, strict: true })
+      if (!postId.ok || !content.ok) return NextResponse.json({ error: "Invalid reply payload" }, { status: 400 })
+      const targetPost = posts.find((p) => p.id === postId.value)
       if (!targetPost) {
         return NextResponse.json({ error: "Post not found" }, { status: 404 })
       }
       const next = posts.map((p) =>
-        p.id === postId
+        p.id === postId.value
           ? {
               ...p,
               replies: [
                 ...p.replies,
                 {
                   id: `reply_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-                  author: author || "Anonymous",
-                  authorId: authorId || "",
-                  content: content || "",
+                  author: author.ok && author.value ? author.value : "Anonymous",
+                  authorId: authorId.ok ? authorId.value : "",
+                  content: content.value,
                   timestamp: "Just now",
                 },
               ],
@@ -140,30 +156,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ posts: serialize(next) })
     }
 
-    if (action === "toggle_reaction") {
-      const { postId, reactionType, userKey } = body
-      const targetPost = posts.find((p) => p.id === postId)
+    if (actionValue.ok && actionValue.value === "toggle_reaction") {
+      const postId = sanitizeTextInput(body.postId, { maxLen: 120 })
+      const reactionType = sanitizeTextInput(body.reactionType, { maxLen: 24 })
+      const userKey = sanitizeTextInput(body.userKey, { maxLen: 120 })
+      if (!postId.ok || !reactionType.ok || !userKey.ok) {
+        return NextResponse.json({ error: "Invalid reaction payload" }, { status: 400 })
+      }
+      if (!["heard", "strong", "relate", "support", "hope"].includes(reactionType.value)) {
+        return NextResponse.json({ error: "Invalid reaction type" }, { status: 400 })
+      }
+      const targetPost = posts.find((p) => p.id === postId.value)
       if (!targetPost) {
         return NextResponse.json({ error: "Post not found" }, { status: 404 })
       }
       const next = posts.map((p) => {
-        if (p.id !== postId) return p
-        const users = new Set<string>(p.reactionUsers[reactionType] || [])
-        const already = users.has(userKey)
-        if (already) users.delete(userKey)
-        else users.add(userKey)
+        if (p.id !== postId.value) return p
+        const users = new Set<string>(p.reactionUsers[reactionType.value] || [])
+        const already = users.has(userKey.value)
+        if (already) users.delete(userKey.value)
+        else users.add(userKey.value)
 
         return {
           ...p,
           reactions: {
             ...p.reactions,
-            [reactionType]: already
-              ? Math.max(0, (p.reactions[reactionType] || 0) - 1)
-              : (p.reactions[reactionType] || 0) + 1,
+            [reactionType.value]: already
+              ? Math.max(0, (p.reactions[reactionType.value] || 0) - 1)
+              : (p.reactions[reactionType.value] || 0) + 1,
           },
           reactionUsers: {
             ...p.reactionUsers,
-            [reactionType]: Array.from(users),
+            [reactionType.value]: Array.from(users),
           },
         }
       })
@@ -173,15 +197,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ posts: serialize(next) })
     }
 
-    if (action === "delete_post") {
-      const { postId, userId, userKey } = body
-      if (!userId && !userKey) {
+    if (actionValue.ok && actionValue.value === "delete_post") {
+      const postId = sanitizeTextInput(body.postId, { maxLen: 120 })
+      const userId = sanitizeTextInput(body.userId, { maxLen: 120, allowEmpty: true })
+      const userKey = sanitizeTextInput(body.userKey, { maxLen: 120, allowEmpty: true })
+      if (!postId.ok || (!userId.ok || !userId.value) && (!userKey.ok || !userKey.value)) {
         return NextResponse.json({ error: "userId or userKey is required" }, { status: 400 })
       }
       const next = posts.filter((p) => {
-        if (p.id !== postId) return true
-        const isOwnerById = Boolean(userId && p.authorId && p.authorId === userId)
-        const isOwnerByLegacyName = Boolean(userKey && !p.authorId && p.author === userKey)
+        if (p.id !== postId.value) return true
+        const isOwnerById = Boolean(userId.ok && userId.value && p.authorId && p.authorId === userId.value)
+        const isOwnerByLegacyName = Boolean(userKey.ok && userKey.value && !p.authorId && p.author === userKey.value)
         return !(isOwnerById || isOwnerByLegacyName)
       })
       store[threadKey] = next
@@ -189,24 +215,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ posts: serialize(next) })
     }
 
-    if (action === "delete_reply") {
-      const { postId, replyId, userId, userKey } = body
-      if (!userId && !userKey) {
+    if (actionValue.ok && actionValue.value === "delete_reply") {
+      const postId = sanitizeTextInput(body.postId, { maxLen: 120 })
+      const replyId = sanitizeTextInput(body.replyId, { maxLen: 120 })
+      const userId = sanitizeTextInput(body.userId, { maxLen: 120, allowEmpty: true })
+      const userKey = sanitizeTextInput(body.userKey, { maxLen: 120, allowEmpty: true })
+      if (!postId.ok || !replyId.ok || ((!userId.ok || !userId.value) && (!userKey.ok || !userKey.value))) {
         return NextResponse.json({ error: "userId or userKey is required" }, { status: 400 })
       }
-      const targetPost = posts.find((p) => p.id === postId)
+      const targetPost = posts.find((p) => p.id === postId.value)
       if (!targetPost) {
         return NextResponse.json({ error: "Post not found" }, { status: 404 })
       }
       const next = posts.map((p) =>
-        p.id !== postId
+        p.id !== postId.value
           ? p
           : {
               ...p,
               replies: p.replies.filter((r) => {
-                if (r.id !== replyId) return true
-                const isOwnerById = Boolean(userId && r.authorId && r.authorId === userId)
-                const isOwnerByLegacyName = Boolean(userKey && !r.authorId && r.author === userKey)
+                if (r.id !== replyId.value) return true
+                const isOwnerById = Boolean(userId.ok && userId.value && r.authorId && r.authorId === userId.value)
+                const isOwnerByLegacyName = Boolean(userKey.ok && userKey.value && !r.authorId && r.author === userKey.value)
                 return !(isOwnerById || isOwnerByLegacyName)
               }),
             },

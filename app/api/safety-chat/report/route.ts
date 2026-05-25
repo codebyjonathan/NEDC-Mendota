@@ -1,16 +1,24 @@
+import { NextRequest } from "next/server"
+import { enforceRateLimit, sanitizeTextInput } from "@/lib/server/api-security"
+
 const reports: Array<{
   createdAt: string
   reason: string
   message: string
 }> = []
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const reason = String(body?.reason || "unspecified").slice(0, 120)
-    const message = String(body?.message || "").slice(0, 4000)
+    const limited = enforceRateLimit(req, { key: "safety-chat-report:post", maxRequests: 12, windowMs: 60_000 })
+    if (limited) return limited
 
-    if (!message.trim()) {
+    const body = await req.json()
+    const reasonCheck = sanitizeTextInput(body?.reason ?? "unspecified", { maxLen: 120, allowEmpty: true })
+    const messageCheck = sanitizeTextInput(body?.message, { maxLen: 4000, strict: true })
+    const reason = reasonCheck.ok ? reasonCheck.value : "unspecified"
+    const message = messageCheck.ok ? messageCheck.value : ""
+
+    if (!messageCheck.ok) {
       return new Response(JSON.stringify({ error: "Missing message" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -41,4 +49,3 @@ export async function POST(req: Request) {
     })
   }
 }
-

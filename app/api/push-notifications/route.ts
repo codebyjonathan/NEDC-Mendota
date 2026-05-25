@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
+import { enforceRateLimit, readJsonObject, sanitizeTextInput } from "@/lib/server/api-security"
 
 /**
  * Push Notifications API
@@ -330,7 +331,17 @@ export async function POST(request: NextRequest) {
   const pathname = url.pathname
 
   try {
-    const body = await request.json().catch(() => ({}))
+    const limited = enforceRateLimit(request, { key: "push-notifications:post", maxRequests: 30, windowMs: 60_000 })
+    if (limited) return limited
+    const body = await readJsonObject(request)
+    if (typeof body.endpoint === "string") {
+      const endpointCheck = sanitizeTextInput(body.endpoint, { maxLen: 2048, allowEmpty: true })
+      body.endpoint = endpointCheck.ok ? endpointCheck.value : ""
+    }
+    if (typeof body.title === "string") {
+      const titleCheck = sanitizeTextInput(body.title, { maxLen: 120, strict: true, allowEmpty: true })
+      body.title = titleCheck.ok ? titleCheck.value : ""
+    }
 
     if (pathname.endsWith("/subscribe")) {
       return handleSubscribe(request, body)
@@ -360,6 +371,9 @@ export async function POST(request: NextRequest) {
  * Check push notification status
  */
 export async function GET(request: NextRequest) {
+  const limited = enforceRateLimit(request, { key: "push-notifications:get", maxRequests: 60, windowMs: 60_000 })
+  if (limited) return limited
+
   const deviceId = getDeviceId(request)
 
   // Find subscription for this device

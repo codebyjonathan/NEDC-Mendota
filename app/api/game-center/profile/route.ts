@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { validateNickname } from "@/lib/chat-safety"
+import { enforceRateLimit, readJsonObject } from "@/lib/server/api-security"
 
 type BadgeType = "star" | "moon" | "planet" | "comet"
 type HelmetStyle = "classic" | "visor" | "gold" | "midnight"
@@ -33,6 +34,9 @@ function isAllowedBadge(value: unknown): value is BadgeType {
 }
 
 export async function GET(req: NextRequest) {
+  const limited = enforceRateLimit(req, { key: "game-center-profile:get", maxRequests: 90, windowMs: 60_000 })
+  if (limited) return limited
+
   const deviceId = getDeviceId(req)
   const profile = profileStore.get(deviceId) ?? null
   return NextResponse.json({ profile })
@@ -40,7 +44,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const limited = enforceRateLimit(req, { key: "game-center-profile:post", maxRequests: 20, windowMs: 60_000 })
+    if (limited) return limited
+
+    const body = await readJsonObject(req)
     const nickname = typeof body?.nickname === "string" ? body.nickname : ""
     const suitColor = body?.suitColor
     const helmetStyle = body?.helmetStyle
@@ -82,4 +89,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 })
   }
 }
-

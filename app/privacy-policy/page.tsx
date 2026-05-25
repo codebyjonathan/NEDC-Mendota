@@ -43,6 +43,10 @@ function PrivacyPolicyContent() {
             We use information to provide core app features, including crisis support tools, reminders/notifications,
             app reliability, and abuse/safety moderation.
           </p>
+          <p className="text-sm text-gray-700">
+            We apply strict input validation and sanitization to user-submitted content to reduce abusive, hateful, or
+            unsafe content in community and chat features.
+          </p>
         </section>
 
         <section className="rounded-2xl border bg-white p-4 space-y-2">
@@ -50,6 +54,10 @@ function PrivacyPolicyContent() {
           <p className="text-sm text-gray-700">
             Safety AI messages are sent to OpenAI for model processing. Analytics events may be processed by Vercel
             Analytics. We do not sell personal information.
+          </p>
+          <p className="text-sm text-gray-700">
+            Sensitive server credentials (for example, private API keys) are stored server-side and are not exposed to
+            client-side app code.
           </p>
         </section>
 
@@ -103,4 +111,3 @@ export default function PrivacyPolicyPage() {
     </Suspense>
   )
 }
-

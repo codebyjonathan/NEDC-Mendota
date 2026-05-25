@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { enforceRateLimit, readJsonObject, sanitizeTextInput } from "@/lib/server/api-security"
 
 type IncomingReport = {
   postId: string
@@ -12,21 +13,23 @@ const reports: IncomingReport[] = []
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as Partial<IncomingReport>
-    const postId = body.postId?.trim()
-    const communityId = body.communityId?.trim()
-    const reason = body.reason?.trim()
-    const reportedBy = body.reportedBy?.trim() || "Unknown"
+    const limited = enforceRateLimit(request, { key: "safe-space-reports:post", maxRequests: 20, windowMs: 60_000 })
+    if (limited) return limited
+    const body = (await readJsonObject(request)) as Partial<IncomingReport>
+    const postId = sanitizeTextInput(body.postId, { maxLen: 120 })
+    const communityId = sanitizeTextInput(body.communityId, { maxLen: 120 })
+    const reason = sanitizeTextInput(body.reason, { maxLen: 500, strict: true })
+    const reportedBy = sanitizeTextInput(body.reportedBy, { maxLen: 120, allowEmpty: true })
 
-    if (!postId || !communityId || !reason) {
+    if (!postId.ok || !communityId.ok || !reason.ok) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
     const report: IncomingReport = {
-      postId,
-      communityId,
-      reason,
-      reportedBy,
+      postId: postId.value,
+      communityId: communityId.value,
+      reason: reason.value,
+      reportedBy: reportedBy.ok && reportedBy.value ? reportedBy.value : "Unknown",
       createdAt: body.createdAt || new Date().toISOString(),
     }
 
@@ -44,6 +47,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const limited = enforceRateLimit(request, { key: "safe-space-reports:get", maxRequests: 20, windowMs: 60_000 })
+  if (limited) return limited
+
+  // Note: report list endpoint kept for admin/debug workflows in this release.
   return NextResponse.json({ count: reports.length, reports })
 }

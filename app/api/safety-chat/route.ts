@@ -1,5 +1,7 @@
 import OpenAI from "openai"
 import { isLikelyOffensiveText } from "@/lib/chat-safety"
+import { enforceRateLimit, sanitizeTextInput } from "@/lib/server/api-security"
+import { NextRequest } from "next/server"
 
 let client: OpenAI | undefined
 
@@ -16,6 +18,9 @@ function getClient() {
 export const runtime = "nodejs"
 export const maxDuration = 30
 
+// Goal: Implement AI-powered emotional support systems.
+// This prompt constrains the assistant to short, supportive safety-plan guidance
+// while explicitly rejecting harmful/off-topic generation.
 const SAFETY_PLAN_PROMPT = `
 You are a supportive mental health assistant who helps users create
 a simple and realistic safety plan. Provide calm, short suggestions.
@@ -28,8 +33,11 @@ content, refuse briefly and redirect to a safe coping step.
 const FALLBACK_RESPONSE =
   "I am here with you. Try one next step: 1) name one person to contact, 2) pick one calming activity for 10 minutes, 3) remove one immediate trigger from your space."
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { key: "safety-chat:post", maxRequests: 20, windowMs: 60_000 })
+    if (limited) return limited
+
     const { messages } = await req.json()
 
     if (!messages || messages.length === 0) {
@@ -39,7 +47,23 @@ export async function POST(req: Request) {
       })
     }
 
-    const lastUserMessage = [...messages].reverse().find((m: any) => m?.role === "user")?.content || ""
+    const rawLastUserMessage = [...messages].reverse().find((m: any) => m?.role === "user")?.content || ""
+    const normalizedLastUserMessage = sanitizeTextInput(rawLastUserMessage, {
+      maxLen: 2000,
+      strict: true,
+    })
+    if (!normalizedLastUserMessage.ok) {
+      return new Response(
+        JSON.stringify({
+          blocked: true,
+          reason: "invalid_input",
+          text: normalizedLastUserMessage.reason,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      )
+    }
+    const lastUserMessage = normalizedLastUserMessage.value
+    // Safety strength: layered local screening to quickly block unsafe or abusive inputs.
     if (isLikelyOffensiveText(lastUserMessage)) {
       return new Response(
         JSON.stringify({
@@ -65,6 +89,7 @@ export async function POST(req: Request) {
       model: "omni-moderation-latest",
       input: String(lastUserMessage),
     })
+    // Safety strength: model-side moderation validates user input before generation.
     if (userModeration.results?.[0]?.flagged) {
       return new Response(
         JSON.stringify({
@@ -85,6 +110,7 @@ export async function POST(req: Request) {
     let aiMessage = response.choices?.[0]?.message?.content ?? FALLBACK_RESPONSE
 
     if (isLikelyOffensiveText(aiMessage)) {
+      // Safety strength: output post-check and safe redirect prevent harmful replies.
       aiMessage =
         "I can't help with offensive or harmful language. We can focus on one safe next step right now, like reaching out to a trusted person."
     } else {
@@ -118,7 +144,10 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = enforceRateLimit(req, { key: "safety-chat:get", maxRequests: 60, windowMs: 60_000 })
+  if (limited) return limited
+
   return new Response(
     JSON.stringify({
       ok: true,

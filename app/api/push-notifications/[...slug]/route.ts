@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { PushSubscription } from "web-push"
+import { enforceRateLimit, readJsonObject, sanitizeTextInput } from "@/lib/server/api-security"
 import {
   cancelScheduledPush,
   getPushStatus,
@@ -29,7 +30,9 @@ export async function POST(
   const { slug = [] } = await context.params
   const action = slug[0]
   const deviceId = getOrCreateDeviceId(request)
-  const body = await request.json().catch(() => ({}))
+  const limited = enforceRateLimit(request, { key: "push-notifications-slug:post", maxRequests: 30, windowMs: 60_000 })
+  if (limited) return limited
+  const body = await readJsonObject(request)
 
   if (!isPushConfigured()) {
     return NextResponse.json(
@@ -50,11 +53,14 @@ export async function POST(
     }
 
     if (action === "send-test") {
-      const title = typeof body.title === "string" ? body.title : "Safe Space test notification"
+      const titleCheck = sanitizeTextInput(body.title, { maxLen: 120, strict: true, allowEmpty: true })
+      const title = titleCheck.ok && titleCheck.value ? titleCheck.value : "Safe Space test notification"
       const message =
-        typeof body.body === "string" ? body.body : "Push notifications are enabled on this device."
-      const actionUrl = typeof body.actionUrl === "string" ? body.actionUrl : "/main"
-      const tag = typeof body.tag === "string" ? body.tag : "safe-space-test"
+        typeof body.body === "string"
+          ? sanitizeTextInput(body.body, { maxLen: 300, strict: true }).value
+          : "Push notifications are enabled on this device."
+      const actionUrl = typeof body.actionUrl === "string" ? body.actionUrl.slice(0, 200) : "/main"
+      const tag = typeof body.tag === "string" ? body.tag.slice(0, 60) : "safe-space-test"
 
       await sendPushToDevice(deviceId, {
         title,
@@ -68,15 +74,17 @@ export async function POST(
     }
 
     if (action === "schedule") {
-      const title = typeof body.title === "string" ? body.title : "Safe Space reminder"
+      const titleCheck = sanitizeTextInput(body.title, { maxLen: 120, strict: true, allowEmpty: true })
+      const bodyCheck = sanitizeTextInput(body.body, { maxLen: 300, strict: true, allowEmpty: true })
+      const title = titleCheck.ok && titleCheck.value ? titleCheck.value : "Safe Space reminder"
       const scheduleId = schedulePushForDevice({
         deviceId,
         notificationId:
           typeof body.notificationId === "string" ? body.notificationId : `push_${Date.now()}`,
         title,
         body:
-          typeof body.body === "string"
-            ? body.body
+          bodyCheck.ok && bodyCheck.value
+            ? bodyCheck.value
             : "Open Safe Space to continue your check-in.",
         actionUrl: typeof body.actionUrl === "string" ? body.actionUrl : "/grounding",
         scheduledFor: typeof body.scheduledFor === "number" ? body.scheduledFor : Date.now(),
@@ -102,7 +110,9 @@ export async function DELETE(
   const { slug = [] } = await context.params
   const action = slug[0]
   const id = slug[1]
-  const body = await request.json().catch(() => ({}))
+  const limited = enforceRateLimit(request, { key: "push-notifications-slug:delete", maxRequests: 30, windowMs: 60_000 })
+  if (limited) return limited
+  const body = await readJsonObject(request)
 
   try {
     if (action === "subscribe") {
@@ -138,6 +148,8 @@ export async function GET(
   const { slug = [] } = await context.params
   const action = slug[0]
   const deviceId = getOrCreateDeviceId(request)
+  const limited = enforceRateLimit(request, { key: "push-notifications-slug:get", maxRequests: 60, windowMs: 60_000 })
+  if (limited) return limited
 
   if (!action || action === "status") {
     return withDeviceCookie(NextResponse.json(getPushStatus(deviceId)), deviceId)

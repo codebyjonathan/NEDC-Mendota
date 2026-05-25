@@ -20,6 +20,6 @@ export const CONFIG = {
   SAMHSA_WEBSITE: "https://www.samhsa.gov",
 
   // Privacy policy metadata
-  PRIVACY_POLICY_EFFECTIVE_DATE: "April 21, 2026",
+  PRIVACY_POLICY_EFFECTIVE_DATE: "May 25, 2026",
   PRIVACY_CONTACT_EMAIL: "",
 }

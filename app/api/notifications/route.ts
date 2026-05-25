@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { enforceRateLimit, readJsonObject, sanitizeTextInput } from "@/lib/server/api-security"
 
 /**
  * Notifications API Route
@@ -136,6 +137,9 @@ function getNotificationIdFromPath(pathname: string): string | null {
 
 export async function GET(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { key: "notifications:get", maxRequests: 120, windowMs: 60_000 })
+    if (limited) return limited
+
     return handleGet(req)
   } catch (error) {
     console.error("GET /api/notifications error:", error)
@@ -145,8 +149,25 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    return handlePost(req, body)
+    const limited = enforceRateLimit(req, { key: "notifications:post", maxRequests: 40, windowMs: 60_000 })
+    if (limited) return limited
+
+    const body = (await readJsonObject(req)) as Partial<StoredNotification>
+    const titleCheck = sanitizeTextInput(body.title, { maxLen: 120, strict: true })
+    if (!titleCheck.ok || typeof body.id !== "string" || typeof body.timestamp !== "number") {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+    }
+    const payload: StoredNotification = {
+      id: body.id.slice(0, 120),
+      title: titleCheck.value,
+      timestamp: body.timestamp,
+      scheduledFor: typeof body.scheduledFor === "number" ? body.scheduledFor : body.timestamp,
+      interval: typeof body.interval === "number" ? body.interval : 0,
+      read: Boolean(body.read),
+      type: body.type === "check-in" ? "check-in" : "reminder",
+      actionUrl: typeof body.actionUrl === "string" ? body.actionUrl.slice(0, 300) : undefined,
+    }
+    return handlePost(req, payload)
   } catch (error) {
     console.error("POST /api/notifications error:", error)
     return NextResponse.json({ error: "Invalid request" }, { status: 400 })
@@ -155,12 +176,15 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { key: "notifications:patch", maxRequests: 60, windowMs: 60_000 })
+    if (limited) return limited
+
     const notificationId = getNotificationIdFromPath(req.nextUrl.pathname)
     if (!notificationId) {
       return NextResponse.json({ error: "Notification ID required" }, { status: 400 })
     }
 
-    const body = await req.json()
+    const body = (await readJsonObject(req)) as Partial<StoredNotification>
     return handlePatch(req, body, notificationId)
   } catch (error) {
     console.error("PATCH /api/notifications error:", error)
@@ -170,6 +194,9 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, { key: "notifications:delete", maxRequests: 40, windowMs: 60_000 })
+    if (limited) return limited
+
     const clearAll = req.nextUrl.searchParams.get("clearAll") === "true"
 
     if (clearAll) {
