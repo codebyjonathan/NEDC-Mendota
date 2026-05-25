@@ -8,6 +8,8 @@ import { BottomNav } from "@/components/bottom-nav"
 import { Button } from "@/components/ui/button"
 import { validateNickname } from "@/lib/chat-safety"
 import type { Language } from "@/lib/translations"
+import { translations } from "@/lib/translations"
+import { Headphones } from "lucide-react"
 
 const SUITS = ["#60a5fa", "#f472b6", "#34d399", "#f59e0b", "#a78bfa", "#f87171"]
 const HELMETS = ["classic", "visor", "gold", "midnight"]
@@ -128,6 +130,7 @@ function CustomizeContent() {
   const currentLang = (langParam === "en" || langParam === "es" || langParam === "ar" ? langParam : "en") as Language
   const isRTL = currentLang === "ar"
   const t = GC_CUSTOMIZE_TRANSLATIONS[currentLang]
+  const sharedT = translations[currentLang]
 
   const [nickname, setNickname] = useState("")
   const [suitColor, setSuitColor] = useState(SUITS[0])
@@ -135,6 +138,8 @@ function CustomizeContent() {
   const [badge, setBadge] = useState<BadgeType>(BADGES[0] as BadgeType)
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
+  const [showGameCenterAudioNotice, setShowGameCenterAudioNotice] = useState(false)
+  const [gameCenterNoticeVisible, setGameCenterNoticeVisible] = useState(false)
 
   const helmetClass = useMemo(() => {
     if (helmetStyle === "visor") return "ring-cyan-200/80 bg-cyan-100/30"
@@ -175,10 +180,22 @@ function CustomizeContent() {
       }
 
       localStorage.setItem("game_center_profile_v1", JSON.stringify(data.profile ?? profile))
-      router.push(`/game-center?lang=${currentLang}`)
+      setShowGameCenterAudioNotice(true)
+      window.setTimeout(() => setGameCenterNoticeVisible(true), 10)
+      window.setTimeout(() => setGameCenterNoticeVisible(false), 4000)
+      window.setTimeout(() => {
+        setShowGameCenterAudioNotice(false)
+        router.push(`/game-center?lang=${currentLang}`)
+      }, 4400)
     } catch {
       localStorage.setItem("game_center_profile_v1", JSON.stringify(profile))
-      router.push(`/game-center?lang=${currentLang}`)
+      setShowGameCenterAudioNotice(true)
+      window.setTimeout(() => setGameCenterNoticeVisible(true), 10)
+      window.setTimeout(() => setGameCenterNoticeVisible(false), 4000)
+      window.setTimeout(() => {
+        setShowGameCenterAudioNotice(false)
+        router.push(`/game-center?lang=${currentLang}`)
+      }, 4400)
     } finally {
       setSaving(false)
     }
@@ -262,6 +279,26 @@ function CustomizeContent() {
         </div>
       </div>
       <BottomNav lang={currentLang} />
+      {showGameCenterAudioNotice ? (
+        <div
+          className={`fixed inset-0 z-[130] bg-black/95 backdrop-blur-[2px] flex items-center justify-center transition-all duration-400 ${
+            gameCenterNoticeVisible ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div
+            className={`w-full max-w-xl px-8 text-center transition-all duration-400 ${
+              gameCenterNoticeVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
+            }`}
+          >
+            <div className="mx-auto mb-6 w-16 h-16 rounded-full border border-white/45 flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.12)]">
+              <Headphones className="w-8 h-8 text-white" />
+            </div>
+            <p className="font-display text-white text-xl sm:text-2xl font-extrabold tracking-wide text-center leading-snug">
+              {sharedT.pageContainsAudio}
+            </p>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

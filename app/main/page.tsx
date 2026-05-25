@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useRef, useState, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
-import { Phone, MessageCircle, MapPin, Wind, Book, Music, Sparkles, Headphones } from "lucide-react"
+import { Phone, MessageCircle, MapPin, Wind, Book, Music, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { BottomNav } from "@/components/bottom-nav"
@@ -67,8 +67,6 @@ function MainScreenContent() {
   const isRTL = lang === "ar"
   const [communityBanMessage, setCommunityBanMessage] = useState<string | null>(null)
   const [communityBanned, setCommunityBanned] = useState(false)
-  const [showGameCenterAudioNotice, setShowGameCenterAudioNotice] = useState(false)
-  const [gameCenterNoticeVisible, setGameCenterNoticeVisible] = useState(false)
 
   useEffect(() => {
     const syncBanState = () => {
@@ -97,13 +95,7 @@ function MainScreenContent() {
   }
 
   const handleOpenGameCenter = () => {
-    setShowGameCenterAudioNotice(true)
-    window.setTimeout(() => setGameCenterNoticeVisible(true), 10)
-    window.setTimeout(() => setGameCenterNoticeVisible(false), 4000)
-    window.setTimeout(() => {
-      setShowGameCenterAudioNotice(false)
-      router.push(`/game-center/customize?lang=${lang}`)
-    }, 4400)
+    router.push(`/game-center/customize?lang=${lang}`)
   }
 
   return (
@@ -268,27 +260,6 @@ function MainScreenContent() {
       </div>
 
       <BottomNav lang={lang} />
-
-      {showGameCenterAudioNotice ? (
-        <div
-          className={`fixed inset-0 z-[130] bg-black/95 backdrop-blur-[2px] flex items-center justify-center transition-all duration-400 ${
-            gameCenterNoticeVisible ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <div
-            className={`w-full max-w-xl px-8 text-center transition-all duration-400 ${
-              gameCenterNoticeVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-95 opacity-0"
-            }`}
-          >
-            <div className="mx-auto mb-6 w-16 h-16 rounded-full border border-white/45 flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.12)]">
-              <Headphones className="w-8 h-8 text-white" />
-            </div>
-            <p className="font-display text-white text-xl sm:text-2xl font-extrabold tracking-wide text-center leading-snug">
-              {t.pageContainsAudio}
-            </p>
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }
