@@ -22,5 +22,5 @@ export const CONFIG = {
   // Privacy policy metadata
   PRIVACY_POLICY_EFFECTIVE_DATE: "May 25, 2026",
   PRIVACY_CONTACT_EMAIL:
-    "epena@mendotaschools.org, ja2737@mendotaschools.org, ct2707@mendotaschools.org",
+    "epena@mendotaschools.org, alfaro.jonathanj@gmail.com, ct2707@mendotaschools.org",
 }
