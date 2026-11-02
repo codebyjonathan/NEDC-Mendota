@@ -4,30 +4,30 @@ A compassionate, multilingual mobile-first web app designed to provide mental he
 
 ## Features
 
-### 🌍 Multilingual Support
+### Multilingual Support
 - English, Spanish (Español), and Arabic (العربية)
 - Full RTL (Right-to-Left) support for Arabic
 - Language selector available in the Tools page
 
-### 🆘 Crisis Support
+### Crisis Support
 - **Get Support Now**: Central hub for all crisis resources
 - **Call Lifeline**: Direct calling to 988 and crisis hotlines
 - **Text Lifeline**: SMS support to Crisis Text Line (741741)
 - **Chat Support**: Links to live chat crisis services
 - **Emergency Location**: Share your location with emergency services
 
-### 🧘 Coping Tools
+### Coping Tools
 - **Breathing Exercises**: Interactive 4-4-4-2 breathing timer with animations
 - **Grounding Techniques**: 5-4-3-2-1 technique with progress tracking
 - **Journal**: Mood tracking and private journaling with local storage
 - **Music & Calm Sounds**: Calming nature sounds with AI voice guidance and beautiful scenery
 
-### 🤖 AI Safety Plan
+### AI Safety Plan
 - Conversational AI chatbot powered by Vercel AI SDK
 - Helps users create personalized safety plans
 - Save and download safety plans as PDF
 
-### 📚 Additional Resources
+### Additional Resources
 - **Tools**: Complete guide to all app features
 - **Emergency**: Quick access to crisis resources
 - **Wellness**: Daily wellness habits and quick activities
